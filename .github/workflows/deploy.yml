@@ -1,4 +1,3 @@
-# .github/workflows/deploy.yml
 name: Deploy to GitHub Pages
 
 on:
@@ -29,13 +28,11 @@ jobs:
           cache: 'npm'
 
       - name: Install deps
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Build
-        run: |
-          npm run build
+        run: npm run build
         env:
-          # Gjør at vite.config.ts setter korrekt base (se filen).
           GITHUB_ACTIONS: "true"
           GITHUB_REPOSITORY: ${{ github.repository }}
 
