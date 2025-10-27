@@ -448,7 +448,9 @@ function onCellMouseEnter(r: number, c: number) {
 
   /* ==== [BLOCK: UI] BEGIN ==== */
   return (
-    <div className="table-wrap">
+  <div className="table-wrap">
+    {/* NYTT omslag for horisontal scroll */}
+    <div className="table-scroller">
       <table className="grid" ref={tableRef}>
         <thead>
           <tr>
@@ -528,6 +530,7 @@ function onCellMouseEnter(r: number, c: number) {
           ))}
         </tbody>
       </table>
+    </div> {/* ← lukker .table-scroller */}
 
       {/* Aksjoner under tabellen (mobilvennlig) */}
       <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
