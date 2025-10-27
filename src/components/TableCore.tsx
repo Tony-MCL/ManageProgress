@@ -5,10 +5,11 @@ import { diffDaysInclusive } from "@/core/date"
 /* ==== [BLOCK: Imports] END ==== */
 
 /* ==== [BLOCK: Column model] BEGIN ==== */
-type ColKey = "aktivitet" | "start" | "slutt" | "varighet" | "avhengigheter" | "ansvar" | "farge"
+type ColKey = "nr" | "aktivitet" | "start" | "slutt" | "varighet" | "avhengigheter" | "ansvar" | "farge"
 type Col = { key: ColKey; title: string; width?: number; readonly?: boolean; type?: "text" | "date" | "select" }
 
 const INITIAL_COLS: Col[] = [
+  { key: "nr", title: "#", width: 50, readonly: true, type: "text" },
   { key: "aktivitet",      title: "Aktivitet",      width: 260, type: "text" },
   { key: "start",          title: "Start",          width: 140, type: "date" },
   { key: "slutt",          title: "Slutt",          width: 140, type: "date" },
@@ -474,6 +475,16 @@ function onCellMouseEnter(r: number, c: number) {
             <tr className="row" key={row.id}>
               {cols.map((col, cIndex) => {
                 const v = (row as any)[col.key]
+              if (col.key === "nr") {
+                  const hasData = Object.entries(row).some(([k, val]) =>
+                    k !== "id" && k !== "nr" && val && String(val).trim() !== ""
+                  )
+                  return (
+                    <td key="nr" style={{ textAlign: "right", opacity: hasData ? 0.6 : 0 }}>
+                      {hasData ? rIndex + 1 : ""}
+                    </td>
+                  )
+                }
                 const rcKey = `${rIndex}:${col.key}`
                 return (
                   <td key={col.key}>
