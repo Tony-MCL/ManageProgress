@@ -456,19 +456,22 @@ function onCellMouseEnter(r: number, c: number) {
         <thead>
           <tr>
             {cols.map((col, cIndex) => (
-              <th key={col.key} style={{ width: col.width }}>
-                <div style={{ position: "relative", userSelect: "none" }}>
-                  {col.title}
-                  {/* Resize grip */}
+              <th
+                key={col.key}
+                // viktig: position: 'relative' så resizer kan ligge "på kanten" av denne th
+                style={{ width: col.width, position: "relative" }}
+              >
+                {col.title}
+        
+                {/* Resizer: fysisk på høyrekanten av kolonnen.
+                    Skjules for første kolonne (#). */}
+                {cIndex !== 0 && (
                   <div
+                    className="col-resizer"
                     onMouseDown={(e) => startResize(cIndex, e)}
-                    style={{
-                      position: "absolute", right: 0, top: 0, bottom: 0,
-                      width: 6, cursor: "col-resize"
-                    }}
                     title="Dra for å endre bredde"
                   />
-                </div>
+                )}
               </th>
             ))}
           </tr>
