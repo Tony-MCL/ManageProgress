@@ -533,21 +533,6 @@ function onCellMouseEnter(r: number, c: number) {
       <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
         <button className="toolbtn ok" onClick={addRow}>➕ Ny rad</button>
         <button className="toolbtn danger" onClick={deleteRow}>🗑️ Slett valgt rad</button>
-        <button className="toolbtn" onClick={() => {
-          const head = cols.map(c => c.title).join(";")
-          const body = rows.map(r => cols.map(c => {
-            const v = (r as any)[c.key]
-            return v == null ? "" : String(v).replaceAll('"','""')
-          }).join(";"))
-          const csv = [head, ...body].join("\n")
-          const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
-          const a = document.createElement("a")
-          a.href = URL.createObjectURL(blob)
-          a.download = "progress-lite.csv"
-          a.click()
-          URL.revokeObjectURL(a.href)
-        }}>⤓ Eksporter CSV</button>
-
         <div style={{ marginLeft: "auto", opacity: 0.8 }}>
           <span title="Hurtigtaster">⌨️ Piltaster • Shift+Piler • Del • Ctrl/Cmd+C/V/X • Ctrl/Cmd+Z/Y</span>
         </div>
