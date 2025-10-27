@@ -473,6 +473,7 @@ function onCellMouseEnter(r: number, c: number) {
                       tabIndex={0}
                       data-rc={rcKey}
                       onMouseDown={(e) => onCellMouseDown(rIndex, cIndex, e)}
+                      onMouseEnter={() => onCellMouseEnter(rIndex, cIndex)} 
                     >
                       {col.readonly ? (
                         <span>{v ?? ""}</span>
