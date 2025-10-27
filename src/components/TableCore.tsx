@@ -51,20 +51,23 @@ function rectFrom(sel: RangeSel) {
 
 const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
   /* ==== [BLOCK: Local state] BEGIN ==== */
-  const [cols, setCols] = useState<Col[]>(INITIAL_COLS)
-  const [sel, setSel] = useState<RangeSel | null>(
-    rows.length ? { anchor: { r: 0, c: 0 }, focus: { r: 0, c: 0 } } : null
-  )
+const [cols, setCols] = useState<Col[]>(INITIAL_COLS)
+const [sel, setSel] = useState<RangeSel | null>(
+  rows.length ? { anchor: { r: 0, c: 0 }, focus: { r: 0, c: 0 } } : null
+)
 
-  // Undo/redo stack – lagrer kun rows (dyp kopi).
-  const [undoStack, setUndo] = useState<Aktivitet[][]>([])
-  const [redoStack, setRedo] = useState<Aktivitet[][]>([])
+// Undo/redo stack – lagrer kun rows (dyp kopi).
+const [undoStack, setUndo] = useState<Aktivitet[][]>([])
+const [redoStack, setRedo] = useState<Aktivitet[][]>([])
 
-  // Kolonne-resize
-  const [resizing, setResizing] = useState<{ c: number; startX: number; startW: number } | null>(null)
+// Kolonne-resize
+const [resizing, setResizing] = useState<{ c: number; startX: number; startW: number } | null>(null)
 
-  const tableRef = useRef<HTMLTableElement>(null)
-  /* ==== [BLOCK: Local state] END ==== */
+// Markerer vi med mus akkurat nå?
+const [isDraggingSel, setIsDraggingSel] = useState(false)
+
+const tableRef = useRef<HTMLTableElement>(null)
+/* ==== [BLOCK: Local state] END ==== */
 
   /* ==== [BLOCK: History helpers] BEGIN ==== */
   function pushUndo(snapshot?: Aktivitet[]) {
@@ -287,28 +290,36 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
   /* ==== [BLOCK: Keyboard & clipboard] END ==== */
 
   /* ==== [BLOCK: Mouse selection (drag)] BEGIN ==== */
-  function onCellMouseDown(r: number, c: number, e: React.MouseEvent) {
-    // Start ny markering
+function onCellMouseDown(r: number, c: number, e: React.MouseEvent) {
+  // Slå av evt. input-fokus så ikke browser kopierer kun den ene cellen
+  const ae = document.activeElement as HTMLElement | null
+  if (ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT")) ae.blur()
+
+  if (e.shiftKey && sel) {
+    // SHIFT+klikk: utvid eksisterende utvalg til denne cellen
+    setSel({ anchor: sel.anchor, focus: { r, c } })
+  } else {
     const p = { r, c }
     setSel({ anchor: p, focus: p })
-    // Sett opp drag
-    const onMove = (ev: MouseEvent) => {
-      const target = ev.target as HTMLElement
-      const rc = target.closest<HTMLElement>("[data-rc]")?.dataset.rc
-      if (!rc) return
-      const [rs, cs] = rc.split(":")
-      const rr = clamp(parseInt(rs, 10), 0, Math.max(0, rows.length - 1))
-      const cc = clamp(colIndexFromKey(cs as ColKey), 0, cols.length - 1)
-      setSel(curr => curr ? { anchor: curr.anchor, focus: { r: rr, c: cc } } : { anchor: { r: rr, c: cc }, focus: { r: rr, c: cc } })
-    }
-    const onUp = () => {
-      window.removeEventListener("mousemove", onMove)
-      window.removeEventListener("mouseup", onUp)
-    }
-    window.addEventListener("mousemove", onMove)
-    window.addEventListener("mouseup", onUp)
   }
-  /* ==== [BLOCK: Mouse selection (drag)] END ==== */
+
+  // Start "drag-select"
+  setIsDraggingSel(true)
+
+  // Avslutt når museknappen slippes (globalt)
+  const onUp = () => {
+    setIsDraggingSel(false)
+    window.removeEventListener("mouseup", onUp)
+  }
+  window.addEventListener("mouseup", onUp)
+}
+
+function onCellMouseEnter(r: number, c: number) {
+  if (!isDraggingSel) return
+  setSel(curr => curr ? { anchor: curr.anchor, focus: { r, c } } : { anchor: { r, c }, focus: { r, c } })
+}
+/* ==== [BLOCK: Mouse selection (drag)] END ==== */
+
 
   /* ==== [BLOCK: Column resize] BEGIN ==== */
   function startResize(c: number, e: React.MouseEvent) {
