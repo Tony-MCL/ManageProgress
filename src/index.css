@@ -241,3 +241,28 @@ body {
   .grid thead th { position: static; }
 }
 /* ==== [BLOCK: Print styles] END ==== */
+/* Grep for kolonne-resize: legg det på selve høyrekanten */
+.grid thead th { position: sticky; } /* (sticky er allerede satt – det er "posisjonert") */
+.grid thead th .col-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;        /* trekk 3px over rammen så det ligger "på kanten" */
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 2;         /* foran headerinnholdet */
+  background: transparent; /* usynlig, men klikkbar */
+}
+
+/* # -kolonnen: midtstill header + tall */
+.grid thead th:first-child { text-align: center; }
+.grid td:first-child .cell { text-align: center; }
+.grid .cell { min-height: 34px; }
+.grid .cell input,
+.grid .cell select {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 8px 10px;          /* beholder samme luft */
+  box-sizing: border-box;     /* inkluder padding i full bredde/høyde */
+}
