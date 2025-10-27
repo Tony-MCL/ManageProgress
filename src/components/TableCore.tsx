@@ -202,92 +202,111 @@ const tableRef = useRef<HTMLTableElement>(null)
   /* ==== [BLOCK: Add/Delete rows] END ==== */
 
   /* ==== [BLOCK: Keyboard & clipboard] BEGIN ==== */
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (!sel) return
-      const rect = rectFrom(sel)
-      const maxR = Math.max(0, rows.length - 1)
-      const maxC = cols.length - 1
+useEffect(() => {
+  function onKey(e: KeyboardEvent) {
+    if (!sel) return
+    const rect = rectFrom(sel)
+    const maxR = Math.max(0, rows.length - 1)
+    const maxC = cols.length - 1
 
-      // Editing guard – la inputs/selects ta tastene
-      const target = e.target as HTMLElement
-      const editing = target.tagName === "INPUT" || target.tagName === "SELECT" || target.isContentEditable
-      if (editing) return
+    // Editing guard – la inputs/selects ta tastene
+    const target = e.target as HTMLElement
+    const editing = target && (target.tagName === "INPUT" || target.tagName === "SELECT" || target.isContentEditable)
+    if (editing) return
 
-      // Undo/Redo
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-        e.preventDefault()
-        handleUndo()
-        return
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
-        e.preventDefault()
-        handleRedo()
-        return
-      }
-
-      // Navigasjon + multi (Shift)
-      const move = (dr: number, dc: number, extend: boolean) => {
-        e.preventDefault()
-        const endR = clamp(sel.focus.r + dr, 0, maxR)
-        const endC = clamp(sel.focus.c + dc, 0, maxC)
-        if (extend) {
-          setSel({ anchor: sel.anchor, focus: { r: endR, c: endC } })
-        } else {
-          const p = { r: endR, c: endC }
-          setSel({ anchor: p, focus: p })
-        }
-      }
-
-      if (e.key === "ArrowDown") return move(1, 0, e.shiftKey)
-      if (e.key === "ArrowUp") return move(-1, 0, e.shiftKey)
-      if (e.key === "ArrowLeft") return move(0, -1, e.shiftKey)
-      if (e.key === "ArrowRight" || e.key === "Tab") return move(0, 1, e.shiftKey)
-      if (e.key === "Enter") {
-        e.preventDefault()
-        focusCellInput(sel.focus.r, sel.focus.c)
-        return
-      }
-      if (e.key === "Delete") {
-        e.preventDefault()
-        clearRange()
-        return
-      }
-
-      // Copy / Cut
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
-        e.preventDefault()
-        const tsv = serializeSelection(rect)
-        navigator.clipboard.writeText(tsv)
-        return
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "x") {
-        e.preventDefault()
-        const tsv = serializeSelection(rect)
-        navigator.clipboard.writeText(tsv)
-        clearRange()
-        return
-      }
-      // Paste håndteres i onPaste
-    }
-
-    function onPaste(e: ClipboardEvent) {
-      if (!sel) return
-      const text = e.clipboardData?.getData("text/plain")
-      if (!text) return
+    // Undo/Redo
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
       e.preventDefault()
-      pasteRect(text)
+      handleUndo()
+      return
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+      e.preventDefault()
+      handleRedo()
+      return
     }
 
-    window.addEventListener("keydown", onKey)
-    const el = tableRef.current
-    el?.addEventListener("paste", onPaste)
-    return () => {
-      window.removeEventListener("keydown", onKey)
-      el?.removeEventListener("paste", onPaste)
+    // Navigasjon + multi (Shift)
+    const move = (dr: number, dc: number, extend: boolean) => {
+      e.preventDefault()
+      const endR = clamp((sel?.focus.r ?? 0) + dr, 0, maxR)
+      const endC = clamp((sel?.focus.c ?? 0) + dc, 0, maxC)
+      if (extend && sel) {
+        setSel({ anchor: sel.anchor, focus: { r: endR, c: endC } })
+      } else {
+        const p = { r: endR, c: endC }
+        setSel({ anchor: p, focus: p })
+      }
     }
-  }, [rows, cols, sel])
-  /* ==== [BLOCK: Keyboard & clipboard] END ==== */
+
+    if (e.key === "ArrowDown") return move(1, 0, e.shiftKey)
+    if (e.key === "ArrowUp") return move(-1, 0, e.shiftKey)
+    if (e.key === "ArrowLeft") return move(0, -1, e.shiftKey)
+    if (e.key === "ArrowRight" || e.key === "Tab") return move(0, 1, e.shiftKey)
+    if (e.key === "Enter") {
+      e.preventDefault()
+      focusCellInput(sel.focus.r, sel.focus.c)
+      return
+    }
+    if (e.key === "Delete") {
+      e.preventDefault()
+      clearRange()
+      return
+    }
+    // Copy/Cut håndteres i egne 'copy'/'cut' events nedenfor
+    // Paste håndteres i onPaste
+  }
+
+  function onCopy(ev: ClipboardEvent) {
+    if (!sel) return
+    // Ikke overstyr dersom bruker kopierer fra et aktivt input/select
+    const ae = document.activeElement as HTMLElement | null
+    const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
+    if (editing) return
+    const rect = rectFrom(sel)
+    const tsv = serializeSelection(rect)
+    ev.preventDefault()
+    ev.clipboardData?.setData("text/plain", tsv)
+  }
+
+  function onCut(ev: ClipboardEvent) {
+    if (!sel) return
+    const ae = document.activeElement as HTMLElement | null
+    const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
+    if (editing) return
+    const rect = rectFrom(sel)
+    const tsv = serializeSelection(rect)
+    ev.preventDefault()
+    ev.clipboardData?.setData("text/plain", tsv)
+    clearRange()
+  }
+
+  function onPaste(e: ClipboardEvent) {
+    if (!sel) return
+    const text = e.clipboardData?.getData("text/plain")
+    if (!text) return
+    // Hvis fokus står i input/select – la standard innliming skje der
+    const ae = document.activeElement as HTMLElement | null
+    const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
+    if (editing) return
+    e.preventDefault()
+    pasteRect(text)
+  }
+
+  window.addEventListener("keydown", onKey)
+  window.addEventListener("copy", onCopy)
+  window.addEventListener("cut", onCut)
+  window.addEventListener("paste", onPaste)
+
+  return () => {
+    window.removeEventListener("keydown", onKey)
+    window.removeEventListener("copy", onCopy)
+    window.removeEventListener("cut", onCut)
+    window.removeEventListener("paste", onPaste)
+  }
+}, [rows, cols, sel])
+/* ==== [BLOCK: Keyboard & clipboard] END ==== */
+
 
   /* ==== [BLOCK: Mouse selection (drag)] BEGIN ==== */
 function onCellMouseDown(r: number, c: number, e: React.MouseEvent) {
