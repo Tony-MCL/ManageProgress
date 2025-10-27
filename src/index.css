@@ -135,3 +135,11 @@ body {
   color: var(--muted);
 }
 /* ==== [BLOCK: Footer] END ==== */
+/* Nummerkolonnen (#) */
+.grid td:first-child {
+  color: var(--text-muted, #aaa);
+  font-size: 0.9em;
+  text-align: right;
+  padding-right: 6px;
+  user-select: none;
+}
