@@ -97,10 +97,11 @@ body {
   outline: none;
   cursor: default;
 }
-.grid .row:hover .cell { background: var(--grid-hover); }
+.grid .row:hover .cell:not(.selected) { background: var(--grid-hover); }
 .grid .cell.selected { background: var(--grid-select); }
+.grid .cell { user-select: none; }
+.grid .cell input, .grid .cell select { user-select: text; }
 .grid .cell.readonly { color: var(--muted); }
-.grid .cell input, .grid .cell select {
   width: 100%;
   background: transparent;
   border: none;
