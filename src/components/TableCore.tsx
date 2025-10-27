@@ -203,101 +203,109 @@ const tableRef = useRef<HTMLTableElement>(null)
 
   /* ==== [BLOCK: Keyboard & clipboard] BEGIN ==== */
 useEffect(() => {
+  function selectionRectAndSize() {
+    if (!sel) return null
+    const rect = rectFrom(sel)
+    const rowsN = rect.r2 - rect.r1 + 1
+    const colsN = rect.c2 - rect.c1 + 1
+    return { rect, rowsN, colsN }
+  }
+
   function onKey(e: KeyboardEvent) {
     if (!sel) return
-    const rect = rectFrom(sel)
+    const srs = selectionRectAndSize()
     const maxR = Math.max(0, rows.length - 1)
     const maxC = cols.length - 1
 
-    // Editing guard – la inputs/selects ta tastene
     const target = e.target as HTMLElement
-    const editing = target && (target.tagName === "INPUT" || target.tagName === "SELECT" || target.isContentEditable)
-    if (editing) return
+    const inForm = target && (target.tagName === "INPUT" || target.tagName === "SELECT" || target.isContentEditable)
 
     // Undo/Redo
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-      e.preventDefault()
-      handleUndo()
-      return
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
-      e.preventDefault()
-      handleRedo()
-      return
-    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); handleUndo(); return }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); handleRedo(); return }
 
     // Navigasjon + multi (Shift)
     const move = (dr: number, dc: number, extend: boolean) => {
       e.preventDefault()
       const endR = clamp((sel?.focus.r ?? 0) + dr, 0, maxR)
       const endC = clamp((sel?.focus.c ?? 0) + dc, 0, maxC)
-      if (extend && sel) {
-        setSel({ anchor: sel.anchor, focus: { r: endR, c: endC } })
-      } else {
-        const p = { r: endR, c: endC }
-        setSel({ anchor: p, focus: p })
-      }
+      if (extend && sel) setSel({ anchor: sel.anchor, focus: { r: endR, c: endC } })
+      else { const p = { r: endR, c: endC }; setSel({ anchor: p, focus: p }) }
     }
 
     if (e.key === "ArrowDown") return move(1, 0, e.shiftKey)
     if (e.key === "ArrowUp") return move(-1, 0, e.shiftKey)
     if (e.key === "ArrowLeft") return move(0, -1, e.shiftKey)
     if (e.key === "ArrowRight" || e.key === "Tab") return move(0, 1, e.shiftKey)
-    if (e.key === "Enter") {
-      e.preventDefault()
-      focusCellInput(sel.focus.r, sel.focus.c)
-      return
-    }
-    if (e.key === "Delete") {
-      e.preventDefault()
-      clearRange()
-      return
-    }
-    // Copy/Cut håndteres i egne 'copy'/'cut' events nedenfor
-    // Paste håndteres i onPaste
+    if (e.key === "Enter") { e.preventDefault(); focusCellInput(sel.focus.r, sel.focus.c); return }
+    if (e.key === "Delete") { e.preventDefault(); clearRange(); return }
+
+    // Copy/Cut/Paste håndteres i egne events under
   }
 
   function onCopy(ev: ClipboardEvent) {
     if (!sel) return
-    // Ikke overstyr dersom bruker kopierer fra et aktivt input/select
+    const srs = selectionRectAndSize()
+    if (!srs) return
+
+    // Hvis utvalget er større enn én celle → overstyr alltid og kopier hele utvalget
+    // Hvis bare én celle: overstyr hvis fokus IKKE er i et input/select (da ønsker vi celleverdi, ikke deltekst)
     const ae = document.activeElement as HTMLElement | null
     const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
-    if (editing) return
-    const rect = rectFrom(sel)
-    const tsv = serializeSelection(rect)
-    ev.preventDefault()
-    ev.clipboardData?.setData("text/plain", tsv)
+
+    if (srs.rowsN > 1 || srs.colsN > 1 || !editing) {
+      const tsv = serializeSelection(srs.rect)
+      ev.preventDefault()
+      ev.clipboardData?.setData("text/plain", tsv)
+    }
   }
 
   function onCut(ev: ClipboardEvent) {
     if (!sel) return
+    const srs = selectionRectAndSize()
+    if (!srs) return
     const ae = document.activeElement as HTMLElement | null
     const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
-    if (editing) return
-    const rect = rectFrom(sel)
-    const tsv = serializeSelection(rect)
-    ev.preventDefault()
-    ev.clipboardData?.setData("text/plain", tsv)
-    clearRange()
+
+    if (srs.rowsN > 1 || srs.colsN > 1 || !editing) {
+      const tsv = serializeSelection(srs.rect)
+      ev.preventDefault()
+      ev.clipboardData?.setData("text/plain", tsv)
+      clearRange()
+    }
   }
 
   function onPaste(e: ClipboardEvent) {
     if (!sel) return
-    const text = e.clipboardData?.getData("text/plain")
+    const srs = selectionRectAndSize()
+    if (!srs) return
+    const text = e.clipboardData?.getData("text/plain") ?? ""
     if (!text) return
-    // Hvis fokus står i input/select – la standard innliming skje der
+
+    // Sjekk om clipboard er "rektangel" (flere rader/kolonner)
+    const rowsArr = text.split(/\r?\n/).filter(Boolean)
+    const sep = text.includes("\t") ? "\t" : (text.includes(";") ? ";" : ",")
+    const colsCounts = rowsArr.map(r => r.split(sep).length)
+    const clipRows = rowsArr.length
+    const clipCols = Math.max(...colsCounts, 1)
+
     const ae = document.activeElement as HTMLElement | null
     const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
-    if (editing) return
-    e.preventDefault()
-    pasteRect(text)
+
+    const shouldGridPaste =
+      clipRows > 1 || clipCols > 1 || srs.rowsN > 1 || srs.colsN > 1 || !editing
+
+    if (shouldGridPaste) {
+      e.preventDefault()
+      pasteRect(text)
+    }
+    // ellers: la en-celle-innliming skje i input/select (standard browser)
   }
 
   window.addEventListener("keydown", onKey)
   window.addEventListener("copy", onCopy)
   window.addEventListener("cut", onCut)
   window.addEventListener("paste", onPaste)
-
   return () => {
     window.removeEventListener("keydown", onKey)
     window.removeEventListener("copy", onCopy)
@@ -306,6 +314,7 @@ useEffect(() => {
   }
 }, [rows, cols, sel])
 /* ==== [BLOCK: Keyboard & clipboard] END ==== */
+
 
 
   /* ==== [BLOCK: Mouse selection (drag)] BEGIN ==== */
