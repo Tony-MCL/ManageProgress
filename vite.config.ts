@@ -1,12 +1,15 @@
+// vite.config.ts
+/* ==== [BLOCK: Imports] BEGIN ==== */
 import { defineConfig } from "vite"
+/* ==== [BLOCK: Imports] END ==== */
 
-// ==== [BLOCK: GitHub Pages base] BEGIN ====
-// For GitHub Pages prosjekt-sider (user.github.io/REPO):
-// 1) Sett base til `"/REPO/"`.
-// 2) For custom domain eller user.github.io root: bruk "/".
-// LITE nå: vi starter med "/" og kan endre senere når repo-navnet er klart.
-const BASE = "/ManageProgress/"
-// ==== [BLOCK: GitHub Pages base] END ====
+/* ==== [BLOCK: BASE auto-detect] BEGIN ==== */
+// Hvis vi bygger i GitHub Actions: bruk /<repo>/ som base for prosjekt-sider.
+// Hvis ikke (lokalt eller custom domain): bruk "/".
+const isCI = process.env.GITHUB_ACTIONS === "true"
+const repo = process.env.GITHUB_REPOSITORY?.split("/")?.[1]
+const BASE = isCI && repo ? `/${repo}/` : "/"
+/* ==== [BLOCK: BASE auto-detect] END ==== */
 
 export default defineConfig({
   base: BASE
