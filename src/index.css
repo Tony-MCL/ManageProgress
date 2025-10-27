@@ -1,0 +1,128 @@
+/* ==== [BLOCK: Reset + Base] BEGIN ==== */
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+:root {
+  --bg: #0f1115;
+  --panel: #151923;
+  --panel-2: #1b2030;
+  --text: #e7e7ea;
+  --muted: #a9afc3;
+  --accent: #7a4b2e; /* "kaffe" */
+  --accent-2: #9b5f3a;
+  --ok: #1a7f37;
+  --warn: #c17d00;
+  --danger: #cc3333;
+  --grid-border: #2a3145;
+  --grid-hover: #242b3d;
+  --grid-select: #2f3751;
+}
+body {
+  background: linear-gradient(180deg, #0b0d12, #0f1115 35%, #0f1115);
+  color: var(--text);
+  font: 14px/1.35 ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Noto Color Emoji;
+}
+/* ==== [BLOCK: Reset + Base] END ==== */
+
+/* ==== [BLOCK: Header] BEGIN ==== */
+.app-header {
+  padding: 14px 18px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  color: white;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-header .brand {
+  letter-spacing: 0.3px;
+}
+.app-header .sub {
+  font-weight: 500;
+  opacity: 0.9;
+}
+/* ==== [BLOCK: Header] END ==== */
+
+/* ==== [BLOCK: Toolbar] BEGIN ==== */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--grid-border);
+}
+.toolbtn {
+  background: var(--panel-2);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text);
+  cursor: pointer;
+}
+.toolbtn:hover { background: var(--grid-hover); }
+.toolbtn:active { transform: translateY(1px); }
+.toolbtn.danger { border-color: #4a1f20; color: #ffdede; }
+.toolbtn.ok { border-color: #1c3b28; }
+/* ==== [BLOCK: Toolbar] END ==== */
+
+/* ==== [BLOCK: Table] BEGIN ==== */
+.table-wrap {
+  padding: 14px;
+}
+.grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel);
+  border: 1px solid var(--grid-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.grid thead th {
+  position: sticky;
+  top: 0;
+  background: #161b28;
+  color: var(--muted);
+  text-align: left;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--grid-border);
+}
+.grid tbody td {
+  border-bottom: 1px solid var(--grid-border);
+  padding: 0;
+}
+.grid .cell {
+  padding: 8px 10px;
+  min-height: 34px;
+  outline: none;
+  cursor: default;
+}
+.grid .row:hover .cell { background: var(--grid-hover); }
+.grid .cell.selected { background: var(--grid-select); }
+.grid .cell.readonly { color: var(--muted); }
+.grid .cell input, .grid .cell select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  padding: 8px 10px;
+  outline: none;
+}
+.grid .color-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  border: 1px solid #0006;
+}
+/* ==== [BLOCK: Table] END ==== */
+
+/* ==== [BLOCK: Footer] BEGIN ==== */
+.footer {
+  padding: 16px;
+  text-align: center;
+  color: var(--muted);
+}
+/* ==== [BLOCK: Footer] END ==== */
