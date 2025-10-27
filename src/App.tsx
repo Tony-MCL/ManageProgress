@@ -53,7 +53,11 @@ const App: React.FC = () => {
         <div className="sub">TableCore v0.1 (låses når stabil)</div>
       </header>
 
-      <Toolbar onAddRow={onAddRow} onDeleteRow={onDeleteRow} onExportCsv={onExportCsv} />
+      <Toolbar
+        onAddRow={onAddRow}
+        onDeleteRow={onDeleteRow}
+        onPrint={() => window.print()}
+      />
 
       <main style={{ flex: 1 }}>
         <TableCore rows={rows} onRowsChange={setRows} />
