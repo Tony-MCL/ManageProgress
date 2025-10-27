@@ -126,6 +126,11 @@ body {
   vertical-align: middle;
   border: 1px solid #0006;
 }
+/* Horisontal rulling når total bredde > viewport */
+.table-scroller {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 /* ==== [BLOCK: Table] END ==== */
 
 /* ==== [BLOCK: Footer] BEGIN ==== */
@@ -156,10 +161,27 @@ body {
 
   /* Tabell: vis tydelige grenser i print */
   .grid {
-    border: 1px solid #000;
-    border-radius: 0;
-    background: white;
-  }
+  /* fjern (eller overstyr) width: 100%; */
+  width: max-content;          /* ← lar tabellen bli bredere enn container */
+  table-layout: fixed;         /* ← bruker kolonnebredder som fasit */
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel);
+  border: 1px solid var(--grid-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ikke-linje­bryting i celler (Excel-følelse) */
+.grid .cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.grid .cell input,
+.grid .cell select {
+  white-space: nowrap;
+}
   .grid thead th {
     background: #f2f2f2 !important;
     color: #000 !important;
