@@ -143,3 +143,38 @@ body {
   padding-right: 6px;
   user-select: none;
 }
+/* ==== [BLOCK: Print styles] BEGIN ==== */
+@media print {
+  /* Skjul alt utenom tabellen */
+  .app-header,
+  .toolbar,
+  .footer,
+  .table-wrap > div:not(.grid) { display: none !important; }
+
+  body { background: white; color: black; }
+  .table-wrap { padding: 0; }
+
+  /* Tabell: vis tydelige grenser i print */
+  .grid {
+    border: 1px solid #000;
+    border-radius: 0;
+    background: white;
+  }
+  .grid thead th {
+    background: #f2f2f2 !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .grid tbody td { border-bottom: 1px solid #ddd; }
+  .grid .cell { background: transparent !important; color: #000; }
+  .grid .cell.selected { background: transparent !important; }
+
+  /* #-kolonnen (første kolonne) med dempet grå i print */
+  .grid thead th:first-child { text-align: right; }
+  .grid td:first-child .cell { text-align: right; color: #666; }
+
+  /* Unngå sidesøkking pga sticky-header */
+  .grid thead th { position: static; }
+}
+/* ==== [BLOCK: Print styles] END ==== */
