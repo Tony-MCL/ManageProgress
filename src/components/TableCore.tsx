@@ -9,7 +9,7 @@ type ColKey = "nr" | "aktivitet" | "start" | "slutt" | "varighet" | "avhengighet
 type Col = { key: ColKey; title: string; width?: number; readonly?: boolean; type?: "text" | "date" | "select" }
 
 const INITIAL_COLS: Col[] = [
-  { key: "nr", title: "#", width: 50, readonly: true, type: "text" },
+  { key: "nr", title: "#", width: 48, readonly: true, type: "text" },
   { key: "aktivitet",      title: "Aktivitet",      width: 260, type: "text" },
   { key: "start",          title: "Start",          width: 140, type: "date" },
   { key: "slutt",          title: "Slutt",          width: 140, type: "date" },
@@ -352,6 +352,7 @@ function onCellMouseEnter(r: number, c: number) {
 
   /* ==== [BLOCK: Column resize] BEGIN ==== */
   function startResize(c: number, e: React.MouseEvent) {
+    if (c === 0) return; 
     e.preventDefault()
     e.stopPropagation()
     const startX = e.clientX
