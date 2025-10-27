@@ -68,8 +68,19 @@ body {
 .table-wrap {
   padding: 14px;
 }
+
+/* horisontal scroll når tabellen blir bredere enn visningen */
+.table-scroller {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* selve tabellen */
 .grid {
-  width: 100%;
+  /* la tabellen få bli bredere enn containeren */
+  width: max-content;
+  table-layout: fixed;
+
   border-collapse: separate;
   border-spacing: 0;
   background: var(--panel);
@@ -77,6 +88,7 @@ body {
   border-radius: 10px;
   overflow: hidden;
 }
+
 .grid thead th {
   position: sticky;
   top: 0;
@@ -85,31 +97,53 @@ body {
   text-align: left;
   font-weight: 600;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--grid-border);
+
+  /* horisontale linjer i header */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+
+  /* vertikale linjer mellom kolonner (header) */
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
+.grid thead th:last-child { border-right: none; }
+
 .grid tbody td {
-  border-bottom: 1px solid var(--grid-border);
   padding: 0;
+
+  /* horisontale linjer mellom rader */
+  border-bottom: 1px solid var(--grid-border);
+
+  /* vertikale linjer mellom kolonner (body) */
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
+.grid tbody td:last-child { border-right: none; }
+
 .grid .cell {
   padding: 8px 10px;
   min-height: 34px;
   outline: none;
   cursor: default;
-}
-/* Kun cellen under musa får hover (ikke hele raden) */
-.grid .cell:hover:not(.selected) {
-  background: var(--grid-hover);
+
+  /* ikke bryt linjer i celler (excel-følelse) */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* unngå at tekst blir selektert når du drar markering */
+  user-select: none;
 }
 
-/* Valgt område skal alltid vinne over hover */
+/* kun cellen under musa får hover – ikke hele raden */
+.grid .cell:hover:not(.selected) { background: var(--grid-hover); }
+
+/* valgt område vinner alltid over hover */
 .grid .cell.selected,
-.grid .cell.selected:hover {
-  background: var(--grid-select);
-}
-.grid .cell { user-select: none; }
-.grid .cell input, .grid .cell select { user-select: text; }
+.grid .cell.selected:hover { background: var(--grid-select); }
+
+/* readonly-celler (inkl. #) litt dempet */
 .grid .cell.readonly { color: var(--muted); }
+
+/* inputs beholder normal tekstmarkering */
+.grid .cell input, .grid .cell select {
   width: 100%;
   background: transparent;
   border: none;
@@ -117,7 +151,10 @@ body {
   font: inherit;
   padding: 8px 10px;
   outline: none;
+  user-select: text;
 }
+
+/* fargedott */
 .grid .color-dot {
   display: inline-block;
   width: 10px; height: 10px;
@@ -126,12 +163,8 @@ body {
   vertical-align: middle;
   border: 1px solid #0006;
 }
-/* Horisontal rulling når total bredde > viewport */
-.table-scroller {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
 /* ==== [BLOCK: Table] END ==== */
+
 
 /* ==== [BLOCK: Footer] BEGIN ==== */
 .footer {
