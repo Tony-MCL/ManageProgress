@@ -5,7 +5,7 @@ import { defineConfig } from "vite"
 // 1) Sett base til `"/REPO/"`.
 // 2) For custom domain eller user.github.io root: bruk "/".
 // LITE nå: vi starter med "/" og kan endre senere når repo-navnet er klart.
-const BASE = "/"
+const BASE = "/ManageProgress/"
 // ==== [BLOCK: GitHub Pages base] END ====
 
 export default defineConfig({
