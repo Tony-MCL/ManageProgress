@@ -362,7 +362,7 @@ function onCellMouseEnter(r: number, c: number) {
       setCols(prev => {
         const dx = ev.clientX - startX
         const next = prev.slice()
-        const w = Math.max(60, (resizing?.startW ?? startW) + dx)
+        const w = Math.max(32, (resizing?.startW ?? startW) + dx)
         next[c] = { ...next[c], width: w }
         return next
       })
