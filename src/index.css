@@ -97,8 +97,16 @@ body {
   outline: none;
   cursor: default;
 }
-.grid .row:hover .cell:not(.selected) { background: var(--grid-hover); }
-.grid .cell.selected { background: var(--grid-select); }
+/* Kun cellen under musa får hover (ikke hele raden) */
+.grid .cell:hover:not(.selected) {
+  background: var(--grid-hover);
+}
+
+/* Valgt område skal alltid vinne over hover */
+.grid .cell.selected,
+.grid .cell.selected:hover {
+  background: var(--grid-select);
+}
 .grid .cell { user-select: none; }
 .grid .cell input, .grid .cell select { user-select: text; }
 .grid .cell.readonly { color: var(--muted); }
