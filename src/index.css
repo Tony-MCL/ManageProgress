@@ -171,6 +171,18 @@ body {
   text-align: right;
   padding: 8px 6px; /* litt smalere */
 }
+/* --- Drag hints (diskré) --- */
+.grid thead th { cursor: default; }
+.grid thead th.draggable { cursor: move; }          /* kolonne-drag */
+.grid td:first-child .cell { cursor: move; }        /* rad-drag i # */
+
+/* Vis drop-posisjon med subtil linje */
+.tr-drop-above td { box-shadow: 0 -1px 0 0 rgba(255,255,255,0.18) inset; }
+.tr-drop-below td { box-shadow: 0  1px 0 0 rgba(255,255,255,0.18) inset; }
+
+.th-drop-left  { box-shadow: -1px 0 0 0 rgba(255,255,255,0.18) inset; }
+.th-drop-right { box-shadow:  1px 0 0 0 rgba(255,255,255,0.18) inset; }
+
 /* ==== [BLOCK: Table] END ==== */
 
 
