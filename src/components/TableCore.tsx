@@ -59,6 +59,15 @@ function arrayMove<T>(arr: T[], from: number, to: number): T[] {
 }
 /* ==== [BLOCK: Reorder helpers] END ==== */
 
+/* ==== [BLOCK: Dragging indicator] BEGIN ==== */
+function setBodyDragging(active: boolean) {
+  if (typeof document === "undefined") return
+  const body = document.body
+  if (active) body.classList.add("dragging")
+  else body.classList.remove("dragging")
+}
+/* ==== [BLOCK: Dragging indicator] END ==== */
+
 const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
   /* ==== [BLOCK: Local state] BEGIN ==== */
 const [cols, setCols] = useState<Col[]>(INITIAL_COLS)
@@ -370,6 +379,7 @@ function startRowDrag(r: number, e: React.MouseEvent) {
   // Starter kun når vi drar i # -kolonnen (kalles fra UI)
   e.preventDefault()
   setDragRow({ from: r, over: r })
+  setBodyDragging(true)
 
   const onUp = () => {
     setDragRow(curr => {
@@ -381,7 +391,8 @@ function startRowDrag(r: number, e: React.MouseEvent) {
       setSel(s => s ? { anchor: { r: curr.over!, c: s.anchor.c }, focus: { r: curr.over!, c: s.focus.c } } : s)
       return null
     })
-    window.removeEventListener("mouseup", onUp)
+     setBodyDragging(false)
+     window.removeEventListener("mouseup", onUp)
   }
   window.addEventListener("mouseup", onUp)
 }
@@ -514,6 +525,7 @@ function onRowMouseEnter(r: number, e: React.MouseEvent) {
           // Kun venstre musetast
           if (e.button !== 0) return
           setDragCol({ from: cIndex, over: cIndex })
+          setBodyDragging(true)
 
           const onUp = () => {
             setDragCol(curr => {
@@ -541,6 +553,7 @@ function onRowMouseEnter(r: number, e: React.MouseEvent) {
               })
               return null
             })
+            setBodyDragging(false)
             window.removeEventListener("mouseup", onUp)
           }
           window.addEventListener("mouseup", onUp)
