@@ -581,42 +581,69 @@ function onRowMouseEnter(r: number, e: React.MouseEvent) {
 </thead>
      <tbody>
   {rows.map((row: Aktivitet, rowIndex: number) => {
+    // Finnes det noe innhold i raden?
     const rowHasData = Object.values(row).some(
       (v) => v !== null && v !== undefined && v !== ""
     )
 
     return (
-      <tr key={rowIndex}>
-        {props.columns.map((col: any) => {
-          const value = (row as any)[col.key] ?? ""
+      <tr key={rowIndex} onMouseEnter={(e) => onRowMouseEnter(rowIndex, e)}>
+        {cols.map((col, cIndex) => {
+          const key = col.key
+          const cur = (row as any)[key] ?? ""
           const isDateColumn =
-            col.key.toLowerCase().includes("dato") ||
-            col.key.toLowerCase().includes("date")
-          const isReadOnly = !!col.readOnly
+            key.toLowerCase().includes("dato") || key.toLowerCase().includes("date")
+          const isReadOnly = !!col.readonly
 
-          const onFocus = props.handleCellFocus
-            ? (e: React.FocusEvent<HTMLTableCellElement>) =>
-                props.handleCellFocus!(e, rowIndex, col.key)
-            : undefined
+          // Teksten som vises i cella
+          // # -kolonnen: vis radnummer kun hvis raden har innhold
+          const displayText =
+            cIndex === 0 ? (rowHasData ? String(rowIndex + 1) : "") : String(cur ?? "")
 
-          const onBlur = props.handleCellBlur
-            ? (e: React.FocusEvent<HTMLTableCellElement>) =>
-                props.handleCellBlur!(e, rowIndex, col.key)
-            : undefined
+          // Lagring ved blur (inkl. normalisering)
+          const handleBlur = (e: React.FocusEvent<HTMLTableCellElement>) => {
+            if (isReadOnly) return
+            const raw = (e.currentTarget.textContent ?? "").trim()
+
+            let nextVal: any = raw
+            if (col.type === "date") {
+              nextVal = normalizeDate(raw) ?? "" // tom string hvis ugyldig/blank
+            } else if (col.type === "select") {
+              nextVal = normalizeFarge(raw)
+            }
+
+            // Ikke skriv hvis uendret
+            if (String(nextVal) === String(cur ?? "")) return
+
+            setCell(rowIndex, cIndex, nextVal)
+          }
+
+          // Placeholder-logikk:
+          //  - i tomme rader: ikke vis placeholder som default, men vis ved fokus (CSS :focus-within)
+          //  - i rader med data: ingen placeholder
+          const showPlaceholderClass =
+            isDateColumn && !cur && !rowHasData ? "placeholder" : ""
 
           return (
             <td
-              key={col.key}
-              className={`cell ${
-                isDateColumn ? "date-cell" : ""
-              } ${!value && !rowHasData ? "placeholder" : ""}`}
+              key={key}
+              data-rc={`${rowIndex}:${key}`}
+              className={`cell ${isDateColumn ? "date-cell" : ""} ${showPlaceholderClass} ${isReadOnly ? "readonly" : ""} ${isSelected(rowIndex, cIndex) ? "selected" : ""}`}
               data-placeholder={isDateColumn ? "dd.mm.åååå" : ""}
-              contentEditable={!isReadOnly}
+              contentEditable={!isReadOnly && cIndex !== 0} // # er ikke redigerbar
               suppressContentEditableWarning
-              onFocus={onFocus}
-              onBlur={onBlur}
+              onMouseDown={(e) => {
+                // # -kolonnen: start rad-drag (reorder) ved dra
+                if (cIndex === 0) {
+                  startRowDrag(rowIndex, e)
+                } else {
+                  onCellMouseDown(rowIndex, cIndex, e)
+                }
+              }}
+              onMouseEnter={() => onCellMouseEnter(rowIndex, cIndex)}
+              onBlur={handleBlur}
             >
-              {value || ""}
+              {displayText}
             </td>
           )
         })}
