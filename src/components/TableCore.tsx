@@ -579,31 +579,29 @@ function onRowMouseEnter(r: number, e: React.MouseEvent) {
     ))}
   </tr>
 </thead>
-      <tbody>
+     <tbody>
   {rows.map((row: Aktivitet, rowIndex: number) => {
-    // sjekk om raden inneholder noe data (for å skjule placeholder i helt tomme rader)
     const rowHasData = Object.values(row).some(
       (v) => v !== null && v !== undefined && v !== ""
     )
 
     return (
       <tr key={rowIndex}>
-        {columns.map((col: any) => {
+        {props.columns.map((col: any) => {
           const value = (row as any)[col.key] ?? ""
           const isDateColumn =
             col.key.toLowerCase().includes("dato") ||
             col.key.toLowerCase().includes("date")
           const isReadOnly = !!col.readOnly
 
-          // håndter fokus og blur dersom de ikke finnes
-          const onFocus = typeof handleCellFocus === "function"
+          const onFocus = props.handleCellFocus
             ? (e: React.FocusEvent<HTMLTableCellElement>) =>
-                handleCellFocus(e, rowIndex, col.key)
+                props.handleCellFocus!(e, rowIndex, col.key)
             : undefined
 
-          const onBlur = typeof handleCellBlur === "function"
+          const onBlur = props.handleCellBlur
             ? (e: React.FocusEvent<HTMLTableCellElement>) =>
-                handleCellBlur(e, rowIndex, col.key)
+                props.handleCellBlur!(e, rowIndex, col.key)
             : undefined
 
           return (
