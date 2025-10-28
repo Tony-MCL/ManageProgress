@@ -200,10 +200,7 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
     const key = col.key
     let value: any = rawValue
 
-    if (col.type === "date") {
-      // aksepter både ISO og norsk, men lagre som ISO
-      const iso = norToIso(String(rawValue ?? "")) ?? String(rawValue ?? "").trim() || undefined
-      value = iso
+    if (col.type === "date"
     } else if (col.type === "select") {
       value = normalizeFarge(String(rawValue ?? ""))
     } else if (col.type === "number" && key === "varighet") {
