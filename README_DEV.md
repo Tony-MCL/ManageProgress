@@ -145,4 +145,61 @@ Importer komponenten og koble den til hovedverktøylinjen (Hjelp-knapp).
 
 Ingen justeringer i build-oppsett nødvendig.
 
+📘 Eksempelstruktur for help.md
+
+For å sikre konsistent hjelpedesign i alle Manage-apper skal hjelpeteksten følge dette oppsettet.
+Markdownen kan skrives med standard syntaks – den interne parseren vår støtter overskrifter, punktlister, tabeller og avsnitt.
+
+Eksempelinnhold (public/help.md):
+# 🧭 Navigasjon
+- Klikk på kolonneoverskrifter for å justere bredde.
+- Dra og slipp rader eller kolonner for å endre rekkefølge.
+- Bruk høyre museknapp for hurtigmeny (hvor støttet).
+
+# ✏️ Redigering
+- Dobbeltklikk på en celle for å redigere innholdet.
+- `Enter` lagrer, `Esc` avbryter.
+- `Tab` flytter til neste celle, `Shift+Tab` til forrige.
+- Kopier og lim inn direkte fra Excel – alle verdier og formater følger med.
+
+# #️⃣ Radnumre
+- Den venstre kolonnen viser radnummer (`#`).
+- Radenummer vises kun når det finnes data i raden.
+- Nummerkolonnen kan ikke redigeres eller markeres.
+
+# 🎨 Utseende og farger
+- Tabellen har diskret markering ved aktiv celle.
+- Hover-effekt på rader viser hvor du er uten å forstyrre arbeidet.
+- Kolonnebredder kan justeres ned til smal visning; tabellen støtter horisontal scrolling.
+
+# 🖨️ Utskrift og PDF
+- I LITE-versjonen kan planen lagres som PDF.
+- Radnumre (`#`) tas med på PDF-eksport, men ikke ved kopiering til utklippstavle.
+- CSV-eksport er kun tilgjengelig i lisensierte versjoner.
+
+# ⌨️ Tastatursnarveier
+| Funksjon           | Snarvei     |
+|--------------------|-------------|
+| Rediger celle      | Enter       |
+| Avbryt redigering  | Esc         |
+| Neste celle        | Tab         |
+| Forrige celle      | Shift + Tab |
+| Kopier/Lim inn     | Ctrl + C / Ctrl + V |
+| Åpne hjelp          | F1 eller Hjelp-knapp |
+
+# ℹ️ Tips
+- Hjelpepanelet kan stå åpent mens du jobber.
+- Endringer lagres automatisk der det er implementert.
+- Du finner oppdaterte beskrivelser på nettsiden til Manage Progress.
+
+📋 Retningslinjer for innhold
+
+Bruk emojis eller ikoner i hovedoverskrifter for visuell skille mellom seksjoner.
+
+Hold tekst kort og konkret — punktlister fremfor lange forklaringer.
+
+Plasser avanserte tips nederst i dokumentet under «ℹ️ Tips».
+
+Alle apper i Manage-serien skal ha de samme hovedseksjonene, selv om innholdet varierer.
+
 © 2025 MorningCoffee Labs · Internal Development Notes
