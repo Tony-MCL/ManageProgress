@@ -1,50 +1,77 @@
-# Manage Progress – Brukerhåndbok (LITE-versjon)
+# Manage Progress – Huskelapp / Hjelp
 
-Denne LITE-versjonen av **Manage Progress** lar deg bygge en enkel fremdriftsplan direkte i nettleseren, uten pålogging eller lagring.  
-Den er laget for rask planlegging og visuell presentasjon av aktiviteter, og kan eksporteres til PDF.
-
----
-
-## 📋 Grunnfunksjoner
-
-| Funksjon | Handling |
-|-----------|-----------|
-| **Ny rad** | Klikk `➕ Ny rad` eller bruk `Ctrl + Enter` på siste rad. |
-| **Slett rad** | Marker en rad og trykk `🗑️ Slett valgt rad`. |
-| **Kopier / Lim inn** | Bruk vanlige hurtigtaster (`Ctrl+C`, `Ctrl+V`) – fullt kompatibelt med Excel. |
-| **Flermarkering** | Hold `Shift` mens du klikker på en annen celle for å markere et område. |
-| **Kolonnebredde** | Dra i høyrekanten av en kolonneoverskrift. |
-| **Kolonne- og radrekkefølge** | Dra i kolonnenavnet for å flytte kolonnen, eller i `#`-kolonnen for å flytte en rad. |
-| **Utskrift / PDF** | Klikk `🖨️ Skriv ut / PDF` i verktøylinjen. |
-| **Tastatur-navigasjon** | Piltaster for bevegelse, `Tab` / `Shift+Tab` for sideveis, `Enter` for neste rad. |
+Denne filen brukes som grunnlag for hjelpepanelet i Manage Progress LITE.  
+Alt innhold skal kunne vises som kort tekst i appen (tooltip, modal eller hjelpeside).
 
 ---
 
-## ⚙️ Kolonner
+## 📑 Navigasjon og markering
 
-| Kolonne | Beskrivelse |
-|----------|--------------|
-| **#** | Radnummer (kan ikke redigeres, flytt raden ved å dra). |
-| **Aktivitet** | Navnet eller beskrivelsen av oppgaven. |
-| **Start / Slutt** | Datoer som brukes til å beregne varighet (kommer i senere versjon). |
-| **Farge / Ansvar / Kommentarer** | Kolonner tilpasses senere for Progress-funksjoner. |
-
----
-
-## 🖱️ Tips
-
-- `#`-kolonnen er alltid med på utskrift, men ikke ved kopiering.
-- Du kan gjøre kolonner svært smale – tabellen får automatisk horisontal rullefelt.
-- Hover- og markeringsfarger er diskrete med hensikt – fokus på innhold.
+| Handling | Beskrivelse |
+|-----------|-------------|
+| Klikk på celle | Velger cellen for redigering |
+| **Shift + klikk** | Marker område mellom to celler |
+| **Piltaster** | Flytt markering mellom celler |
+| **Enter / Tab** | Gå til neste celle |
+| **Ctrl + C / Ctrl + V** | Kopier / lim inn mellom Progress og Excel |
+| **Ctrl + X** | Klipp ut valgt område |
+| **Ctrl + Z / Ctrl + Y** | Angre / Gjenta |
+| **Ctrl + Enter** | Legg til ny rad nederst |
 
 ---
 
-## 🧩 Videre funksjoner (kommer i lisensversjonen)
+## 🧱 Rader
 
-- Lagring til sky / eksport til CSV  
-- Automatisk Gantt-diagram basert på datoer  
-- Egne fargetema og firmalogo  
-- Samspill med andre Manage-apper  
+| Handling | Beskrivelse |
+|-----------|-------------|
+| **➕ Ny rad** | Legger til en tom rad nederst |
+| **🗑️ Slett valgt rad** | Fjerner raden der markøren står |
+| **Dra i `#`-kolonnen** | Endre rekkefølge på rader |
+| **Tall i `#`-kolonnen** | Vises kun når raden inneholder data |
+| **Radnummerering** | Tas med på utskrift, men ikke ved kopiering |
 
 ---
-© 2025 MorningCoffee Labs · Manage Progress LITE
+
+## 📊 Kolonner
+
+| Handling | Beskrivelse |
+|-----------|-------------|
+| **Dra i kolonnenavn** | Flytt kolonne til ny plassering |
+| **Dra i høyrekant av kolonnenavn** | Endre kolonnebredde |
+| **Kolonnebredde** | Kan være svært smal, tabellen får horisontal scroll |
+| **#-kolonne** | Fast bredde, ikke redigerbar og ikke flyttbar |
+
+---
+
+## 🖨️ Utskrift og eksport
+
+| Handling | Beskrivelse |
+|-----------|-------------|
+| **🖨️ Skriv ut / PDF** | Åpner utskriftsdialog, klar for PDF |
+| **CSV-eksport** | Ikke tilgjengelig i LITE-versjonen |
+| **Lagring** | Ikke tilgjengelig i LITE-versjonen |
+
+---
+
+## 🎨 Brukeropplevelse
+
+| Element | Beskrivelse |
+|----------|-------------|
+| **Mørkt tema** | Designet for lav kontrast og rolige overganger |
+| **Hover / markering** | Diskret og uten sterke farger |
+| **Pekeren** | Viser “grabbing” under flytting av rader eller kolonner |
+| **Skjermtilpasning** | Tabellen kan overskride skjermbredden (scroll horisontalt) |
+
+---
+
+## 🔜 Kommer i neste versjon
+
+- Lagring og gjenåpning av planer  
+- CSV-eksport  
+- Gantt-visning med farger per ansvar  
+- Firmalogo i utskrift  
+- Skytilkobling (Firestore / Supabase)
+
+---
+
+© 2025 MorningCoffee Labs – For bruk i Manage Progress LITE
