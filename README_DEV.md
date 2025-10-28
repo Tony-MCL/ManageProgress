@@ -1,117 +1,85 @@
-# Manage Progress — Utviklerkokebok (Internt)
+# Manage Progress – Dev Log / Kokebok
 
-Dette dokumentet fungerer som **internt design- og historienotat** for Progress-appen.  
-Det beskriver hva vi har gjort, hvorfor, og hvordan prosjektet er strukturert.  
-Når nye Manage-apper skal bygges, kan denne README kopieres som første instruksjon.
+## 📦 Status per nå
+**TableCore** er ferdigstilt og "låst" som felles tabellmotor for Progress-appen og fremtidige Manage-apper.  
+Den gir Excel-følelse, med full støtte for:
 
----
+- Multi-markering (Shift+klikk, drag)
+- Kopier / lim inn (kompatibel med Excel)
+- Rad- og kolonnerekkefølge via drag-and-drop
+- Kolonne-resize direkte på kantlinjen
+- Utskrift / PDF-eksport med automatisk format
+- Horisontal scroll og faste kolonnebredder
+- Ikke-markérbar `#`-kolonne med dynamisk synlighet
+- Diskré, konsekvent mørk-modusdesign
+- Global `body.dragging`-indikator med `cursor: grabbing`
 
-## ☕ Konsept og filosofi
-
-**Progress** er den første appen i *Manage*-systemet under *MorningCoffee Labs*.  
-Alle Manage-appene skal føles som **samme produkt**, med samme visuelle stil, kodearkitektur og brukerlogikk.  
-Forskjellen skal kun være *funksjonelt innhold* (f.eks. Progress = fremdrift, Estimates = kalkyle).
-
----
-
-## ⚙️ Teknisk arkitektur
-
-| Nivå | Beskrivelse |
-|------|--------------|
-| **Kjerne (TableCore)** | Egenbygd tabellmotor, Excel-lignende, reagerer på tastatur og musehandlinger. |
-| **UI (Toolbar, Header, Footer)** | Enkle, stilrene komponenter som skal gjenbrukes på tvers av apper. |
-| **Motor** | React + TypeScript + Vite (ES2021), ingen tredjeparts grid. |
-| **Deploy** | GitHub Pages via Actions (`vite build → dist → deploy-pages`). |
-| **Base-konfig** | Automatisk basepath for GitHub Pages, alias `@` → `src`. |
+TableCore er nå definert som **“stabil kjerne”**, og videreutvikling skjer kun dersom en funksjon må støtte hele Manage-systemet (ikke app-spesifikt).
 
 ---
 
-## 📂 Kodestruktur
+## 🧱 Struktur
 
-src/
-├─ components/
-│ ├─ TableCore.tsx ← tabellmotor (grunnlaget for alle apper)
-│ ├─ Toolbar.tsx ← knappelinje for handlinger
-│ └─ ...
-├─ core/
-│ ├─ date.ts ← hjelpefunksjoner for dato
-├─ types.ts ← felles typer
-├─ App.tsx ← hovedkomponent (UI + table)
-├─ index.css ← grunnstil (kaffe-tema)
-├─ main.tsx ← oppstartspunkt
+/src
+├── components
+│ ├── TableCore.tsx ← tabellmotor (låst)
+│ ├── Toolbar.tsx ← verktøylinje (app-spesifikk)
+│ └── App.tsx ← samler tabell + toolbar
+├── index.css ← global stil inkl. TableCore-blocks
+├── main.tsx / index.html ← Vite standard bootstrap
+└── README_DEV.md / README_USER.md
 
----
-
-## 🧱 Design og fargepalett
-
-- **Primærfarge:** kaffe-brun (`--accent: #7a4b2e`)
-- **Sekundær:** mørk bakgrunn (`--panel`, `--panel-2`)
-- **Tekst:** lys grå / hvit (`--text`, `--muted`)
-- **Font:** system-ui sans-serif
-- **Stil:** flate komponenter, myke hjørner, minimalisme
-- **UI-filosofi:** Alt skal se ut som ett sammenhengende panel – ikke “kort + kort + kort”.
+yaml
+Copy code
 
 ---
 
-## 🧩 Funksjoner per versjon
+## 🧰 Tekniske detaljer
 
-### v0.1 – **LITE Start**
-✅ Bygg og deploy via GitHub Pages  
-✅ Funksjonell tabell (legg til/slett rader, rediger celler)  
-✅ Lim-inn fra Excel/CSV  
-✅ Automatisk varighet (Slutt - Start + 1)  
-✅ Fargevalg i tabell  
-✅ Eksporter CSV  
-✅ Tastaturnavigasjon (piler, Enter, Tab, Delete)  
-✅ Kaffe-palett & strukturert kodebase  
-
-### v0.2 – **TableCore-forbedringer (pågående)**
-🔹 Multi-seleksjon (Shift + piltaster / dra)  
-🔹 Undo/Redo  
-🔹 Kolonne-resize  
-🔹 Drag-fyll og autofill  
-🔹 Print/PDF-eksport  
-
-### v0.3 – **Gantt & Rapport**
-🔸 Gantt-view generert fra tabellen  
-🔸 Fargekobling mot ansvar  
-🔸 Utskrift og PDF-eksport av Gantt  
+- Bygget med **React + TypeScript + Vite**
+- Deploy via **GitHub Pages**
+- Node 20 / TS target `es2021` / lib `es2021,dom`
+- Ingen eksterne grid-biblioteker; alt håndskrevet og optimalisert for kontroll
+- CSS følger “block markers” slik at store filer kan byttes ut blokkvis
 
 ---
 
-## 🧠 Gjenbruk i fremtidige apper
+## ⚙️ Interne prinsipper
 
-Alle Manage-appene skal bruke:
-- **TableCore** som tabellmotor
-- **ToolbarCore** (kommer)
-- **Platform Shell** for navigasjon, språk og brukerprofiler
-
-Målet er å lage et økosystem der hver app kan:
-1. Kjøre alene (standalone)
-2. Koble seg til systemmodus (multi-app hub)
-3. Dele felles komponenter og stil
-
----
-
-## 🚀 Deploy-oppsett (kortversjon)
-
-- Actions workflow i `.github/workflows/deploy.yml`
-- Automatisk `base` i `vite.config.ts`
-- SPA fallback med `404.html`
-- `.nojekyll` i rot
-- Branch: `main`
+| Område | Retningslinje |
+|---------|----------------|
+| **Design** | Nøytral mørk base, lav kontrast, ingen "bling" |
+| **Input** | Alt skjer med standard HTML `<input>` for maksimal kontroll |
+| **Respons** | Ingen automatisk wrapping, tabellen scroller horisontalt |
+| **Utskrift** | Alt utenom tabellen skjules med `@media print` |
+| **#-kolonne** | Ikke-redigerbar, fast bredde, ikke med i kopier/klipp |
+| **Undo/Redo** | Rader støttes via `pushUndo()`, kolonner ikke (enda) |
 
 ---
 
-## 💡 Retningslinjer for videre utvikling
+## 🚀 Neste milepæl: App-nivå
 
-1. **Alt som kan gjenbrukes → flytt til “core” eller “components”.**
-2. **Alt skal være modulært.** Store filer deles opp i `[BLOCK:]`-bolker.
-3. **Ingen snarveier.** Vi bygger kvalitet først, så ytelse.
-4. **Visuell identitet skal være konsistent** mellom alle apper.
-5. **Kode skal være “copy-paste-ready”** for bruk i GitHub – aldri avhengig av lokale justeringer.
+Vi går nå fra **tabellmotor** → **app-spesifikke lag**:
+
+1. **Progress UI**
+   - Legge til topprad for prosjektnavn, dato, ansvarlig
+   - Implementere Gantt-fanen (visualisering)
+   - Bygge meny for eksport, tema og hjelp
+2. **Dataflyt**
+   - Midlertidig lagring i `localStorage`
+   - Klargjøring for fremtidig Firestore-/Supabase-lagring
+3. **UX**
+   - Innføring av fargetema pr. ansvar
+   - PDF-utskrift med firmalogo og watermark
+   - Verktøytips (tooltip-system basert på README_USER.md)
 
 ---
 
-> 🧾 *Denne README fungerer som “oppskriften” for nye Manage-prosjekter.*  
-> Når du starter et nytt prosjekt (f.eks. *Manage Estimates*), kopier denne filen inn og oppdater navnene.
+## 📚 Videre bruk av denne README
+
+Når du starter neste app (Estimate, Workflow, osv.),  
+kopiér denne README_DEV.md som første instruks, slik at oppsett, arkitektur og konvensjoner arves 1-til-1.
+
+---
+
+© 2025 MorningCoffee Labs · Internal Development Notes
