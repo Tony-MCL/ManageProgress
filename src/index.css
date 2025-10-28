@@ -424,24 +424,39 @@ body.dragging .grid .cell:hover {
 }
 /* ==== [BLOCK: Dragging indicator global] END ==== */
 
-/* ==== [BLOCK: Date Cell Placeholder] BEGIN ==== */
-.date-cell { position: relative; }
+/* ==== [BLOCK: Date Input + Focus-Only Placeholder] BEGIN ==== */
+.date-cell { position: relative; padding: 0; }
 
-.date-cell.placeholder::before {
+/* Selve input-feltet fyller cella og matcher stil */
+.date-input {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 6px 8px;
+}
+
+/* Placeholder-tekst: skal KUN synes når cella har fokus og er tom */
+.date-cell::before {
   content: attr(data-placeholder);
-  color: rgba(255,255,255,0.15);
-  font-style: italic;
-  pointer-events: none;
   position: absolute;
   left: 8px;
   top: 4px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0); /* usynlig normalt */
+  pointer-events: none;
+  transition: color 120ms ease;
 }
 
-/* Marker tydeligere ved fokus i tom rad */
-.date-cell.placeholder:focus-within::before {
-  color: rgba(255,255,255,0.35);
+/* Vis placeholder KUN ved fokus + tomt innhold */
+.date-cell.is-empty:focus-within::before {
+  color: rgba(255, 255, 255, 0.35);
 }
-/* ==== [BLOCK: Date Cell Placeholder] END ==== */
+/* ==== [BLOCK: Date Input + Focus-Only Placeholder] END ==== */
 
 /* Sentrér # -kolonneinnhold (du har tittel sentrert allerede) */
 .grid td:first-child {
