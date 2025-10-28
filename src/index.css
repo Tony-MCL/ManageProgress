@@ -293,3 +293,23 @@ body {
   padding: 8px 10px;          /* beholder samme luft */
   box-sizing: border-box;     /* inkluder padding i full bredde/høyde */
 }
+/* ==== [BLOCK: Dragging indicator global] BEGIN ==== */
+body.dragging {
+  cursor: grabbing !important;
+}
+
+/* Forsterk "grep"-følelsen på drag-områdene */
+.grid thead th.draggable,
+.grid td:first-child .cell {
+  cursor: grab;
+}
+.grid thead th.draggable:active,
+.grid td:first-child .cell:active {
+  cursor: grabbing;
+}
+
+/* Mens man drar: slå av hover på celler (stabilitet) */
+body.dragging .grid .cell:hover {
+  background: none !important;
+}
+/* ==== [BLOCK: Dragging indicator global] END ==== */
