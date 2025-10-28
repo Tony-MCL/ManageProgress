@@ -201,11 +201,11 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
     let value: any = rawValue
 
     if (col.type === "date"
-        { else if (col.type === "select") {
+        } else if (col.type === "select") {
       value = normalizeFarge(String(rawValue ?? ""))
     } else if (col.type === "number" && key === "varighet") {
       value = normalizeInt(rawValue)
-    }
+    )}
 
     ;(row as any)[key] = value
 
