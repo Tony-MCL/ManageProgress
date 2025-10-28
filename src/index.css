@@ -183,6 +183,21 @@ body {
 .th-drop-left  { box-shadow: -1px 0 0 0 rgba(255,255,255,0.18) inset; }
 .th-drop-right { box-shadow:  1px 0 0 0 rgba(255,255,255,0.18) inset; }
 
+/* ==== Disable text selection while dragging columns/rows ==== */
+.grid thead th,
+.grid td:first-child .cell {
+  user-select: none;       /* hindrer blå markering ved drag */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Tillat fortsatt tekstmarkering inne i inputs */
+.grid .cell input,
+.grid .cell select {
+  user-select: text;
+}
+
 /* ==== [BLOCK: Table] END ==== */
 
 
