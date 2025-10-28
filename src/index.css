@@ -294,11 +294,14 @@ body {
   box-sizing: border-box;     /* inkluder padding i full bredde/høyde */
 }
 /* ==== [BLOCK: Dragging indicator global] BEGIN ==== */
-body.dragging {
+
+/* Når vi drar: hele dokumentet skal vise grabbing, uansett element */
+body.dragging,
+body.dragging * {
   cursor: grabbing !important;
 }
 
-/* Forsterk "grep"-følelsen på drag-områdene */
+/* Gir "grep" på steder du kan dra */
 .grid thead th.draggable,
 .grid td:first-child .cell {
   cursor: grab;
@@ -308,8 +311,9 @@ body.dragging {
   cursor: grabbing;
 }
 
-/* Mens man drar: slå av hover på celler (stabilitet) */
+/* Deaktiver hover mens man drar */
 body.dragging .grid .cell:hover {
   background: none !important;
 }
 /* ==== [BLOCK: Dragging indicator global] END ==== */
+
