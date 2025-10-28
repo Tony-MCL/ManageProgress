@@ -1,84 +1,50 @@
-# Manage Progress — Brukerens Kokebok (Huskelapp)
+# Manage Progress – Brukerhåndbok (LITE-versjon)
 
-Denne filen fungerer som grunnlag for hjelpetekster, FAQ og tooltips i Progress-appen.  
-Den skal beskrive hvordan brukeren **styrer tabellen**, **bruker hurtigtaster**, og **finner funksjoner i menyen**.
-
----
-
-## 🧭 Navigasjon og Hoveddeler
-
-- **Header:** viser appnavn og versjon (Progress LITE).
-- **Verktøylinje (toolbar):**
-  - ➕ **Ny rad** – legger til en ny aktivitet nederst.
-  - 🗑️ **Slett valgt rad** – sletter raden du står i.
-  - ⤓ **Eksporter CSV** – laster ned tabellen som `.csv`-fil.
-- **Tabellen (TableCore):**
-  - Hovedområdet der aktiviteter vises og redigeres.
-  - Kolonner: Aktivitet, Start, Slutt, Varighet, Avhengigheter, Ansvar, Farge.
-- **Footer:** viser app-versjon og informasjon.
+Denne LITE-versjonen av **Manage Progress** lar deg bygge en enkel fremdriftsplan direkte i nettleseren, uten pålogging eller lagring.  
+Den er laget for rask planlegging og visuell presentasjon av aktiviteter, og kan eksporteres til PDF.
 
 ---
 
-## ⌨️ Tastatursnarveier
+## 📋 Grunnfunksjoner
 
-| Handling | Hurtigtast |
-|-----------|-------------|
-| Flytt opp/ned | ⬆️ / ⬇️ |
-| Flytt til venstre/høyre | ⬅️ / ➡️ |
-| Gå til neste celle | Tab |
-| Start redigering i celle | Enter |
-| Slett innhold | Delete |
-| Kopier celle | Ctrl/Cmd + C |
-| Klipp ut celle | Ctrl/Cmd + X |
-| Lim inn (fra Excel, CSV osv.) | Ctrl/Cmd + V |
-| Ny rad | (Bruk knapp eller Ctrl + Shift + N \[planlagt\]) |
-| Lagre / eksporter | Bruk "Eksporter CSV" i menyen |
+| Funksjon | Handling |
+|-----------|-----------|
+| **Ny rad** | Klikk `➕ Ny rad` eller bruk `Ctrl + Enter` på siste rad. |
+| **Slett rad** | Marker en rad og trykk `🗑️ Slett valgt rad`. |
+| **Kopier / Lim inn** | Bruk vanlige hurtigtaster (`Ctrl+C`, `Ctrl+V`) – fullt kompatibelt med Excel. |
+| **Flermarkering** | Hold `Shift` mens du klikker på en annen celle for å markere et område. |
+| **Kolonnebredde** | Dra i høyrekanten av en kolonneoverskrift. |
+| **Kolonne- og radrekkefølge** | Dra i kolonnenavnet for å flytte kolonnen, eller i `#`-kolonnen for å flytte en rad. |
+| **Utskrift / PDF** | Klikk `🖨️ Skriv ut / PDF` i verktøylinjen. |
+| **Tastatur-navigasjon** | Piltaster for bevegelse, `Tab` / `Shift+Tab` for sideveis, `Enter` for neste rad. |
 
 ---
 
-## 🖱️ Musehandlinger
-
-| Handling | Beskrivelse |
-|-----------|-------------|
-| Klikk på celle | Marker celle |
-| Dobbeltklikk / Enter | Start redigering |
-| Klikk og dra (planlagt i v0.2) | Marker flere celler |
-| Høyreklikk (planlagt) | Åpner kontekstmeny |
-
----
-
-## 🎨 Kolonnebeskrivelse
+## ⚙️ Kolonner
 
 | Kolonne | Beskrivelse |
-|----------|-------------|
-| **Aktivitet** | Navnet på oppgaven |
-| **Start** | Startdato (kalenderformat) |
-| **Slutt** | Sluttdato (kalenderformat) |
-| **Varighet (d)** | Beregnes automatisk (inkl. sluttdag) |
-| **Avhengigheter** | Angi ID-er for aktiviteter som må være ferdige først |
-| **Ansvar** | Hvem som har ansvaret for oppgaven |
-| **Farge** | Velg farge som styrer utseendet i Gantt-diagrammet |
+|----------|--------------|
+| **#** | Radnummer (kan ikke redigeres, flytt raden ved å dra). |
+| **Aktivitet** | Navnet eller beskrivelsen av oppgaven. |
+| **Start / Slutt** | Datoer som brukes til å beregne varighet (kommer i senere versjon). |
+| **Farge / Ansvar / Kommentarer** | Kolonner tilpasses senere for Progress-funksjoner. |
 
 ---
 
-## 📂 Eksport og import
+## 🖱️ Tips
 
-- **Eksporter:** Klikk ⤓ Eksporter CSV for å laste ned plan som `.csv`.
-- **Import (lim-inn):** Kopier data fra Excel og lim rett inn i tabellen.  
-  Appen gjenkjenner automatisk komma-, semikolon- og tabulatorseparerte data.
-
----
-
-## 🧱 Planlagte funksjoner (kommende versjoner)
-
-- Multi-seleksjon (Shift + klikk / dra)
-- Kolonnebredde-justering
-- Undo/Redo
-- Gantt-visning
-- Print/PDF-eksport
-- Temavelger (lys/mørk)
-- Tooltips med disse hjelpetekstene
+- `#`-kolonnen er alltid med på utskrift, men ikke ved kopiering.
+- Du kan gjøre kolonner svært smale – tabellen får automatisk horisontal rullefelt.
+- Hover- og markeringsfarger er diskrete med hensikt – fokus på innhold.
 
 ---
 
-> ✨ Denne “kokeboken” blir til selve hjelpesystemet i Progress, og brukes for å bygge opp tooltips og hjelpesider i kommende versjoner.
+## 🧩 Videre funksjoner (kommer i lisensversjonen)
+
+- Lagring til sky / eksport til CSV  
+- Automatisk Gantt-diagram basert på datoer  
+- Egne fargetema og firmalogo  
+- Samspill med andre Manage-apper  
+
+---
+© 2025 MorningCoffee Labs · Manage Progress LITE
