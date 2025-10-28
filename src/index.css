@@ -278,6 +278,50 @@ body {
 }
 /* ==== [BLOCK: Help Panel] END ==== */
 
+/* ==== [BLOCK: Help Panel Markdown Styling] BEGIN ==== */
+.help-body h1,
+.help-body h2,
+.help-body h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #fff;
+}
+.help-body h1 { font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 4px; }
+.help-body h2 { font-size: 1rem; color: #ddd; }
+.help-body h3 { font-size: 0.95rem; color: #ccc; }
+
+.help-body ul {
+  margin: 4px 0 10px 18px;
+  padding: 0;
+  list-style: disc;
+}
+.help-body li {
+  margin-bottom: 4px;
+}
+
+.help-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 16px 0;
+  font-size: 0.85rem;
+}
+.help-body th,
+.help-body td {
+  border: 1px solid #2e3648;
+  padding: 6px 8px;
+  text-align: left;
+}
+.help-body th {
+  background: #242b3b;
+  color: #eee;
+  font-weight: 600;
+}
+.help-body td {
+  background: #1d2333;
+  color: #ccc;
+}
+/* ==== [BLOCK: Help Panel Markdown Styling] END ==== */
 
 /* ==== [BLOCK: Print styles] BEGIN ==== */
 @media print {
