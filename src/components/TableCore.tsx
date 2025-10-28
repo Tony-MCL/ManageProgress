@@ -50,25 +50,41 @@ function rectFrom(sel: RangeSel) {
 }
 /* ==== [BLOCK: Helpers] END ==== */
 
+/* ==== [BLOCK: Reorder helpers] BEGIN ==== */
+function arrayMove<T>(arr: T[], from: number, to: number): T[] {
+  const a = arr.slice()
+  const [it] = a.splice(from, 1)
+  a.splice(to, 0, it)
+  return a
+}
+/* ==== [BLOCK: Reorder helpers] END ==== */
+
 const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
   /* ==== [BLOCK: Local state] BEGIN ==== */
 const [cols, setCols] = useState<Col[]>(INITIAL_COLS)
 const [sel, setSel] = useState<RangeSel | null>(
-  rows.length ? { anchor: { r: 0, c: 0 }, focus: { r: 0, c: 0 } } : null
+  rows.length ? { anchor: { r: 0, c: 1 }, focus: { r: 0, c: 1 } } : null
 )
 
-// Undo/redo stack – lagrer kun rows (dyp kopi).
+// Undo/redo
 const [undoStack, setUndo] = useState<Aktivitet[][]>([])
 const [redoStack, setRedo] = useState<Aktivitet[][]>([])
 
 // Kolonne-resize
 const [resizing, setResizing] = useState<{ c: number; startX: number; startW: number } | null>(null)
 
-// Markerer vi med mus akkurat nå?
+// Markerer vi celler nå?
 const [isDraggingSel, setIsDraggingSel] = useState(false)
+
+// RAD-drag
+const [dragRow, setDragRow] = useState<{ from: number; over: number | null } | null>(null)
+
+// KOLONNE-drag
+const [dragCol, setDragCol] = useState<{ from: number; over: number | null } | null>(null)
 
 const tableRef = useRef<HTMLTableElement>(null)
 /* ==== [BLOCK: Local state] END ==== */
+
 
   /* ==== [BLOCK: History helpers] BEGIN ==== */
   function pushUndo(snapshot?: Aktivitet[]) {
@@ -349,6 +365,32 @@ function onCellMouseEnter(r: number, c: number) {
 }
 /* ==== [BLOCK: Mouse selection (drag)] END ==== */
 
+/* ==== [BLOCK: Row drag & drop] BEGIN ==== */
+function startRowDrag(r: number, e: React.MouseEvent) {
+  // Starter kun når vi drar i # -kolonnen (kalles fra UI)
+  e.preventDefault()
+  setDragRow({ from: r, over: r })
+
+  const onUp = () => {
+    setDragRow(curr => {
+      if (!curr || curr.over == null || curr.over === curr.from) return null
+      pushUndo()
+      const next = arrayMove(rows, curr.from, curr.over).map(r => ({ ...r }))
+      onRowsChange(next)
+      // flytt markering til samme radposisjon (kolonne uendret)
+      setSel(s => s ? { anchor: { r: curr.over!, c: s.anchor.c }, focus: { r: curr.over!, c: s.focus.c } } : s)
+      return null
+    })
+    window.removeEventListener("mouseup", onUp)
+  }
+  window.addEventListener("mouseup", onUp)
+}
+
+function onRowMouseEnter(r: number, e: React.MouseEvent) {
+  if (!dragRow) return
+  setDragRow(d => d ? { ...d, over: r } : d)
+}
+/* ==== [BLOCK: Row drag & drop] END ==== */
 
   /* ==== [BLOCK: Column resize] BEGIN ==== */
   function startResize(c: number, e: React.MouseEvent) {
@@ -454,85 +496,154 @@ function onCellMouseEnter(r: number, c: number) {
     <div className="table-scroller">
       <table className="grid" ref={tableRef}>
         <thead>
-          <tr>
-            {cols.map((col, cIndex) => (
-              <th
-                key={col.key}
-                // viktig: position: 'relative' så resizer kan ligge "på kanten" av denne th
-                style={{ width: col.width, position: "relative" }}
-              >
-                {col.title}
-        
-                {/* Resizer: fysisk på høyrekanten av kolonnen.
-                    Skjules for første kolonne (#). */}
-                {cIndex !== 0 && (
-                  <div
-                    className="col-resizer"
-                    onMouseDown={(e) => startResize(cIndex, e)}
-                    title="Dra for å endre bredde"
-                  />
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, rIndex) => (
-            <tr className="row" key={row.id}>
-              {cols.map((col, cIndex) => {
-                const v = (row as any)[col.key]
-              if (col.key === "nr") {
-                  const hasData = Object.entries(row).some(([k, val]) =>
-                    k !== "id" && k !== "nr" && val && String(val).trim() !== ""
-                  )
-                  return (
-                    <td key="nr" style={{ textAlign: "right", opacity: hasData ? 0.6 : 0 }}>
-                      {hasData ? rIndex + 1 : ""}
-                    </td>
-                  )
+  <tr>
+    {cols.map((col, cIndex) => (
+      <th
+        key={col.key}
+        style={{ width: col.width, position: "relative" }}
+        className={(cIndex !== 0 ? "draggable " : "") + (
+          dragCol && dragCol.over === cIndex
+            ? (dragCol.from! > cIndex ? "th-drop-left" : "th-drop-right")
+            : ""
+        )}
+        onMouseDown={(e) => {
+          // Start kolonne-drag når du klikker på header (men ikke på resizer)
+          const target = e.target as HTMLElement
+          if (target.closest(".col-resizer")) return
+          if (cIndex === 0) return // Ikke lov å flytte # -kolonnen
+          // Kun venstre musetast
+          if (e.button !== 0) return
+          setDragCol({ from: cIndex, over: cIndex })
+
+          const onUp = () => {
+            setDragCol(curr => {
+              if (!curr || curr.over == null || curr.from === curr.over) return null
+              // Ikke tillat å slippe på posisjon 0
+              const to = Math.max(1, curr.over)
+              const from = curr.from!
+              const moved = arrayMove(cols, from, to)
+              setCols(moved)
+              // Flytt markert kolonneposisjon tilsvarende (hold rad)
+              setSel(s => {
+                if (!s) return s
+                const mapIndex = (i: number): number => {
+                  // map gammel index -> ny index etter flytt
+                  // (forenklet: hvis markert col var 'from', blir den 'to';
+                  // hvis mellomrommet påvirkes, justér +/-1)
+                  if (i === from) return to
+                  if (from < to && i > from && i <= to) return i - 1
+                  if (from > to && i >= to && i < from) return i + 1
+                  return i
                 }
-                const rcKey = `${rIndex}:${col.key}`
-                return (
-                  <td key={col.key}>
-                    <div
-                      className={cellClass(rIndex, cIndex, !!col.readonly)}
-                      tabIndex={0}
-                      data-rc={rcKey}
-                      onMouseDown={(e) => onCellMouseDown(rIndex, cIndex, e)}
-                      onMouseEnter={() => onCellMouseEnter(rIndex, cIndex)} 
-                    >
-                      {col.readonly ? (
-                        <span>{v ?? ""}</span>
-                      ) : col.type === "date" ? (
-                        <input
-                          type="date"
-                          value={v ?? ""}
-                          onChange={(e) => setCell(rIndex, cIndex, e.target.value || undefined)}
-                        />
-                      ) : col.type === "select" ? (
-                        <div style={{ display: "flex", alignItems: "center" }}>
-                          {fargeDot(v)}
-                          <select
-                            value={v ?? "auto"}
-                            onChange={(e) => setCell(rIndex, cIndex, e.target.value as FargeKey)}
-                          >
-                            {FARGER.map(f => <option key={f} value={f}>{f}</option>)}
-                          </select>
-                        </div>
-                      ) : (
-                        <input
-                          type="text"
-                          value={v ?? ""}
-                          onChange={(e) => setCell(rIndex, cIndex, e.target.value)}
-                        />
-                      )}
-                    </div>
-                  </td>
-                )
-              })}
-            </tr>
-          ))}
-        </tbody>
+                const a = { r: s.anchor.r, c: mapIndex(s.anchor.c) }
+                const f = { r: s.focus.r,  c: mapIndex(s.focus.c) }
+                return { anchor: a, focus: f }
+              })
+              return null
+            })
+            window.removeEventListener("mouseup", onUp)
+          }
+          window.addEventListener("mouseup", onUp)
+        }}
+        onMouseEnter={() => {
+          if (!dragCol) return
+          // Ikke tillat over/inn i posisjon 0
+          if (cIndex === 0) return
+          setDragCol(d => d ? { ...d, over: cIndex } : d)
+        }}
+      >
+        {col.title}
+
+        {/* Resizer på høyrekant (deaktivert for # i startResize) */}
+        {cIndex !== 0 && (
+          <div
+            className="col-resizer"
+            onMouseDown={(e) => startResize(cIndex, e)}
+            title="Dra for å endre bredde"
+          />
+        )}
+      </th>
+    ))}
+  </tr>
+</thead>
+        <tbody>
+  {rows.map((row, rIndex) => (
+    <tr
+      className={
+        "row " +
+        (dragRow && dragRow.over === rIndex
+          ? (dragRow.from! > rIndex ? "tr-drop-above" : "tr-drop-below")
+          : "")
+      }
+      key={row.id}
+      onMouseEnter={(e) => onRowMouseEnter(rIndex, e)}
+    >
+      {cols.map((col, cIndex) => {
+        const v = (row as any)[col.key]
+        const rcKey = `${rIndex}:${col.key}`
+
+        // # -kolonnen: gjør cellen til drag-handle for rad
+        if (col.key === "nr") {
+          const hasData = Object.entries(row).some(([k, val]) =>
+            k !== "id" && k !== "nr" && val && String(val).trim() !== ""
+          )
+          return (
+            <td key="nr" style={{ textAlign: "center", width: col.width }}>
+              <div
+                className="cell readonly"
+                tabIndex={-1}
+                style={{ opacity: hasData ? 0.6 : 0 }}
+                onMouseDown={(e) => startRowDrag(rIndex, e)}   // ← RAD-DRAG START
+                title="Dra for å flytte raden"
+              >
+                {hasData ? rIndex + 1 : ""}
+              </div>
+            </td>
+          )
+        }
+
+        return (
+          <td key={col.key}>
+            <div
+              className={cellClass(rIndex, cIndex, !!col.readonly)}
+              tabIndex={0}
+              data-rc={rcKey}
+              onMouseDown={(e) => onCellMouseDown(rIndex, cIndex, e)}
+              onMouseEnter={() => onCellMouseEnter(rIndex, cIndex)}
+            >
+              {col.readonly ? (
+                <span>{v ?? ""}</span>
+              ) : col.type === "date" ? (
+                <input
+                  type="date"
+                  value={v ?? ""}
+                  onChange={(e) => setCell(rIndex, cIndex, e.target.value || undefined)}
+                />
+              ) : col.type === "select" ? (
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  {fargeDot(v)}
+                  <select
+                    value={v ?? "auto"}
+                    onChange={(e) => setCell(rIndex, cIndex, e.target.value as FargeKey)}
+                  >
+                    {FARGER.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={v ?? ""}
+                  onChange={(e) => setCell(rIndex, cIndex, e.target.value)}
+                />
+              )}
+            </div>
+          </td>
+        )
+      })}
+    </tr>
+  ))}
+</tbody>
+
       </table>
     </div> {/* ← lukker .table-scroller */}
 
