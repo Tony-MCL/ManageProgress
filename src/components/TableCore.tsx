@@ -544,7 +544,7 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
                         >
                           <input
                             type="date"
-                            value={cur || ""}        {/* ISO yyyy-mm-dd */}
+                            value={cur ? String(cur) : ""}
                             disabled={isReadOnly}
                             onChange={(e) => setCell(rowIndex, cIndex, (e.target.value || "").trim() || undefined)}
                           />
