@@ -54,15 +54,19 @@ const HelpPanel: React.FC<HelpPanelProps> = ({ open, onClose }) => {
   const [content, setContent] = useState<string>("")
 
   useEffect(() => {
-    if (!open) return
-    // Hent fra /public/help.md med korrekt base-path i GitHub Pages
-    const base = (import.meta as any).env.BASE_URL as string
-    const url = new URL("help.md", base).toString()
+  if (!open) return;
+  try {
+    const url = new URL("help.md", document.baseURI).toString();
     fetch(url)
       .then((res) => res.text())
       .then((text: string) => setContent(renderMarkdown(text)))
-      .catch(() => setContent("<p>Kunne ikke laste hjelpetekst. Prøv igjen senere.</p>"))
-  }, [open])
+      .catch(() =>
+        setContent("<p>Kunne ikke laste hjelpetekst. Prøv igjen senere.</p>")
+      );
+  } catch (e) {
+    setContent("<p>Kunne ikke bestemme base-URL for hjelpetekst.</p>");
+  }
+}, [open]);
 
   return (
     <div className={`help-panel ${open ? "open" : ""}`}>
