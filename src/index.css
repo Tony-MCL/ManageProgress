@@ -33,13 +33,8 @@ body {
   align-items: center;
   justify-content: space-between;
 }
-.app-header .brand {
-  letter-spacing: 0.3px;
-}
-.app-header .sub {
-  font-weight: 500;
-  opacity: 0.9;
-}
+.app-header .brand { letter-spacing: 0.3px; }
+.app-header .sub { font-weight: 500; opacity: 0.9; }
 /* ==== [BLOCK: Header] END ==== */
 
 /* ==== [BLOCK: Toolbar] BEGIN ==== */
@@ -65,9 +60,7 @@ body {
 /* ==== [BLOCK: Toolbar] END ==== */
 
 /* ==== [BLOCK: Table] BEGIN ==== */
-.table-wrap {
-  padding: 14px;
-}
+.table-wrap { padding: 14px; }
 
 /* horisontal scroll når tabellen blir bredere enn visningen */
 .table-scroller {
@@ -77,10 +70,8 @@ body {
 
 /* selve tabellen */
 .grid {
-  /* la tabellen få bli bredere enn containeren */
-  width: max-content;
-  table-layout: fixed;
-
+  width: max-content;          /* la tabellen få bli bredere enn containeren */
+  table-layout: fixed;         /* følg satte kolonnebredder */
   border-collapse: separate;
   border-spacing: 0;
   background: var(--panel);
@@ -89,6 +80,7 @@ body {
   overflow: hidden;
 }
 
+/* header */
 .grid thead th {
   position: sticky;
   top: 0;
@@ -97,23 +89,16 @@ body {
   text-align: left;
   font-weight: 600;
   padding: 10px 12px;
-
-  /* horisontale linjer i header */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-
-  /* vertikale linjer mellom kolonner (header) */
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.10); /* horisontal linje */
+  border-right: 1px solid rgba(255,255,255,0.08);  /* vertikal linje */
 }
 .grid thead th:last-child { border-right: none; }
 
+/* body celler */
 .grid tbody td {
   padding: 0;
-
-  /* horisontale linjer mellom rader */
-  border-bottom: 1px solid var(--grid-border);
-
-  /* vertikale linjer mellom kolonner (body) */
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--grid-border);             /* horisontale linjer */
+  border-right: 1px solid rgba(255,255,255,0.08);          /* vertikale linjer */
 }
 .grid tbody td:last-child { border-right: none; }
 
@@ -122,28 +107,25 @@ body {
   min-height: 34px;
   outline: none;
   cursor: default;
-
-  /* ikke bryt linjer i celler (excel-følelse) */
-  white-space: nowrap;
+  white-space: nowrap;     /* excel-følelse */
   overflow: hidden;
   text-overflow: ellipsis;
-
-  /* unngå at tekst blir selektert når du drar markering */
-  user-select: none;
+  user-select: none;       /* unngå blå tekst ved drag */
 }
 
-/* kun cellen under musa får hover – ikke hele raden */
+/* hover kun på cella, ikke hele raden */
 .grid .cell:hover:not(.selected) { background: var(--grid-hover); }
 
-/* valgt område vinner alltid over hover */
+/* valgt område vinner over hover */
 .grid .cell.selected,
 .grid .cell.selected:hover { background: var(--grid-select); }
 
 /* readonly-celler (inkl. #) litt dempet */
 .grid .cell.readonly { color: var(--muted); }
 
-/* inputs beholder normal tekstmarkering */
-.grid .cell input, .grid .cell select {
+/* inputs inni celler */
+.grid .cell input,
+.grid .cell select {
   width: 100%;
   background: transparent;
   border: none;
@@ -163,43 +145,108 @@ body {
   vertical-align: middle;
   border: 1px solid #0006;
 }
-/* # -kolonnen: fast bredde + litt strammere padding og høyrejustert */
+
+/* # -kolonnen: fast bredde, midtstilling */
 .grid thead th:first-child,
 .grid tbody td:first-child { width: 48px; }
+.grid thead th:first-child { text-align: center; }
+.grid td:first-child .cell { text-align: center; padding: 8px 6px; }
 
-.grid td:first-child .cell {
-  text-align: right;
-  padding: 8px 6px; /* litt smalere */
-}
 /* --- Drag hints (diskré) --- */
 .grid thead th { cursor: default; }
 .grid thead th.draggable { cursor: move; }          /* kolonne-drag */
 .grid td:first-child .cell { cursor: move; }        /* rad-drag i # */
-
-/* Vis drop-posisjon med subtil linje */
 .tr-drop-above td { box-shadow: 0 -1px 0 0 rgba(255,255,255,0.18) inset; }
 .tr-drop-below td { box-shadow: 0  1px 0 0 rgba(255,255,255,0.18) inset; }
-
 .th-drop-left  { box-shadow: -1px 0 0 0 rgba(255,255,255,0.18) inset; }
 .th-drop-right { box-shadow:  1px 0 0 0 rgba(255,255,255,0.18) inset; }
 
-/* ==== Disable text selection while dragging columns/rows ==== */
+/* Deaktiver tekstmarkering i dragområder */
 .grid thead th,
 .grid td:first-child .cell {
-  user-select: none;       /* hindrer blå markering ved drag */
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+  user-select: none;
 }
 
-/* Tillat fortsatt tekstmarkering inne i inputs */
-.grid .cell input,
-.grid .cell select {
-  user-select: text;
+/* ===== Kolonne-resizer på selve høyrekanten ===== */
+.grid thead th .col-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;     /* ligger “på linja” */
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 2;
+  background: transparent;
 }
 
+/* ==== [BLOCK: Date Input + Focus-Only Placeholder] BEGIN ==== */
+/* Struktur i TableCore:
+   <td class="cell date-cell [is-empty]">
+     <span class="date-display">dd.mm.åååå</span>
+     <input class="date-input" type="date" .../>
+   </td>
+*/
+
+/* baseline */
+.date-cell { position: relative; padding: 0; }
+
+/* visning som tekst (når ikke fokus) */
+.date-cell .date-display {
+  display: inline-block;
+  width: 100%;
+  padding: 6px 8px;
+  color: inherit;
+}
+
+/* input finnes alltid, men er “usynlig” inntil fokus */
+.date-cell .date-input {
+  position: absolute;
+  inset: 0;              /* fyll cella */
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 6px 8px;
+  border: 0;
+  outline: none;
+}
+
+/* ved fokus: skjul display-tekst, vis input + kalender */
+.date-cell:focus-within .date-display { display: none; }
+.date-cell:focus-within .date-input {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* placeholder-tekst kun når cella er tom og fokusert */
+.date-cell::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  font-style: italic;
+  color: rgba(255,255,255,0);
+  pointer-events: none;
+  transition: color 120ms ease;
+}
+.date-cell.is-empty:focus-within::before {
+  color: rgba(255,255,255,0.35);
+}
+/* ==== [BLOCK: Date Input + Focus-Only Placeholder] END ==== */
+
+/* ==== [BLOCK: Dragging indicator global] BEGIN ==== */
+body.dragging,
+body.dragging * { cursor: grabbing !important; }
+
+.grid thead th.draggable,
+.grid td:first-child .cell { cursor: grab; }
+.grid thead th.draggable:active,
+.grid td:first-child .cell:active { cursor: grabbing; }
+
+body.dragging .grid .cell:hover { background: none !important; }
+/* ==== [BLOCK: Dragging indicator global] END ==== */
 /* ==== [BLOCK: Table] END ==== */
-
 
 /* ==== [BLOCK: Footer] BEGIN ==== */
 .footer {
@@ -208,14 +255,6 @@ body {
   color: var(--muted);
 }
 /* ==== [BLOCK: Footer] END ==== */
-/* Nummerkolonnen (#) */
-.grid td:first-child {
-  color: var(--text-muted, #aaa);
-  font-size: 0.9em;
-  text-align: right;
-  padding-right: 6px;
-  user-select: none;
-}
 
 /* ==== [BLOCK: Help Panel] BEGIN ==== */
 .help-panel {
@@ -233,232 +272,52 @@ body {
   display: flex;
   flex-direction: column;
 }
-
-.help-panel.open {
-  right: 0; /* glir inn fra høyre */
-}
-
+.help-panel.open { right: 0; }
 .help-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: #222a3d;
-  border-bottom: 1px solid #2b3245;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; background: #222a3d; border-bottom: 1px solid #2b3245;
 }
-
-.help-header h2 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #fff;
-}
-
-.close-btn {
-  background: transparent;
-  color: #aaa;
-  border: none;
-  font-size: 1.4rem;
-  cursor: pointer;
-}
-.close-btn:hover {
-  color: #fff;
-}
-
+.help-header h2 { margin: 0; font-size: 1.1rem; color: #fff; }
+.close-btn { background: transparent; color: #aaa; border: none; font-size: 1.4rem; cursor: pointer; }
+.close-btn:hover { color: #fff; }
 .help-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  font-family: monospace;
-  font-size: 0.85rem;
-  white-space: pre-wrap;
+  flex: 1; overflow-y: auto; padding: 16px;
+  font-family: monospace; font-size: 0.85rem; white-space: pre-wrap;
 }
-
-.help-body pre {
-  margin: 0;
-}
+.help-body pre { margin: 0; }
 /* ==== [BLOCK: Help Panel] END ==== */
 
 /* ==== [BLOCK: Help Panel Markdown Styling] BEGIN ==== */
-.help-body h1,
-.help-body h2,
-.help-body h3 {
-  margin-top: 16px;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #fff;
-}
+.help-body h1,.help-body h2,.help-body h3 { margin-top: 16px; margin-bottom: 8px; font-weight: 600; color: #fff; }
 .help-body h1 { font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 4px; }
 .help-body h2 { font-size: 1rem; color: #ddd; }
 .help-body h3 { font-size: 0.95rem; color: #ccc; }
-
-.help-body ul {
-  margin: 4px 0 10px 18px;
-  padding: 0;
-  list-style: disc;
-}
-.help-body li {
-  margin-bottom: 4px;
-}
-
-.help-body table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 8px 0 16px 0;
-  font-size: 0.85rem;
-}
-.help-body th,
-.help-body td {
-  border: 1px solid #2e3648;
-  padding: 6px 8px;
-  text-align: left;
-}
-.help-body th {
-  background: #242b3b;
-  color: #eee;
-  font-weight: 600;
-}
-.help-body td {
-  background: #1d2333;
-  color: #ccc;
-}
+.help-body ul { margin: 4px 0 10px 18px; padding: 0; list-style: disc; }
+.help-body li { margin-bottom: 4px; }
+.help-body table { width: 100%; border-collapse: collapse; margin: 8px 0 16px 0; font-size: 0.85rem; }
+.help-body th, .help-body td { border: 1px solid #2e3648; padding: 6px 8px; text-align: left; }
+.help-body th { background: #242b3b; color: #eee; font-weight: 600; }
+.help-body td { background: #1d2333; color: #ccc; }
 /* ==== [BLOCK: Help Panel Markdown Styling] END ==== */
 
 /* ==== [BLOCK: Print styles] BEGIN ==== */
 @media print {
-  /* Skjul alt utenom tabellen */
-  .app-header,
-  .toolbar,
-  .footer,
-  .table-wrap > div:not(.grid) { display: none !important; }
-
+  .app-header, .toolbar, .footer, .help-panel { display: none !important; }
   body { background: white; color: black; }
   .table-wrap { padding: 0; }
 
-  /* Tabell: vis tydelige grenser i print */
-  .grid {
-  /* fjern (eller overstyr) width: 100%; */
-  width: max-content;          /* ← lar tabellen bli bredere enn container */
-  table-layout: fixed;         /* ← bruker kolonnebredder som fasit */
-  border-collapse: separate;
-  border-spacing: 0;
-  background: var(--panel);
-  border: 1px solid var(--grid-border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-/* ikke-linje­bryting i celler (Excel-følelse) */
-.grid .cell {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.grid .cell input,
-.grid .cell select {
-  white-space: nowrap;
-}
-  .grid thead th {
-    background: #f2f2f2 !important;
-    color: #000 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+  .grid { width: max-content; border: 1px solid #bbb; border-radius: 0; background: white; }
+  .grid thead th { position: static; background: #f2f2f2 !important; color: #000 !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .grid tbody td { border-bottom: 1px solid #ddd; }
   .grid .cell { background: transparent !important; color: #000; }
   .grid .cell.selected { background: transparent !important; }
 
-  /* #-kolonnen (første kolonne) med dempet grå i print */
-  .grid thead th:first-child { text-align: right; }
-  .grid td:first-child .cell { text-align: right; color: #666; }
+  /* vis tekst for dato, skjul input i print */
+  .date-cell .date-input { display: none !important; }
+  .date-cell .date-display { display: inline !important; }
 
-  /* Unngå sidesøkking pga sticky-header */
-  .grid thead th { position: static; }
+  .grid thead th:first-child,
+  .grid td:first-child .cell { text-align: right; color: #666; }
 }
 /* ==== [BLOCK: Print styles] END ==== */
-/* Grep for kolonne-resize: legg det på selve høyrekanten */
-.grid thead th { position: sticky; } /* (sticky er allerede satt – det er "posisjonert") */
-.grid thead th .col-resizer {
-  position: absolute;
-  top: 0;
-  right: -3px;        /* trekk 3px over rammen så det ligger "på kanten" */
-  bottom: 0;
-  width: 6px;
-  cursor: col-resize;
-  z-index: 2;         /* foran headerinnholdet */
-  background: transparent; /* usynlig, men klikkbar */
-}
-
-/* # -kolonnen: midtstill header + tall */
-.grid thead th:first-child { text-align: center; }
-.grid td:first-child .cell { text-align: center; }
-.grid .cell { min-height: 34px; }
-.grid .cell input,
-.grid .cell select {
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 8px 10px;          /* beholder samme luft */
-  box-sizing: border-box;     /* inkluder padding i full bredde/høyde */
-}
-/* ==== [BLOCK: Dragging indicator global] BEGIN ==== */
-
-/* Når vi drar: hele dokumentet skal vise grabbing, uansett element */
-body.dragging,
-body.dragging * {
-  cursor: grabbing !important;
-}
-
-/* Gir "grep" på steder du kan dra */
-.grid thead th.draggable,
-.grid td:first-child .cell {
-  cursor: grab;
-}
-.grid thead th.draggable:active,
-.grid td:first-child .cell:active {
-  cursor: grabbing;
-}
-
-/* Deaktiver hover mens man drar */
-body.dragging .grid .cell:hover {
-  background: none !important;
-}
-/* ==== [BLOCK: Dragging indicator global] END ==== */
-
-/* ==== [BLOCK: Date Input + Focus-Only Placeholder] BEGIN ==== */
-.date-cell { position: relative; padding: 0; }
-
-/* Selve input-feltet fyller cella og matcher stil */
-.date-input {
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  padding: 6px 8px;
-}
-
-/* Placeholder-tekst: skal KUN synes når cella har fokus og er tom */
-.date-cell::before {
-  content: attr(data-placeholder);
-  position: absolute;
-  left: 8px;
-  top: 4px;
-  font-style: italic;
-  color: rgba(255, 255, 255, 0); /* usynlig normalt */
-  pointer-events: none;
-  transition: color 120ms ease;
-}
-
-/* Vis placeholder KUN ved fokus + tomt innhold */
-.date-cell.is-empty:focus-within::before {
-  color: rgba(255, 255, 255, 0.35);
-}
-/* ==== [BLOCK: Date Input + Focus-Only Placeholder] END ==== */
-
-/* Sentrér # -kolonneinnhold (du har tittel sentrert allerede) */
-.grid td:first-child {
-  text-align: center;
-}
