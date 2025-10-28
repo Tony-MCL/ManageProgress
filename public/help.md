@@ -1,77 +1,41 @@
-# Manage Progress – Huskelapp / Hjelp
+# 🧭 Navigasjon
+- Klikk og dra kolonneoverskrifter for å endre rekkefølge.
+- Juster kolonnebredder ved å dra i kantlinjene.
+- Dra og slipp rader for å omorganisere planen.
+- Bruk høyre museknapp for hurtigvalg (der dette er støttet).
 
-Denne filen brukes som grunnlag for hjelpepanelet i Manage Progress LITE.  
-Alt innhold skal kunne vises som kort tekst i appen (tooltip, modal eller hjelpeside).
+# ✏️ Redigering
+- Dobbeltklikk på en celle for å redigere innhold.
+- Trykk **Enter** for å lagre, **Esc** for å avbryte.
+- **Tab** flytter til neste celle, **Shift + Tab** til forrige.
+- Du kan kopiere og lime inn direkte fra Excel — data og formatering følger med.
 
----
+# #️⃣ Radnumre
+- Den venstre kolonnen (`#`) viser radenummer.
+- Nummer vises kun når det finnes data i raden.
+- Kolonnen kan ikke redigeres, markeres eller kopieres.
 
-## 📑 Navigasjon og markering
+# 🎨 Utseende og farger
+- Diskret markering viser hvilken celle du arbeider i.
+- Rader utheves forsiktig når du holder musepekeren over.
+- Kolonnebredder kan justeres helt ned til smal visning; tabellen kan scrolle horisontalt.
 
-| Handling | Beskrivelse |
-|-----------|-------------|
-| Klikk på celle | Velger cellen for redigering |
-| **Shift + klikk** | Marker område mellom to celler |
-| **Piltaster** | Flytt markering mellom celler |
-| **Enter / Tab** | Gå til neste celle |
-| **Ctrl + C / Ctrl + V** | Kopier / lim inn mellom Progress og Excel |
-| **Ctrl + X** | Klipp ut valgt område |
-| **Ctrl + Z / Ctrl + Y** | Angre / Gjenta |
-| **Ctrl + Enter** | Legg til ny rad nederst |
+# 🖨️ Utskrift og PDF
+- I **LITE-versjonen** kan planen lagres som PDF for presentasjon eller dokumentasjon.
+- Radnumre (`#`) tas med på PDF-eksport, men ikke ved kopiering til utklippstavle.
+- CSV-eksport er kun tilgjengelig i lisensierte versjoner.
 
----
+# ⌨️ Tastatursnarveier
+| Funksjon           | Snarvei            |
+|--------------------|--------------------|
+| Rediger celle      | **Enter**          |
+| Avbryt redigering  | **Esc**            |
+| Neste celle        | **Tab**            |
+| Forrige celle      | **Shift + Tab**    |
+| Kopier / Lim inn   | **Ctrl + C / Ctrl + V** |
+| Åpne hjelp          | **F1** eller Hjelp-knapp |
 
-## 🧱 Rader
-
-| Handling | Beskrivelse |
-|-----------|-------------|
-| **➕ Ny rad** | Legger til en tom rad nederst |
-| **🗑️ Slett valgt rad** | Fjerner raden der markøren står |
-| **Dra i `#`-kolonnen** | Endre rekkefølge på rader |
-| **Tall i `#`-kolonnen** | Vises kun når raden inneholder data |
-| **Radnummerering** | Tas med på utskrift, men ikke ved kopiering |
-
----
-
-## 📊 Kolonner
-
-| Handling | Beskrivelse |
-|-----------|-------------|
-| **Dra i kolonnenavn** | Flytt kolonne til ny plassering |
-| **Dra i høyrekant av kolonnenavn** | Endre kolonnebredde |
-| **Kolonnebredde** | Kan være svært smal, tabellen får horisontal scroll |
-| **#-kolonne** | Fast bredde, ikke redigerbar og ikke flyttbar |
-
----
-
-## 🖨️ Utskrift og eksport
-
-| Handling | Beskrivelse |
-|-----------|-------------|
-| **🖨️ Skriv ut / PDF** | Åpner utskriftsdialog, klar for PDF |
-| **CSV-eksport** | Ikke tilgjengelig i LITE-versjonen |
-| **Lagring** | Ikke tilgjengelig i LITE-versjonen |
-
----
-
-## 🎨 Brukeropplevelse
-
-| Element | Beskrivelse |
-|----------|-------------|
-| **Mørkt tema** | Designet for lav kontrast og rolige overganger |
-| **Hover / markering** | Diskret og uten sterke farger |
-| **Pekeren** | Viser “grabbing” under flytting av rader eller kolonner |
-| **Skjermtilpasning** | Tabellen kan overskride skjermbredden (scroll horisontalt) |
-
----
-
-## 🔜 Kommer i neste versjon
-
-- Lagring og gjenåpning av planer  
-- CSV-eksport  
-- Gantt-visning med farger per ansvar  
-- Firmalogo i utskrift  
-- Skytilkobling (Firestore / Supabase)
-
----
-
-© 2025 MorningCoffee Labs – For bruk i Manage Progress LITE
+# ℹ️ Tips
+- Hjelpepanelet kan stå åpent mens du arbeider i tabellen.
+- Endringer lagres automatisk der dette er implementert.
+- Du finner oppdatert brukerveiledning på nettsiden til **Manage Progress**.
