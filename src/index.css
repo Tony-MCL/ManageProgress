@@ -62,16 +62,14 @@ body {
 /* ==== [BLOCK: Table] BEGIN ==== */
 .table-wrap { padding: 14px; }
 
-/* horisontal scroll når tabellen blir bredere enn visningen */
 .table-scroller {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* selve tabellen */
 .grid {
-  width: max-content;          /* la tabellen få bli bredere enn containeren */
-  table-layout: fixed;         /* følg satte kolonnebredder */
+  width: max-content;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
   background: var(--panel);
@@ -80,7 +78,6 @@ body {
   overflow: hidden;
 }
 
-/* header */
 .grid thead th {
   position: sticky;
   top: 0;
@@ -89,16 +86,15 @@ body {
   text-align: left;
   font-weight: 600;
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.10); /* horisontal linje */
-  border-right: 1px solid rgba(255,255,255,0.08);  /* vertikal linje */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 .grid thead th:last-child { border-right: none; }
 
-/* body celler */
 .grid tbody td {
   padding: 0;
-  border-bottom: 1px solid var(--grid-border);             /* horisontale linjer */
-  border-right: 1px solid rgba(255,255,255,0.08);          /* vertikale linjer */
+  border-bottom: 1px solid var(--grid-border);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 .grid tbody td:last-child { border-right: none; }
 
@@ -107,23 +103,18 @@ body {
   min-height: 34px;
   outline: none;
   cursor: default;
-  white-space: nowrap;     /* excel-følelse */
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  user-select: none;       /* unngå blå tekst ved drag */
+  user-select: none;
 }
 
-/* hover kun på cella, ikke hele raden */
 .grid .cell:hover:not(.selected) { background: var(--grid-hover); }
-
-/* valgt område vinner over hover */
 .grid .cell.selected,
 .grid .cell.selected:hover { background: var(--grid-select); }
-
-/* readonly-celler (inkl. #) litt dempet */
 .grid .cell.readonly { color: var(--muted); }
 
-/* inputs inni celler */
+/* Inputs inside cells */
 .grid .cell input,
 .grid .cell select {
   width: 100%;
@@ -136,7 +127,7 @@ body {
   user-select: text;
 }
 
-/* fargedott */
+/* fargedott (om/naar vi bruker den igjen) */
 .grid .color-dot {
   display: inline-block;
   width: 10px; height: 10px;
@@ -146,178 +137,77 @@ body {
   border: 1px solid #0006;
 }
 
-/* # -kolonnen: fast bredde, midtstilling */
+/* # -kolonnen: fast bredde + sentrert */
 .grid thead th:first-child,
 .grid tbody td:first-child { width: 48px; }
 .grid thead th:first-child { text-align: center; }
 .grid td:first-child .cell { text-align: center; padding: 8px 6px; }
 
-/* --- Drag hints (diskré) --- */
+/* Drag hints */
 .grid thead th { cursor: default; }
-.grid thead th.draggable { cursor: move; }          /* kolonne-drag */
-.grid td:first-child .cell { cursor: move; }        /* rad-drag i # */
+.grid thead th.draggable { cursor: move; }
+.grid td:first-child .cell { cursor: move; }
 .tr-drop-above td { box-shadow: 0 -1px 0 0 rgba(255,255,255,0.18) inset; }
 .tr-drop-below td { box-shadow: 0  1px 0 0 rgba(255,255,255,0.18) inset; }
 .th-drop-left  { box-shadow: -1px 0 0 0 rgba(255,255,255,0.18) inset; }
 .th-drop-right { box-shadow:  1px 0 0 0 rgba(255,255,255,0.18) inset; }
 
-/* Deaktiver tekstmarkering i dragområder */
+/* Disable text selection while dragging */
 .grid thead th,
 .grid td:first-child .cell {
   user-select: none;
 }
 
-/* ===== Kolonne-resizer på selve høyrekanten ===== */
+/* Resizer på høyrekant */
 .grid thead th .col-resizer {
   position: absolute;
   top: 0;
-  right: -3px;     /* ligger “på linja” */
+  right: -3px;
   bottom: 0;
   width: 6px;
   cursor: col-resize;
   z-index: 2;
   background: transparent;
 }
-
-/* ==== [BLOCK: Date Input + Focus-Only Placeholder] BEGIN ==== */
-/* Struktur i TableCore:
-   <td class="cell date-cell [is-empty]">
-     <span class="date-display">dd.mm.åååå</span>
-     <input class="date-input" type="date" .../>
-   </td>
-*/
-
-/* baseline */
-.date-cell { position: relative; padding: 0; }
-
-/* visning som tekst (når ikke fokus) */
-.date-cell .date-display {
-  display: inline-block;
-  width: 100%;
-  padding: 6px 8px;
-  color: inherit;
-}
-
-/* input finnes alltid, men er “usynlig” inntil fokus */
-.date-cell .date-input {
-  position: absolute;
-  inset: 0;              /* fyll cella */
-  opacity: 0;
-  pointer-events: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  padding: 6px 8px;
-  border: 0;
-  outline: none;
-}
-
-/* ved fokus: skjul display-tekst, vis input + kalender */
-.date-cell:focus-within .date-display { display: none; }
-.date-cell:focus-within .date-input {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* placeholder-tekst kun når cella er tom og fokusert */
-.date-cell::before {
-  content: attr(data-placeholder);
-  position: absolute;
-  left: 8px;
-  top: 6px;
-  font-style: italic;
-  color: rgba(255,255,255,0);
-  pointer-events: none;
-  transition: color 120ms ease;
-}
-.date-cell.is-empty:focus-within::before {
-  color: rgba(255,255,255,0.35);
-}
-/* ==== [BLOCK: Date Input + Focus-Only Placeholder] END ==== */
-
-/* ==== [BLOCK: Dragging indicator global] BEGIN ==== */
-body.dragging,
-body.dragging * { cursor: grabbing !important; }
-
-.grid thead th.draggable,
-.grid td:first-child .cell { cursor: grab; }
-.grid thead th.draggable:active,
-.grid td:first-child .cell:active { cursor: grabbing; }
-
-body.dragging .grid .cell:hover { background: none !important; }
-/* ==== [BLOCK: Dragging indicator global] END ==== */
 /* ==== [BLOCK: Table] END ==== */
 
-/* ==== [BLOCK: Footer] BEGIN ==== */
-.footer {
-  padding: 16px;
-  text-align: center;
-  color: var(--muted);
-}
-/* ==== [BLOCK: Footer] END ==== */
-
-/* ==== [BLOCK: Help Panel] BEGIN ==== */
-.help-panel {
-  position: fixed;
-  top: 0;
-  right: -420px; /* starter skjult */
-  width: 400px;
-  height: 100vh;
-  background: #1b2232;
-  border-left: 1px solid #2b3245;
-  box-shadow: -3px 0 15px rgba(0,0,0,0.4);
-  color: #eee;
-  z-index: 999;
-  transition: right 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
-.help-panel.open { right: 0; }
-.help-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 16px; background: #222a3d; border-bottom: 1px solid #2b3245;
-}
-.help-header h2 { margin: 0; font-size: 1.1rem; color: #fff; }
-.close-btn { background: transparent; color: #aaa; border: none; font-size: 1.4rem; cursor: pointer; }
-.close-btn:hover { color: #fff; }
-.help-body {
-  flex: 1; overflow-y: auto; padding: 16px;
-  font-family: monospace; font-size: 0.85rem; white-space: pre-wrap;
-}
-.help-body pre { margin: 0; }
-/* ==== [BLOCK: Help Panel] END ==== */
-
-/* ==== [BLOCK: Help Panel Markdown Styling] BEGIN ==== */
-.help-body h1,.help-body h2,.help-body h3 { margin-top: 16px; margin-bottom: 8px; font-weight: 600; color: #fff; }
-.help-body h1 { font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 4px; }
-.help-body h2 { font-size: 1rem; color: #ddd; }
-.help-body h3 { font-size: 0.95rem; color: #ccc; }
-.help-body ul { margin: 4px 0 10px 18px; padding: 0; list-style: disc; }
-.help-body li { margin-bottom: 4px; }
-.help-body table { width: 100%; border-collapse: collapse; margin: 8px 0 16px 0; font-size: 0.85rem; }
-.help-body th, .help-body td { border: 1px solid #2e3648; padding: 6px 8px; text-align: left; }
-.help-body th { background: #242b3b; color: #eee; font-weight: 600; }
-.help-body td { background: #1d2333; color: #ccc; }
-/* ==== [BLOCK: Help Panel Markdown Styling] END ==== */
+/* ==== [BLOCK: Help Panel] (uendret) ==== */
+.help-panel{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:#1b2232;border-left:1px solid #2b3245;box-shadow:-3px 0 15px rgba(0,0,0,0.4);color:#eee;z-index:999;transition:right .3s ease;display:flex;flex-direction:column;}
+.help-panel.open{right:0;}
+.help-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#222a3d;border-bottom:1px solid #2b3245;}
+.help-header h2{margin:0;font-size:1.1rem;color:#fff;}
+.close-btn{background:transparent;color:#aaa;border:none;font-size:1.4rem;cursor:pointer;}
+.close-btn:hover{color:#fff;}
+.help-body{flex:1;overflow-y:auto;padding:16px;font-family:monospace;font-size:.85rem;white-space:pre-wrap;}
+.help-body pre{margin:0;}
+.help-body h1,.help-body h2,.help-body h3{margin-top:16px;margin-bottom:8px;font-weight:600;color:#fff;}
+.help-body h1{font-size:1.2rem;border-bottom:1px solid #333;padding-bottom:4px;}
+.help-body h2{font-size:1rem;color:#ddd;}
+.help-body h3{font-size:.95rem;color:#ccc;}
+.help-body ul{margin:4px 0 10px 18px;padding:0;list-style:disc;}
+.help-body li{margin-bottom:4px;}
+.help-body table{width:100%;border-collapse:collapse;margin:8px 0 16px 0;font-size:.85rem;}
+.help-body th,.help-body td{border:1px solid #2e3648;padding:6px 8px;text-align:left;}
+.help-body th{background:#242b3b;color:#eee;font-weight:600;}
+.help-body td{background:#1d2333;color:#ccc;}
 
 /* ==== [BLOCK: Print styles] BEGIN ==== */
 @media print {
-  .app-header, .toolbar, .footer, .help-panel { display: none !important; }
+  .app-header, .toolbar, .footer, .table-wrap > div:not(.grid) { display: none !important; }
   body { background: white; color: black; }
   .table-wrap { padding: 0; }
 
-  .grid { width: max-content; border: 1px solid #bbb; border-radius: 0; background: white; }
-  .grid thead th { position: static; background: #f2f2f2 !important; color: #000 !important;
-    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .grid { width: max-content; table-layout: fixed; border-collapse: separate; border-spacing: 0; border: 1px solid #000; }
+  .grid thead th { background: #f2f2f2 !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .grid tbody td { border-bottom: 1px solid #ddd; }
   .grid .cell { background: transparent !important; color: #000; }
   .grid .cell.selected { background: transparent !important; }
-
-  /* vis tekst for dato, skjul input i print */
-  .date-cell .date-input { display: none !important; }
-  .date-cell .date-display { display: inline !important; }
-
-  .grid thead th:first-child,
-  .grid td:first-child .cell { text-align: right; color: #666; }
+  .grid thead th { position: static; }
 }
 /* ==== [BLOCK: Print styles] END ==== */
+
+/* ==== [BLOCK: Dragging indicator global] ==== */
+body.dragging, body.dragging * { cursor: grabbing !important; }
+.grid thead th.draggable, .grid td:first-child .cell { cursor: grab; }
+.grid thead th.draggable:active, .grid td:first-child .cell:active { cursor: grabbing; }
+body.dragging .grid .cell:hover { background: none !important; }
