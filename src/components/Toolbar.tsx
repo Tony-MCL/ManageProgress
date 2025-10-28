@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import HelpModal from "./HelpModal"
+import HelpPanel from "./HelpPanel"
 
 type Props = {
   onAddRow: () => void
@@ -16,10 +16,12 @@ const Toolbar: React.FC<Props> = ({ onAddRow, onDeleteRow, onPrint }) => {
         <button className="toolbtn ok" onClick={onAddRow}>➕ Ny rad</button>
         <button className="toolbtn danger" onClick={onDeleteRow}>🗑️ Slett valgt rad</button>
         <button className="toolbtn" onClick={onPrint}>🖨️ Skriv ut / PDF</button>
-        <button className="toolbtn info" onClick={() => setHelpOpen(true)}>❓ Hjelp</button>
+        <button className="toolbtn info" onClick={() => setHelpOpen(!helpOpen)}>
+          ❓ Hjelp
+        </button>
       </div>
 
-      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <HelpPanel open={helpOpen} onClose={() => setHelpOpen(false)} />
     </>
   )
 }
