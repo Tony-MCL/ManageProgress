@@ -579,83 +579,44 @@ function onRowMouseEnter(r: number, e: React.MouseEvent) {
     ))}
   </tr>
 </thead>
-        <tbody>
-  {rows.map((row, rIndex) => (
-    <tr
-      className={
-        "row " +
-        (dragRow && dragRow.over === rIndex
-          ? (dragRow.from! > rIndex ? "tr-drop-above" : "tr-drop-below")
-          : "")
-      }
-      key={row.id}
-      onMouseEnter={(e) => onRowMouseEnter(rIndex, e)}
-    >
-      {cols.map((col, cIndex) => {
-        const v = (row as any)[col.key]
-        const rcKey = `${rIndex}:${col.key}`
+       <tbody>
+  {rows.map((row, rowIndex) => {
+    // sjekk om raden inneholder noe data (for å skjule placeholder i helt tomme rader)
+    const rowHasData = Object.values(row).some(
+      (v) => v !== null && v !== undefined && v !== ""
+    )
 
-        // # -kolonnen: gjør cellen til drag-handle for rad
-        if (col.key === "nr") {
-          const hasData = Object.entries(row).some(([k, val]) =>
-            k !== "id" && k !== "nr" && val && String(val).trim() !== ""
-          )
+    return (
+      <tr key={rowIndex}>
+        {columns.map((col) => {
+          const value = row[col.key] ?? ""
+          const isDateColumn =
+            col.key.toLowerCase().includes("dato") ||
+            col.key.toLowerCase().includes("date")
+
+          const isReadOnly = col.readOnly === true
+
           return (
-            <td key="nr" style={{ textAlign: "center", width: col.width }}>
-              <div
-                className="cell readonly"
-                tabIndex={-1}
-                style={{ opacity: hasData ? 0.6 : 0 }}
-                onMouseDown={(e) => startRowDrag(rIndex, e)}   // ← RAD-DRAG START
-                title="Dra for å flytte raden"
-              >
-                {hasData ? rIndex + 1 : ""}
-              </div>
+            <td
+              key={col.key}
+              className={`cell ${
+                isDateColumn ? "date-cell" : ""
+              } ${!value && !rowHasData ? "placeholder" : ""}`}
+              data-placeholder={isDateColumn ? "dd.mm.åååå" : ""}
+              contentEditable={!isReadOnly}
+              suppressContentEditableWarning
+              onFocus={(e) => handleCellFocus(e, rowIndex, col.key)}
+              onBlur={(e) => handleCellBlur(e, rowIndex, col.key)}
+            >
+              {value || ""}
             </td>
           )
-        }
-
-        return (
-          <td key={col.key}>
-            <div
-              className={cellClass(rIndex, cIndex, !!col.readonly)}
-              tabIndex={0}
-              data-rc={rcKey}
-              onMouseDown={(e) => onCellMouseDown(rIndex, cIndex, e)}
-              onMouseEnter={() => onCellMouseEnter(rIndex, cIndex)}
-            >
-              {col.readonly ? (
-                <span>{v ?? ""}</span>
-              ) : col.type === "date" ? (
-                <input
-                  type="date"
-                  value={v ?? ""}
-                  onChange={(e) => setCell(rIndex, cIndex, e.target.value || undefined)}
-                />
-              ) : col.type === "select" ? (
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  {fargeDot(v)}
-                  <select
-                    value={v ?? "auto"}
-                    onChange={(e) => setCell(rIndex, cIndex, e.target.value as FargeKey)}
-                  >
-                    {FARGER.map(f => <option key={f} value={f}>{f}</option>)}
-                  </select>
-                </div>
-              ) : (
-                <input
-                  type="text"
-                  value={v ?? ""}
-                  onChange={(e) => setCell(rIndex, cIndex, e.target.value)}
-                />
-              )}
-            </div>
-          </td>
-        )
-      })}
-    </tr>
-  ))}
+        })}
+      </tr>
+    )
+  })}
 </tbody>
+
 
       </table>
     </div> {/* ← lukker .table-scroller */}
