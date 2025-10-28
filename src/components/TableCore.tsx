@@ -5,15 +5,25 @@ import { diffDaysInclusive } from "@/core/date"
 /* ==== [BLOCK: Imports] END ==== */
 
 /* ==== [BLOCK: Column model] BEGIN ==== */
-type ColKey = "nr" | "aktivitet" | "start" | "slutt" | "varighet" | "avhengigheter" | "ansvar" | "farge"
-type Col = { key: ColKey; title: string; width?: number; readonly?: boolean; type?: "text" | "date" | "select" }
+type ColKey =
+  | "nr" | "aktivitet" | "start" | "slutt" | "varighet"
+  | "avhengigheter" | "ansvar" | "farge"
+
+type Col = {
+  key: ColKey
+  title: string
+  width?: number
+  readonly?: boolean
+  type?: "text" | "number" | "date" | "select"
+}
 
 const INITIAL_COLS: Col[] = [
   { key: "nr",             title: "#",            width: 48,  readonly: true,  type: "text" },
   { key: "aktivitet",      title: "Aktivitet",    width: 260,                  type: "text" },
   { key: "start",          title: "Start",        width: 140,                  type: "date" },
   { key: "slutt",          title: "Slutt",        width: 140,                  type: "date" },
-  { key: "varighet",       title: "Varighet (d)", width: 120, readonly: true,  type: "text" },
+  // Varighet skal være redigerbar i LITE (for 3-veis); vi parser tall i setCell
+  { key: "varighet",       title: "Varighet (d)", width: 120,                  type: "number" },
   { key: "avhengigheter",  title: "Avhengigheter",width: 150,                  type: "text" },
   { key: "ansvar",         title: "Ansvar",       width: 160,                  type: "text" },
   { key: "farge",          title: "Farge",        width: 140,                  type: "select" },
@@ -54,37 +64,38 @@ function arrayMove<T>(arr: T[], from: number, to: number): T[] {
   a.splice(to, 0, it)
   return a
 }
-/* ==== [BLOCK: Helpers] END ==== */
-
-/* ==== [BLOCK: Dragging indicator] BEGIN ==== */
 function setBodyDragging(active: boolean) {
   if (typeof document === "undefined") return
-  const body = document.body
-  if (active) body.classList.add("dragging")
-  else body.classList.remove("dragging")
+  document.body.classList.toggle("dragging", active)
 }
-/* ==== [BLOCK: Dragging indicator] END ==== */
+/* ==== [BLOCK: Helpers] END ==== */
 
 /* ==== [BLOCK: Date helpers] BEGIN ==== */
-function toDate(iso: string): Date {
-  // Sikrer lokal-midnatt uten TZ-problematikk
-  return new Date(`${iso}T00:00:00`)
-}
-function addDaysISO(iso: string, days: number): string {
-  const d = toDate(iso)
-  d.setDate(d.getDate() + days)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const dd = String(d.getDate()).padStart(2, "0")
-  return `${y}-${m}-${dd}`
-}
-function subDaysISO(iso: string, days: number): string {
-  return addDaysISO(iso, -days)
-}
-function formatDateDisplay(iso?: string): string {
+function isoToNor(iso?: string): string {
   if (!iso) return ""
-  const [y, m, d] = iso.split("-")
-  return `${d}.${m}.${y}`
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!m) return ""
+  return `${m[3]}.${m[2]}.${m[1]}`
+}
+function norToIso(s: string): string | undefined {
+  const t = s.trim()
+  if (!t) return undefined
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t
+  const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(t)
+  if (m) {
+    const dd = m[1].padStart(2, "0")
+    const mm = m[2].padStart(2, "0")
+    return `${m[3]}-${mm}-${dd}`
+  }
+  return undefined
+}
+function addDaysIso(iso: string, days: number): string {
+  const d = new Date(iso + "T00:00:00")
+  d.setDate(d.getDate() + days)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  return `${yyyy}-${mm}-${dd}`
 }
 /* ==== [BLOCK: Date helpers] END ==== */
 
@@ -95,32 +106,25 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
     rows.length ? { anchor: { r: 0, c: 1 }, focus: { r: 0, c: 1 } } : null
   )
 
-  // Undo/redo
   const [undoStack, setUndo] = useState<Aktivitet[][]>([])
   const [redoStack, setRedo] = useState<Aktivitet[][]>([])
 
-  // Kolonne-resize
   const [resizing, setResizing] = useState<{ c: number; startX: number; startW: number } | null>(null)
-
-  // Multi-markering
   const [isDraggingSel, setIsDraggingSel] = useState(false)
-
-  // Rad-/kolonnedrag
   const [dragRow, setDragRow] = useState<{ from: number; over: number | null } | null>(null)
   const [dragCol, setDragCol] = useState<{ from: number; over: number | null } | null>(null)
 
   const tableRef = useRef<HTMLTableElement>(null)
   /* ==== [BLOCK: Local state] END ==== */
 
-  /* ==== [BLOCK: History helpers] BEGIN ==== */
+  /* ==== [BLOCK: History] BEGIN ==== */
   function pushUndo(snapshot?: Aktivitet[]) {
     const snap = snapshot ? snapshot : rows.map(r => ({ ...r }))
-    setUndo(s => [...s, snap])
-    setRedo([]) // Invalider redo ved ny handling
+    setUndo(s => [...s, snap]); setRedo([])
   }
   function handleUndo() {
     setUndo(s => {
-      if (s.length === 0) return s
+      if (!s.length) return s
       const prev = s[s.length - 1]
       setRedo(r => [...r, rows.map(x => ({ ...x }))])
       onRowsChange(prev.map(x => ({ ...x })))
@@ -129,65 +133,58 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
   }
   function handleRedo() {
     setRedo(s => {
-      if (s.length === 0) return s
+      if (!s.length) return s
       const next = s[s.length - 1]
       setUndo(u => [...u, rows.map(x => ({ ...x }))])
       onRowsChange(next.map(x => ({ ...x })))
       return s.slice(0, -1)
     })
   }
-  /* ==== [BLOCK: History helpers] END ==== */
+  /* ==== [BLOCK: History] END ==== */
 
   /* ==== [BLOCK: Normalizers] BEGIN ==== */
-  function normalizeDate(s: string): string | undefined {
-    const t = s.trim()
-    if (!t) return undefined
-    if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t
-    const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(t)
-    if (m) {
-      const [_, dd, mm, yyyy] = m
-      const d = String(dd).padStart(2, "0")
-      const mo = String(mm).padStart(2, "0")
-      return `${yyyy}-${mo}-${d}`
-    }
-    return undefined
-  }
   function normalizeFarge(s: string): FargeKey {
     const t = s.toLowerCase()
-    if (t.includes("blå") || t.includes("blue")) return "blå"
-    if (t.includes("grønn") || t.includes("green")) return "grønn"
-    if (t.includes("gul") || t.includes("yellow")) return "gul"
-    if (t.includes("rød") || t.includes("red")) return "rød"
+    if (t.includes("blå")   || t.includes("blue"))   return "blå"
+    if (t.includes("grønn") || t.includes("green"))  return "grønn"
+    if (t.includes("gul")   || t.includes("yellow")) return "gul"
+    if (t.includes("rød")   || t.includes("red"))    return "rød"
     if (t.includes("lilla") || t.includes("purple")) return "lilla"
     return "auto"
+  }
+  function normalizeInt(s: string | number | undefined): number | undefined {
+    const n = typeof s === "number" ? s : Number(String(s ?? "").trim())
+    if (!Number.isFinite(n)) return undefined
+    const i = Math.max(1, Math.floor(n))
+    return i
   }
   /* ==== [BLOCK: Normalizers] END ==== */
 
   /* ==== [BLOCK: 3-veis beregning] BEGIN ==== */
-  function recalcThreeWay(row: Aktivitet, changedKey?: "start" | "slutt"): Aktivitet {
-    let { start, slutt, varighet } = row
+  function recalcThreeWay(row: Aktivitet): Aktivitet {
+    const start = row.start
+    const slutt = row.slutt
+    const varighet = row.varighet
 
-    // 1) Har start + slutt -> varighet
+    // 1) Har start + slutt → regn varighet
     if (start && slutt) {
-      varighet = diffDaysInclusive(start, slutt)
-      return { ...row, varighet }
+      return { ...row, varighet: diffDaysInclusive(start, slutt) }
     }
 
-    // 2) Har start + varighet -> slutt
-    if (start && varighet && varighet > 0) {
-      // Inkluderende: 1 dag varighet => slutt = start
-      const endIso = addDaysISO(start, varighet - 1)
-      return { ...row, slutt: endIso, varighet }
+    // 2) Har start + varighet → regn slutt (varighet er inkl. startdagen)
+    if (start && varighet && varighet >= 1) {
+      const end = addDaysIso(start, varighet - 1)
+      return { ...row, slutt: end }
     }
 
-    // 3) Har slutt + varighet -> start
-    if (slutt && varighet && varighet > 0) {
-      const startIso = subDaysISO(slutt, varighet - 1)
-      return { ...row, start: startIso, varighet }
+    // 3) Har slutt + varighet → regn start
+    if (slutt && varighet && varighet >= 1) {
+      const begin = addDaysIso(slutt, -(varighet - 1))
+      return { ...row, start: begin }
     }
 
-    // Ingen gyldig kombo -> ikke kalkuler
-    return { ...row, varighet: start && slutt ? diffDaysInclusive(start, slutt) : undefined }
+    // ellers: bare sørg for at varighet er undefined hvis ikke grunnlag
+    return { ...row, varighet: start && slutt ? diffDaysInclusive(start, slutt) : row.varighet }
   }
   /* ==== [BLOCK: 3-veis beregning] END ==== */
 
@@ -197,25 +194,29 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
     if (!col || col.readonly) return
 
     pushUndo()
-    const next = rows.slice()
-    const curr = { ...next[rIndex] }
+    const clone = rows.slice()
+    let row = { ...clone[rIndex] }
+
     const key = col.key
-
     let value: any = rawValue
-    if (col.type === "date") value = normalizeDate(String(rawValue ?? ""))
-    if (col.type === "select") value = normalizeFarge(String(rawValue ?? ""))
 
-    ;(curr as any)[key] = value
-
-    // 3-veis logikk trigges når vi endrer start/slutt (varighet-kolonna er readonly)
-    if (key === "start" || key === "slutt") {
-      next[rIndex] = recalcThreeWay(curr, key)
-    } else {
-      // Andre felt: oppdater og kalkuler varighet hvis både start og slutt finnes
-      next[rIndex] = recalcThreeWay(curr)
+    if (col.type === "date") {
+      // aksepter både ISO og norsk, men lagre som ISO
+      const iso = norToIso(String(rawValue ?? "")) ?? String(rawValue ?? "").trim() || undefined
+      value = iso
+    } else if (col.type === "select") {
+      value = normalizeFarge(String(rawValue ?? ""))
+    } else if (col.type === "number" && key === "varighet") {
+      value = normalizeInt(rawValue)
     }
 
-    onRowsChange(next)
+    ;(row as any)[key] = value
+
+    // 3-veis
+    row = recalcThreeWay(row)
+
+    clone[rIndex] = row
+    onRowsChange(clone)
   }
 
   function clearRange() {
@@ -228,9 +229,8 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
       for (let c = c1; c <= c2; c++) {
         const col = cols[c]
         if (!col || col.readonly) continue
-        ;(row as any)[col.key] = col.type === "select" ? "auto" : ""
+        ;(row as any)[col.key] = col.type === "select" ? "auto" : undefined
       }
-      // Etter tømming: re-kalkuler i tilfelle start/slutt ble blanket ut
       row = recalcThreeWay(row)
       next[r] = row
     }
@@ -241,10 +241,11 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
     if (!sel) return
     pushUndo()
     const { r1, c1 } = rectFrom(sel)
-    const rowsStr = text.split(/\r?\n/).filter(Boolean)
+    const sepRow = /\r?\n/
+    const rowsStr = text.split(sepRow).filter(Boolean)
     const sep = text.includes("\t") ? "\t" : (text.includes(";") ? ";" : ",")
-    const clone = rows.slice()
 
+    const clone = rows.slice()
     for (let i = 0; i < rowsStr.length; i++) {
       const parts = rowsStr[i].split(sep)
       const rIndex = r1 + i
@@ -261,11 +262,12 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
         const col = cols[cIndex]
         if (col.readonly) continue
         const raw = parts[j].trim()
-        const val = (col.type === "date")
-          ? normalizeDate(raw)
-          : (col.type === "select")
-          ? normalizeFarge(raw)
-          : raw
+
+        let val: any = raw
+        if (col.type === "date") val = norToIso(raw) ?? (raw || undefined)
+        else if (col.type === "select") val = normalizeFarge(raw)
+        else if (col.type === "number" && col.key === "varighet") val = normalizeInt(raw)
+
         ;(row as any)[col.key] = val
       }
       row = recalcThreeWay(row)
@@ -289,7 +291,7 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
       farge: "auto",
     }
     onRowsChange([...rows, next])
-    setSel({ anchor: { r: rows.length, c: 0 }, focus: { r: rows.length, c: 0 } })
+    setSel({ anchor: { r: rows.length, c: 1 }, focus: { r: rows.length, c: 1 } })
   }
   function deleteRow() {
     if (!sel) return
@@ -300,7 +302,7 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
     onRowsChange(next)
     if (next.length) {
       const newR = clamp(r1, 0, next.length - 1)
-      setSel({ anchor: { r: newR, c: 0 }, focus: { r: newR, c: 0 } })
+      setSel({ anchor: { r: newR, c: 1 }, focus: { r: newR, c: 1 } })
     } else {
       setSel(null)
     }
@@ -312,14 +314,10 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
     function selectionRectAndSize() {
       if (!sel) return null
       const rect = rectFrom(sel)
-      const rowsN = rect.r2 - rect.r1 + 1
-      const colsN = rect.c2 - rect.c1 + 1
-      return { rect, rowsN, colsN }
+      return { rect, rowsN: rect.r2 - rect.r1 + 1, colsN: rect.c2 - rect.c1 + 1 }
     }
-
     function onKey(e: KeyboardEvent) {
       if (!sel) return
-      const srs = selectionRectAndSize()
       const maxR = Math.max(0, rows.length - 1)
       const maxC = cols.length - 1
 
@@ -327,7 +325,6 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); handleUndo(); return }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); handleRedo(); return }
 
-      // Navigasjon + multi (Shift)
       const move = (dr: number, dc: number, extend: boolean) => {
         e.preventDefault()
         const endR = clamp((sel?.focus.r ?? 0) + dr, 0, maxR)
@@ -335,52 +332,37 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
         if (extend && sel) setSel({ anchor: sel.anchor, focus: { r: endR, c: endC } })
         else { const p = { r: endR, c: endC }; setSel({ anchor: p, focus: p }) }
       }
-
       if (e.key === "ArrowDown") return move(1, 0, e.shiftKey)
       if (e.key === "ArrowUp") return move(-1, 0, e.shiftKey)
       if (e.key === "ArrowLeft") return move(0, -1, e.shiftKey)
       if (e.key === "ArrowRight" || e.key === "Tab") return move(0, 1, e.shiftKey)
+
       if (e.key === "Enter") { e.preventDefault(); focusCellInput(sel.focus.r, sel.focus.c); return }
       if (e.key === "Delete") { e.preventDefault(); clearRange(); return }
     }
-
     function onCopy(ev: ClipboardEvent) {
-      if (!sel) return
-      const srs = selectionRectAndSize()
-      if (!srs) return
-
+      const srs = selectionRectAndSize(); if (!srs) return
       const ae = document.activeElement as HTMLElement | null
       const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
-
       if (srs.rowsN > 1 || srs.colsN > 1 || !editing) {
-        const tsv = serializeSelection(srs.rect!)
         ev.preventDefault()
-        ev.clipboardData?.setData("text/plain", tsv)
+        ev.clipboardData?.setData("text/plain", serializeSelection(srs.rect))
       }
     }
-
     function onCut(ev: ClipboardEvent) {
-      if (!sel) return
-      const srs = selectionRectAndSize()
-      if (!srs) return
+      const srs = selectionRectAndSize(); if (!srs) return
       const ae = document.activeElement as HTMLElement | null
       const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
-
       if (srs.rowsN > 1 || srs.colsN > 1 || !editing) {
-        const tsv = serializeSelection(srs.rect!)
         ev.preventDefault()
-        ev.clipboardData?.setData("text/plain", tsv)
+        ev.clipboardData?.setData("text/plain", serializeSelection(srs.rect))
         clearRange()
       }
     }
-
     function onPaste(e: ClipboardEvent) {
-      if (!sel) return
-      const srs = selectionRectAndSize()
-      if (!srs) return
+      const srs = selectionRectAndSize(); if (!srs) return
       const text = e.clipboardData?.getData("text/plain") ?? ""
       if (!text) return
-
       const rowsArr = text.split(/\r?\n/).filter(Boolean)
       const sep = text.includes("\t") ? "\t" : (text.includes(";") ? ";" : ",")
       const colsCounts = rowsArr.map(r => r.split(sep).length)
@@ -390,15 +372,9 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
       const ae = document.activeElement as HTMLElement | null
       const editing = ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT" || ae.isContentEditable)
 
-      const shouldGridPaste =
-        clipRows > 1 || clipCols > 1 || srs.rowsN > 1 || srs.colsN > 1 || !editing
-
-      if (shouldGridPaste) {
-        e.preventDefault()
-        pasteRect(text)
-      }
+      const shouldGridPaste = clipRows > 1 || clipCols > 1 || srs.rowsN > 1 || srs.colsN > 1 || !editing
+      if (shouldGridPaste) { e.preventDefault(); pasteRect(text) }
     }
-
     window.addEventListener("keydown", onKey)
     window.addEventListener("copy", onCopy)
     window.addEventListener("cut", onCut)
@@ -417,21 +393,13 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
     const ae = document.activeElement as HTMLElement | null
     if (ae && (ae.tagName === "INPUT" || ae.tagName === "SELECT")) ae.blur()
 
-    if (e.shiftKey && sel) {
-      setSel({ anchor: sel.anchor, focus: { r, c } })
-    } else {
-      const p = { r, c }
-      setSel({ anchor: p, focus: p })
-    }
+    if (e.shiftKey && sel) setSel({ anchor: sel.anchor, focus: { r, c } })
+    else { const p = { r, c }; setSel({ anchor: p, focus: p }) }
 
     setIsDraggingSel(true)
-    const onUp = () => {
-      setIsDraggingSel(false)
-      window.removeEventListener("mouseup", onUp)
-    }
+    const onUp = () => { setIsDraggingSel(false); window.removeEventListener("mouseup", onUp) }
     window.addEventListener("mouseup", onUp)
   }
-
   function onCellMouseEnter(r: number, c: number) {
     if (!isDraggingSel) return
     setSel(curr => curr ? { anchor: curr.anchor, focus: { r, c } } : { anchor: { r, c }, focus: { r, c } })
@@ -441,24 +409,20 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
   /* ==== [BLOCK: Row drag & drop] BEGIN ==== */
   function startRowDrag(r: number, e: React.MouseEvent) {
     e.preventDefault()
-    setDragRow({ from: r, over: r })
-    setBodyDragging(true)
-
+    setDragRow({ from: r, over: r }); setBodyDragging(true)
     const onUp = () => {
       setDragRow(curr => {
         if (!curr || curr.over == null || curr.over === curr.from) return null
         pushUndo()
-        const next = arrayMove(rows, curr.from, curr.over).map(rw => ({ ...rw }))
+        const next = arrayMove(rows, curr.from, curr.over).map(x => ({ ...x }))
         onRowsChange(next)
         setSel(s => s ? { anchor: { r: curr.over!, c: s.anchor.c }, focus: { r: curr.over!, c: s.focus.c } } : s)
         return null
       })
-      setBodyDragging(false)
-      window.removeEventListener("mouseup", onUp)
+      setBodyDragging(false); window.removeEventListener("mouseup", onUp)
     }
     window.addEventListener("mouseup", onUp)
   }
-
   function onRowMouseEnter(r: number) {
     if (!dragRow) return
     setDragRow(d => d ? { ...d, over: r } : d)
@@ -468,12 +432,10 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
   /* ==== [BLOCK: Column resize] BEGIN ==== */
   function startResize(c: number, e: React.MouseEvent) {
     if (c === 0) return
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault(); e.stopPropagation()
     const startX = e.clientX
     const startW = cols[c].width ?? 140
     setResizing({ c, startX, startW })
-
     const onMove = (ev: MouseEvent) => {
       setCols(prev => {
         const dx = ev.clientX - startX
@@ -495,9 +457,8 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
 
   /* ==== [BLOCK: Rendering helpers] BEGIN ==== */
   function focusCellInput(r: number, c: number) {
-    const key = cols[c]?.key
-    if (!key) return
-    const el = tableRef.current?.querySelector<HTMLElement>(`[data-rc="${r}:${key}"] input, [data-rc="${r}:${key}"] select`)
+    const key = cols[c]?.key; if (!key) return
+    const el = tableRef.current?.querySelector<HTMLInputElement>(`[data-rc="${r}:${key}"] .date-input`)
     el?.focus()
   }
   function isSelected(r: number, c: number) {
@@ -540,11 +501,8 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
                   onMouseDown={(e) => {
                     const target = e.target as HTMLElement
                     if (target.closest(".col-resizer")) return
-                    if (cIndex === 0) return
-                    if (e.button !== 0) return
-                    setDragCol({ from: cIndex, over: cIndex })
-                    setBodyDragging(true)
-
+                    if (cIndex === 0 || e.button !== 0) return
+                    setDragCol({ from: cIndex, over: cIndex }); setBodyDragging(true)
                     const onUp = () => {
                       setDragCol(curr => {
                         if (!curr || curr.over == null || curr.from === curr.over) return null
@@ -560,31 +518,23 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
                             if (from > to && i >= to && i < from) return i + 1
                             return i
                           }
-                          const a = { r: s.anchor.r, c: mapIndex(s.anchor.c) }
-                          const f = { r: s.focus.r,  c: mapIndex(s.focus.c) }
-                          return { anchor: a, focus: f }
+                          return { anchor: { r: s.anchor.r, c: mapIndex(s.anchor.c) },
+                                   focus:  { r: s.focus.r,  c: mapIndex(s.focus.c) } }
                         })
                         return null
                       })
-                      setBodyDragging(false)
-                      window.removeEventListener("mouseup", onUp)
+                      setBodyDragging(false); window.removeEventListener("mouseup", onUp)
                     }
                     window.addEventListener("mouseup", onUp)
                   }}
                   onMouseEnter={() => {
-                    if (!dragCol) return
-                    if (cIndex === 0) return
+                    if (!dragCol || cIndex === 0) return
                     setDragCol(d => d ? { ...d, over: cIndex } : d)
                   }}
                 >
                   {col.title}
-
                   {cIndex !== 0 && (
-                    <div
-                      className="col-resizer"
-                      onMouseDown={(e) => startResize(cIndex, e)}
-                      title="Dra for å endre bredde"
-                    />
+                    <div className="col-resizer" onMouseDown={(e) => startResize(cIndex, e)} title="Dra for å endre bredde" />
                   )}
                 </th>
               ))}
@@ -593,57 +543,51 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
 
           <tbody>
             {rows.map((row: Aktivitet, rowIndex: number) => {
-              const rowHasData = Object.values(row).some(
-                (v) => v !== null && v !== undefined && v !== ""
-              )
-
+              const rowHasData = Object.values(row).some(v => v !== null && v !== undefined && v !== "")
               return (
                 <tr key={rowIndex} onMouseEnter={() => onRowMouseEnter(rowIndex)}>
                   {cols.map((col, cIndex) => {
                     const key = col.key
-                    const cur = (row as any)[key] ?? ""
-                    const isDateColumn = col.type === "date"
-                    const isReadOnly = !!col.readonly
+                    const cur = (row as any)[key]
 
-                    // # -kolonnen: vis radnummer kun hvis raden har innhold
+                    // # -kolonnen
                     if (cIndex === 0) {
                       return (
-                        <td
-                          key={key}
-                          data-rc={`${rowIndex}:${key}`}
-                          className={`cell ${isSelected(rowIndex, cIndex) ? "selected" : ""} readonly`}
-                          onMouseDown={(e) => startRowDrag(rowIndex, e)}
-                        >
+                        <td key={key}
+                            data-rc={`${rowIndex}:${key}`}
+                            className={`cell ${isSelected(rowIndex, cIndex) ? "selected" : ""} readonly`}
+                            onMouseDown={(e) => startRowDrag(rowIndex, e)}>
                           {rowHasData ? String(rowIndex + 1) : ""}
                         </td>
                       )
                     }
 
                     // === DATO-KOLONNER ===
-                    if (isDateColumn) {
+                    if (col.type === "date") {
                       const isEmpty = !cur
-                      const display = formatDateDisplay(cur || undefined)
-
+                      const display = isoToNor(cur)
                       return (
                         <td
                           key={key}
                           data-rc={`${rowIndex}:${key}`}
-                          className={`cell date-cell ${isEmpty ? "is-empty" : ""} ${
-                            isSelected(rowIndex, cIndex) ? "selected" : ""
-                          } ${isReadOnly ? "readonly" : ""}`}
+                          className={`cell date-cell ${isEmpty ? "is-empty" : ""} ${isSelected(rowIndex, cIndex) ? "selected" : ""}`}
                           data-placeholder={"dd.mm.åååå"}
-                          onMouseDown={(e) => onCellMouseDown(rowIndex, cIndex, e)}
+                          onMouseDown={(e) => {
+                            onCellMouseDown(rowIndex, cIndex, e)
+                            // fokuser input for å trigge kalender/focus-within
+                            const input = tableRef.current?.querySelector<HTMLInputElement>(
+                              `[data-rc="${rowIndex}:${key}"] .date-input`
+                            )
+                            // litt delay så selection rekker å oppdatere seg
+                            setTimeout(() => input?.focus(), 0)
+                          }}
                           onMouseEnter={() => onCellMouseEnter(rowIndex, cIndex)}
                         >
-                          {/* Tekstvisning når cella ikke har fokus */}
                           <span className="date-display">{display}</span>
-
-                          {/* Kalender-input vises ved fokus (via CSS :focus-within) */}
                           <input
                             className="date-input"
                             type="date"
                             value={cur || ""}
-                            disabled={isReadOnly}
                             onChange={(e) => {
                               const iso = (e.target.value || "").trim()
                               setCell(rowIndex, cIndex, iso || undefined)
@@ -654,12 +598,14 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
                     }
 
                     // === ØVRIGE KOLONNER ===
+                    const isReadOnly = !!col.readonly
                     const handleBlur = (e: React.FocusEvent<HTMLTableCellElement>) => {
                       if (isReadOnly) return
                       const raw = (e.currentTarget.textContent ?? "").trim()
                       let nextVal: any = raw
                       if (col.type === "select") nextVal = normalizeFarge(raw)
-                      if (String(nextVal) === String(cur ?? "")) return
+                      if (col.type === "number" && key === "varighet") nextVal = normalizeInt(raw)
+                      if (String(nextVal ?? "") === String(cur ?? "")) return
                       setCell(rowIndex, cIndex, nextVal)
                     }
 
@@ -667,9 +613,7 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
                       <td
                         key={key}
                         data-rc={`${rowIndex}:${key}`}
-                        className={`cell ${
-                          isSelected(rowIndex, cIndex) ? "selected" : ""
-                        } ${isReadOnly ? "readonly" : ""}`}
+                        className={`cell ${isSelected(rowIndex, cIndex) ? "selected" : ""} ${isReadOnly ? "readonly" : ""}`}
                         contentEditable={!isReadOnly}
                         suppressContentEditableWarning
                         onMouseDown={(e) => onCellMouseDown(rowIndex, cIndex, e)}
@@ -687,7 +631,6 @@ const TableCore: React.FC<TableCoreProps> = ({ rows, onRowsChange }) => {
         </table>
       </div>
 
-      {/* Aksjoner under tabellen (mobilvennlig) */}
       <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
         <button className="toolbtn ok" onClick={addRow}>➕ Ny rad</button>
         <button className="toolbtn danger" onClick={deleteRow}>🗑️ Slett valgt rad</button>
