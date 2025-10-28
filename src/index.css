@@ -424,3 +424,22 @@ body.dragging .grid .cell:hover {
 }
 /* ==== [BLOCK: Dragging indicator global] END ==== */
 
+/* ==== [BLOCK: Date Cell Placeholder] BEGIN ==== */
+.date-cell {
+  position: relative;
+}
+
+.date-cell.placeholder::before {
+  content: attr(data-placeholder);
+  color: rgba(255, 255, 255, 0.15);
+  font-style: italic;
+  pointer-events: none;
+  position: absolute;
+  left: 8px;
+  top: 4px;
+}
+
+.date-cell.placeholder:focus-within::before {
+  color: rgba(255, 255, 255, 0.35);
+}
+/* ==== [BLOCK: Date Cell Placeholder] END ==== */
