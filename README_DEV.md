@@ -82,4 +82,67 @@ kopiér denne README_DEV.md som første instruks, slik at oppsett, arkitektur og
 
 ---
 
+🧩 Felleskomponent: HelpPanel
+
+Formål:
+HelpPanel gir en lettvekts, høyrejustert hjelpeside som kan åpnes direkte i appen uten å forstyrre arbeidet. Den brukes for å vise brukerhjelp, tastatursnarveier, funksjonsforklaringer og tips – hentet fra help.md i public-mappen.
+
+📁 Filstruktur
+/src/components/HelpPanel.tsx   ← selve komponenten
+/public/help.md                 ← markdown-fil med hjelpetekst
+
+
+help.md inneholder teksten som vises i appen (samme innhold som README_USER.md, men uten repo-metadata).
+Markdownen gjengis med vår interne parser uten eksterne biblioteker.
+
+⚙️ Bruk
+import HelpPanel from "@/components/HelpPanel";
+
+const [helpOpen, setHelpOpen] = useState(false);
+
+<button onClick={() => setHelpOpen(true)}>Hjelp</button>
+
+<HelpPanel open={helpOpen} onClose={() => setHelpOpen(false)} />
+
+🧠 Teknisk virkemåte
+
+Innhold lastes fra public/help.md via:
+
+const url = new URL("help.md", document.baseURI).toString();
+fetch(url)
+
+
+Dette fungerer både lokalt (Vite dev server) og på GitHub Pages.
+
+Parseren støtter:
+
+#, ##, ### for overskrifter
+
+- punktlister
+
+Enkle tabeller (| Header | Header |)
+
+Avsnitt og linjeskift
+
+🎨 Styling
+
+CSS ligger i index.css under:
+
+/* ==== [BLOCK: Help Panel Markdown Styling] BEGIN ==== */
+
+
+Denne definerer utseende på headings, lister og tabeller i panelet, samt bakgrunn og fargekontraster som passer mørk layout.
+
+🔁 Gjenbruk
+
+Ved opprettelse av ny app i Manage-serien:
+
+Kopier HelpPanel.tsx og de relevante CSS-blokkene fra eksisterende app.
+
+Opprett public/help.md med app-spesifikk hjelpetekst.
+
+Importer komponenten og koble den til hovedverktøylinjen (Hjelp-knapp).
+
+Ingen justeringer i build-oppsett nødvendig.
+
 © 2025 MorningCoffee Labs · Internal Development Notes
