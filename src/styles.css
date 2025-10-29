@@ -10,6 +10,8 @@
   --row-alt: #121521;
   --focus: #7bb0ff55;
   --select: #4ea1ff33;
+  --header-h: 30px; /* felles headerhøyde (tabellheader + gantt-kalender) */
+  --row-h: 24px;    /* felles radhøyde (tabell & gantt) */
 }
 
 @media (prefers-color-scheme: light) {
