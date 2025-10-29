@@ -248,65 +248,78 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
     };
   }, [columns, onChange, widths]);
 
-  /* ---- Render ---- */
-  const cols = columns; // alias for brevity
-  const totalWidth = useMemo(() => widths.reduce((a, b) => a + b, 0), [widths]);
+ /* ---- Render ---- */
+const cols = columns;
+const totalWidth = useMemo(() => widths.reduce((a, b) => a + b, 0), [widths]);
 
-  const header = (
-    <thead>
-      <tr>
-        {cols.map((c, i) => (
-          <th
-           key={c.key}
-           style={{ position: "sticky", width: widths[i], minWidth: widths[i], maxWidth: widths[i] }}
-         >
-            {c.title}
-            <span className="th-resizer" onMouseDown={(e) => onResizeDown(i, e)} />
-          </th>
+const colgroup = (
+  <colgroup>
+    {widths.map((w, i) => (
+      <col key={cols[i].key} style={{ width: w, minWidth: w, maxWidth: w }} />
+    ))}
+  </colgroup>
+);
+
+const header = (
+  <thead>
+    <tr>
+      {cols.map((c, i) => (
+        <th key={c.key} style={{ position: "sticky", top: 0, zIndex: 3 /* sticky header */ }}>
+          {c.title}
+          <span className="th-resizer" onMouseDown={(e) => onResizeDown(i, e)} />
+        </th>
+      ))}
+    </tr>
+  </thead>
+);
+
+return (
+  <div className="table-wrap" onPaste={handlePaste}>
+    <table className="table" style={{ width: totalWidth }}>
+      {colgroup}
+      {header}
+      <tbody>
+        {rows.map((row, r) => (
+          <tr key={r}>
+            {cols.map((c, i) => {
+              const k = keyFor(r, i);
+              const isActive = active?.r === r && active?.c === i;
+              const inSel =
+                sel &&
+                r >= Math.min(sel.r1, sel.r2) &&
+                r <= Math.max(sel.r1, sel.r2) &&
+                i >= Math.min(sel.c1, sel.c2) &&
+                i <= Math.max(sel.c1, sel.c2);
+
+              return (
+                <td key={c.key}>
+                  <div
+                    ref={(el) => {
+                      if (el) tdRefs.current.set(k, el);
+                      else tdRefs.current.delete(k);
+                    }}
+                    className={`cell ${isActive ? "active" : ""} ${inSel ? "sel" : ""}`}
+                    contentEditable
+                    suppressContentEditableWarning
+                    onFocus={() => setActive({ r, c: i })}
+                    onBlur={(e) => onBlurCell(e, r, c.key)}
+                    onKeyDown={(e) => onKeyDownCell(e, r, i, c.key)}
+                    onMouseDown={onMouseDown(r, i)}
+                    onMouseEnter={() => onMouseEnter(r, i)}
+                    spellCheck={false}
+                  >
+                    {row[c.key] ?? ""}
+                  </div>
+                </td>
+              );
+            })}
+          </tr>
         ))}
-      </tr>
-    </thead>
-  );
+      </tbody>
+    </table>
+  </div>
+);
 
-  return (
-    <div className="table-wrap" onPaste={handlePaste}>
-      <table className="table" style={{ width: totalWidth }}>
-        {header}
-        <tbody>
-          {rows.map((row, r) => (
-            <tr key={r}>
-              {cols.map((c, i) => {
-                const k = keyFor(r, i);
-                const isActive = active?.r === r && active?.c === i;
-                const inSel = sel &&
-                  r >= Math.min(sel.r1, sel.r2) && r <= Math.max(sel.r1, sel.r2) &&
-                  i >= Math.min(sel.c1, sel.c2) && i <= Math.max(sel.c1, sel.c2);
-
-                return (
-                  <td key={c.key} style={{ width: widths[i], minWidth: widths[i], maxWidth: widths[i] }}>
-                    <div
-                      ref={(el) => { if (el) tdRefs.current.set(k, el); else tdRefs.current.delete(k); }}
-                      className={`cell ${isActive ? "active" : ""} ${inSel ? "sel" : ""}`}
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={() => setActive({ r, c: i })}
-                      onBlur={(e) => onBlurCell(e, r, c.key)}
-                      onKeyDown={(e) => onKeyDownCell(e, r, i, c.key)}
-                      onMouseDown={onMouseDown(r, i)}
-                      onMouseEnter={() => onMouseEnter(r, i)}
-                      spellCheck={false}
-                    >
-                      {row[c.key] ?? ""}
-                    </div>
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
 });
 /* ==== [BLOCK: Component] END ==== */
 
