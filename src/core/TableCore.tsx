@@ -256,7 +256,10 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
     <thead>
       <tr>
         {cols.map((c, i) => (
-          <th key={c.key} style={{ position: "sticky", width: widths[i] }}>
+          <th
+           key={c.key}
+           style={{ position: "sticky", width: widths[i], minWidth: widths[i], maxWidth: widths[i] }}
+         >
             {c.title}
             <span className="th-resizer" onMouseDown={(e) => onResizeDown(i, e)} />
           </th>
@@ -280,7 +283,7 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
                   i >= Math.min(sel.c1, sel.c2) && i <= Math.max(sel.c1, sel.c2);
 
                 return (
-                  <td key={c.key} style={{ width: widths[i] }}>
+                  <td key={c.key} style={{ width: widths[i], minWidth: widths[i], maxWidth: widths[i] }}>
                     <div
                       ref={(el) => { if (el) tdRefs.current.set(k, el); else tdRefs.current.delete(k); }}
                       className={`cell ${isActive ? "active" : ""} ${inSel ? "sel" : ""}`}
