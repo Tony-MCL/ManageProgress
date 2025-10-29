@@ -250,3 +250,69 @@ button:hover { outline: 2px solid var(--focus); }
   padding-right: var(--overlay-w, 0%); /* <— NØKKELEN */
 }
 /* ==== [BLOCK: SplitOverlay] END ==== */
+/* ==== [BLOCK: Ribbon] BEGIN ==== */
+.ribbon {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  padding: 8px 10px;
+  border: 1px solid var(--grid-border);
+  border-radius: 10px;
+  background: var(--panel);
+  margin-bottom: 10px;
+  flex-wrap: wrap; /* responsiv */
+}
+
+.group {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  background: var(--panel-2);
+  min-width: 160px;
+}
+.group-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+.group-body {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.group .seg {
+  display: inline-flex;
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.group .seg > button {
+  border: 0;
+  background: var(--panel);
+  padding: 8px 10px;
+}
+.group .seg > button + button {
+  border-left: 1px solid var(--grid-border);
+}
+.group .seg > button:hover {
+  outline: 2px solid var(--focus);
+}
+
+.group .chk {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+/* ==== [BLOCK: Ribbon] END ==== */
