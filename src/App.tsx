@@ -118,13 +118,12 @@ export default function App() {
             />
           }
           right={
-            <div className="gantt-wrap">
-              <div className="gantt-title">Gantt</div>
-              <div className="gantt-scroller">
-                <GanttLite rows={rows} pxPerDay={pxPerDay} showToday={showToday} />
-              </div>
-            </div>
-          }
+           <div className="gantt-wrap">
+             <div className="gantt-scroller">
+               <GanttLite rows={rows} pxPerDay={pxPerDay} showToday={showToday} />
+             </div>
+           </div>
+         }
         />
       </div>
     </div>
