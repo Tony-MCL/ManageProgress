@@ -209,6 +209,7 @@ button:hover { outline: 2px solid var(--focus); }
   border-left: 1px solid var(--grid-border);
   background: transparent;
   pointer-events: auto;
+  z-index: 4; 
 }
 
 /* Sørg for at både tabell og gantt kan bruke sin egen scroll */
@@ -233,6 +234,7 @@ button:hover { outline: 2px solid var(--focus); }
   z-index: 5;
   touch-action: none;
   right: 0; /* startverdi, overstyres inline-style */
+  z-index: 5;
 }
 .split-handle .split-grip {
   writing-mode: vertical-rl;
