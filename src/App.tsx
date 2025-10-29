@@ -10,6 +10,7 @@ import TableCore, { TableCoreRef, TableColumn, TableEvent } from "./core/TableCo
 import Toolbar from "./components/Toolbar";
 import SummaryBar from "./components/SummaryBar";
 import GanttLite from "./components/GanttLite";
+import SplitOverlay from "./components/SplitOverlay";
 /* ==== [BLOCK: Imports] END ==== */
 
 /* ==== [BLOCK: Columns Definition] BEGIN ==== */
@@ -61,6 +62,9 @@ export default function App() {
   const [pxPerDay, setPxPerDay] = useState<number>(20);
   const [showToday, setShowToday] = useState<boolean>(true);
 
+  // Split: hvor mye av Gantt (høyre) som vises – 40% = 60/40 standard
+  const [ganttPercent, setGanttPercent] = useState<number>(40);
+
   const onGridChange = (next: Record<string, string>[], evt: TableEvent) => {
     const withDur = applyDurations(next);
     const withNr = renumber(withDur);
@@ -85,7 +89,6 @@ export default function App() {
     <div className="app">
       <h1>Progress (LITE)</h1>
 
-      {/* Verktøylinje for Gantt */}
       <Toolbar
         pxPerDay={pxPerDay}
         setPxPerDay={setPxPerDay}
@@ -93,26 +96,36 @@ export default function App() {
         setShowToday={setShowToday}
       />
 
-      {/* Sammendragslinje */}
       <SummaryBar rows={rows} />
 
-      {/* Tabellkontroller */}
       <div className="toolbar" style={{ marginTop: 8 }}>
         <button onClick={addRow}>+ Legg til rad</button>
         <button onClick={deleteLast}>− Slett siste rad</button>
       </div>
 
-      {/* Tabell */}
-      <TableCore
-        ref={apiRef}
-        columns={COLUMNS}
-        rows={rows}
-        onChange={onGridChange}
-      />
-
-      {/* Gantt */}
-      <div style={{ marginTop: 16 }}>
-        <GanttLite rows={rows} pxPerDay={pxPerDay} showToday={showToday} />
+      {/* SplitOverlay: Tabell under, Gantt som overlay – dragbar fra 0→100 */}
+      <div style={{ marginTop: 12 }}>
+        <SplitOverlay
+          percent={ganttPercent}
+          onPercentChange={setGanttPercent}
+          height="70vh"
+          left={
+            <TableCore
+              ref={apiRef}
+              columns={COLUMNS}
+              rows={rows}
+              onChange={onGridChange}
+            />
+          }
+          right={
+            <div className="gantt-wrap">
+              <div className="gantt-title">Gantt</div>
+              <div className="gantt-scroller">
+                <GanttLite rows={rows} pxPerDay={pxPerDay} showToday={showToday} />
+              </div>
+            </div>
+          }
+        />
       </div>
     </div>
   );
