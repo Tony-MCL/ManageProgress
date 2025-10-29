@@ -207,14 +207,14 @@ button:hover { outline: 2px solid var(--focus); }
   overflow: hidden;
 }
 
-/* Høyre lag (Gantt) ligger OVER og har bredde = percent% */
+/* Høyre lag (Gantt) ligger OVER og trekkes inn fra HØYRE */
 .split-right {
   position: absolute;
-  inset: 0 auto 0 0; /* top:0; right:auto; bottom:0; left:0 */
-  overflow: hidden;  /* la egen scroller innvendig gjøre jobben */
-  border-right: 1px solid var(--grid-border);
+  inset: 0 0 0 auto; /* top:0; right:0; bottom:0; left:auto */
+  overflow: hidden;   /* intern scroller håndterer */
+  border-left: 1px solid var(--grid-border);
   background: transparent;
-  pointer-events: auto; /* Gantt kan scrolles/klikkes */
+  pointer-events: auto;
 }
 
 /* Sørg for at både tabell og gantt kan bruke sin egen scroll */
@@ -223,7 +223,7 @@ button:hover { outline: 2px solid var(--focus); }
   height: 100%;
 }
 
-/* Drag-håndtaket */
+/* Drag-håndtak: posisjoneres fra høyre side */
 .split-handle {
   position: absolute;
   top: 0;
@@ -238,6 +238,7 @@ button:hover { outline: 2px solid var(--focus); }
   justify-content: center;
   z-index: 5;
   touch-action: none;
+  right: 0; /* startverdi, overstyres inline-style */
 }
 .split-handle .split-grip {
   writing-mode: vertical-rl;
