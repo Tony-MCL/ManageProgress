@@ -162,3 +162,32 @@ button:hover { outline: 2px solid var(--focus); }
   outline-offset: -2px;
 }
 /* ==== [BLOCK: Row Drag Handle] END ==== */
+/* ==== [BLOCK: Summary & Gantt] BEGIN ==== */
+.summarybar {
+  display: grid;
+  grid-template-columns: repeat(4, max-content);
+  gap: 16px 24px;
+  background: var(--panel-2);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px 0 6px;
+}
+
+.gantt-wrap {
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.gantt-title {
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--grid-border);
+  background: var(--panel-2);
+}
+.gantt-scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* ==== [BLOCK: Summary & Gantt] END ==== */
