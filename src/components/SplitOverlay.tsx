@@ -6,8 +6,8 @@ export type SplitOverlayProps = {
   percent: number;
   onPercentChange: (p: number) => void;
   height?: number | string; // f.eks 70vh
-  left: React.ReactNode;    // Tabell
-  right: React.ReactNode;   // Gantt
+  left: React.ReactNode;    // Tabell (venstre)
+  right: React.ReactNode;   // Gantt (høyre)
 };
 
 export default function SplitOverlay({
@@ -27,12 +27,13 @@ export default function SplitOverlay({
     e.preventDefault();
   }, []);
 
+  // Nå beregner vi prosent fra HØYRE kant (Gantt trekkes inn fra høyre)
   const onMove = useCallback((clientX: number) => {
     const el = wrapRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const rel = clamp((clientX - rect.left) / rect.width, 0, 1);
-    onPercentChange(Math.round(rel * 100));
+    const relFromRight = clamp((rect.right - clientX) / rect.width, 0, 1);
+    onPercentChange(Math.round(relFromRight * 100));
   }, [onPercentChange]);
 
   const onMouseMove = useCallback((e: MouseEvent) => {
@@ -60,23 +61,24 @@ export default function SplitOverlay({
     };
   }, [onMouseMove, onTouchMove, stopDrag]);
 
-  // Beregn px-posisjon for håndtaket
-  const handleStyle: React.CSSProperties = { left: `calc(${percent}% - 4px)` };
+  // Håndtaket følger grensen mellom venstre (tabell) og høyre (gantt) — måles fra høyre
+  const handleStyle: React.CSSProperties = { right: `calc(${percent}% - 4px)` };
+  // Høyre overlay bredde = percent% (fra høyre kant)
   const rightStyle: React.CSSProperties = { width: `${percent}%` };
 
   return (
     <div className={`split ${dragging ? "split-dragging" : ""}`} ref={wrapRef} style={{ height }}>
-      {/* Venstre (tabell) som bakgrunnslag, alltid 100% bredde */}
+      {/* Venstre: tabell fyller bakgrunn (100%) */}
       <div className="split-left">
         {left}
       </div>
 
-      {/* Høyre (Gantt) som overlay som dekker fra venstre → percent% */}
+      {/* Høyre: Gantt som overlay fra HØYRE → percent% */}
       <div className="split-right" style={rightStyle} aria-label="Gantt overlay">
         {right}
       </div>
 
-      {/* Drag-håndtak */}
+      {/* Drag-håndtak (posisjonert fra høyre) */}
       <div
         className="split-handle"
         style={handleStyle}
