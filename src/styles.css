@@ -24,6 +24,8 @@
     --row-alt: #f9fafe;
     --focus: #1a5fff22;
     --select: #1a5fff1c;
+    --header-h: 34px; /* felles header-høyde (tabellheader + gantt-kalender) */
+    --row-h: 28px;    /* felles radhøyde */
   }
 }
 /* ==== [BLOCK: CSS Variables / Theme] END ==== */
@@ -95,7 +97,9 @@ button:hover { outline: 2px solid var(--focus); }
   color: var(--muted);
   font-weight: 600;
   text-align: left;
-  padding: 8px;
+  padding: 0 8px;                 /* <— ikke vertikal padding */
+  height: var(--header-h);        /* <— felles headerhøyde */
+  line-height: var(--header-h);   /* <— vertikal sentrering av tekst */
   border-bottom: 1px solid var(--grid-border);
   border-right: 1px solid var(--grid-border);
   user-select: none;
@@ -110,25 +114,20 @@ button:hover { outline: 2px solid var(--focus); }
   cursor: col-resize;
 }
 
-.table tbody td {
-  border-right: 1px solid var(--grid-border);
-  border-bottom: 1px solid var(--grid-border);
-  padding: 0;
-  background: var(--panel);
-}
-
-.table tbody tr:nth-child(even) td {
-  background: var(--row-alt);
-}
+.table tbody td { border-right: 1px solid var(--grid-border); border-bottom: 1px solid var(--grid-border); padding: 0; background: var(--panel); }
+.table tbody tr:nth-child(even) td { background: var(--row-alt); }
 
 .cell {
-  display: block;              /* ingen flex i celler */
-  padding: 8px;
+  display: block;
+  height: var(--row-h);
+  line-height: var(--row-h);   /* jevn caret-linje, god vertikal plass */
+  padding: 0 8px;              /* kun horisontal padding */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   unicode-bidi: isolate;
 }
+
 
 .cell[contenteditable="true"]:focus {
   outline: 2px solid var(--focus);
@@ -178,13 +177,6 @@ button:hover { outline: 2px solid var(--focus); }
   border: 1px solid var(--grid-border);
   border-radius: 8px;
   background: var(--panel);
-}
-.gantt-title {
-  padding: 8px 12px;
-  font-weight: 600;
-  color: var(--muted);
-  border-bottom: 1px solid var(--grid-border);
-  background: var(--panel-2);
 }
 .gantt-scroller {
   overflow-x: auto;
