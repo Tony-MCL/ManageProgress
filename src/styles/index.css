@@ -136,6 +136,13 @@ body {
   transition: background 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
 }
 /* ==== [BLOCK: FocusCell] END ==== */
+/* Start/Slutt: vis placeholder bare ved fokus når cellen er tom */
+.grid .cell[data-col="start"]:focus:empty::before,
+.grid .cell[data-col="slutt"]:focus:empty::before {
+  content: attr(data-ph);
+  color: var(--muted);
+  opacity: 0.8;
+}
 
 /* Område-markering – samme uttrykk som aktiv celle, uten ramme */
 .grid .selRect {
