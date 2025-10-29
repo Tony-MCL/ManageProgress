@@ -25,10 +25,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          # ⚠️ Viktig: ikke bruk cache:'npm' når lock-fil ikke finnes
+          # cache: 'npm'
 
-      - name: Install
-        run: npm ci
+      - name: Install deps (ci if lock exists, else install)
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            echo "Lock file found → npm ci"
+            npm ci
+          else
+            echo "No lock file → npm install"
+            npm install --no-audit --no-fund
+          fi
 
       - name: Build
         run: npm run build
