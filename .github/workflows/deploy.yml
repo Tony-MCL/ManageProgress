@@ -25,9 +25,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          # Viktig: IKKE bruk cache her når du ikke har lockfile
 
-      # Robust install: prøv ci hvis lock finnes, ellers vanlig install
+      # Robust install: bruk ci hvis lock finnes, ellers install
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
