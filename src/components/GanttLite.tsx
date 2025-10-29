@@ -1,7 +1,5 @@
 // src/components/GanttLite.tsx
-/* ==== [BLOCK: Imports] BEGIN ==== */
 import React, { useMemo } from "react";
-/* ==== [BLOCK: Imports] END ==== */
 
 /* ==== [BLOCK: Types] BEGIN ==== */
 export type GanttLiteProps = {
@@ -28,15 +26,28 @@ function formatISO(t: number): string {
   const da = String(d.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${da}`;
 }
+
+/** Leser px-verdi fra CSS-variabel – med fallback */
+function cssPxVar(name: string, fallback: number) {
+  if (typeof window === "undefined") return fallback;
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const n = Number(v.replace("px", ""));
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
 /* ==== [BLOCK: Helpers] END ==== */
 
 export default function GanttLite({ rows, pxPerDay, showToday = true }: GanttLiteProps) {
+  // Hent felles høyder fra CSS-variabler (må speile tabellen)
+  const headerH = cssPxVar("--header-h", 34); // kalender-stripen
+  const rowH    = cssPxVar("--row-h", 28);    // radhøyde
+  const gap     = 6;
+
   /* ==== [BLOCK: Compute timeline] BEGIN ==== */
   const model = useMemo(() => {
     const items = rows.map((r, idx) => {
       const s = parseDate(r.start ?? "");
       const e = parseDate(r.slutt ?? "");
-      return { idx, s, e, color: r.farge?.trim() || "#6aa9ff", label: r.aktivitet ?? (`Rad ${idx+1}`) };
+      return { idx, s, e, color: (r.farge ?? "").trim() || "#6aa9ff", label: r.aktivitet ?? (`Rad ${idx+1}`) };
     });
     const valid = items.filter(x => x.s !== null && x.e !== null && (x.e as number) >= (x.s as number));
     const allTimes = valid.flatMap(x => [x.s as number, x.e as number]);
@@ -50,11 +61,8 @@ export default function GanttLite({ rows, pxPerDay, showToday = true }: GanttLit
   }, [rows]);
   /* ==== [BLOCK: Compute timeline] END ==== */
 
-  const rowHeight = 22;
-  const gap = 6;
-  const headerH = 26;
-  const contentH = rows.length * (rowHeight + 1) + 12;
-  const totalH = headerH + contentH;
+  const contentH = rows.length * (rowH + 1) + 12; // +1 for subtil rad-separator
+  const totalH   = headerH + contentH;
 
   // Bredden styres av antall dager × pxPerDay
   const width = Math.max(400, (model.days || 30) * pxPerDay + 120);
@@ -65,21 +73,22 @@ export default function GanttLite({ rows, pxPerDay, showToday = true }: GanttLit
     return t;
   })();
 
+  const leftLabelW = 80;
   const dayX = (t: number) => {
-    if (!model.minT) return 0;
+    if (!model.minT) return leftLabelW;
     const d = Math.round((t - model.minT) / dayMs);
-    return d * pxPerDay + 80; // 80 px venstre “margin” for y-etiketter
+    return d * pxPerDay + leftLabelW;
   };
 
-  const bars = model.items.map((it, i) => {
-    const y = headerH + it.idx * (rowHeight + 1) + gap;
+  const bars = model.items.map((it) => {
+    const y = headerH + it.idx * (rowH + 1) + gap / 2;
     const x1 = dayX(it.s as number);
     const x2 = dayX(it.e as number) + pxPerDay; // inklusiv slutt-dag
     const w = Math.max(4, x2 - x1);
     return (
-      <g key={i} aria-label={it.label}>
-        <rect x={x1} y={y} width={w} height={rowHeight - gap} rx={4} ry={4} fill={it.color} opacity={0.9} />
-        <text x={x1 + 6} y={y + (rowHeight - gap)/2 + 4} fontSize={11} fill="#fff">{it.label}</text>
+      <g key={it.idx} aria-label={it.label}>
+        <rect x={x1} y={y} width={w} height={rowH - gap} rx={4} ry={4} fill={it.color} opacity={0.9} />
+        <text x={x1 + 6} y={y + (rowH - gap)/2 + 4} fontSize={11} fill="#fff">{it.label}</text>
       </g>
     );
   });
@@ -94,7 +103,7 @@ export default function GanttLite({ rows, pxPerDay, showToday = true }: GanttLit
         ticks.push(
           <g key={i}>
             <line x1={x} y1={0} x2={x} y2={totalH} stroke="#3a4259" strokeWidth={1} />
-            <text x={x + 4} y={16} fontSize={11} fill="#a6accd">{formatISO(t)}</text>
+            <text x={x + 4} y={Math.round(headerH/2) + 4} fontSize={11} fill="#a6accd">{formatISO(t)}</text>
           </g>
         );
       } else {
@@ -115,20 +124,19 @@ export default function GanttLite({ rows, pxPerDay, showToday = true }: GanttLit
   /* ==== [BLOCK: Render] BEGIN ==== */
   return (
     <div className="gantt-wrap" role="figure" aria-label="Gantt-oversikt">
-      <div className="gantt-title">Gantt</div>
       <div className="gantt-scroller">
         <svg width={width} height={totalH} role="img" aria-label="Gantt-diagram">
-          {/* Header-bakgrunn */}
+          {/* Header-bakgrunn (kalenderstripen) – HØYDE = --header-h */}
           <rect x={0} y={0} width={width} height={headerH} fill="var(--panel-2)" />
           {/* Y-etiketter bakgrunn */}
-          <rect x={0} y={headerH} width={80} height={contentH} fill="var(--panel-2)" />
-          {/* Rutemønster */}
+          <rect x={0} y={headerH} width={leftLabelW} height={contentH} fill="var(--panel-2)" />
+          {/* Rutemønster og datoetiketter */}
           {headerTicks}
           {/* i dag-linje */}
           {todayLine}
-          {/* Y-etiketter */}
+          {/* Y-etiketter på venstre akse – samme radindeks og høyde som tabellrader */}
           {rows.map((r, i) => {
-            const y = headerH + i * (rowHeight + 1) + rowHeight - 6;
+            const y = headerH + i * (rowH + 1) + Math.round(rowH / 2) + 4;
             const label = r.aktivitet?.trim() || `${i + 1}`;
             return <text key={i} x={6} y={y} fontSize={11} fill="#a6accd">{label}</text>;
           })}
