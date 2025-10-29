@@ -1,27 +1,8 @@
-<!-- 404.html -->
 <!doctype html>
-<html lang="no">
+<html>
   <head>
-    <meta charset="UTF-8"/>
-    <title>Redirecting…</title>
-    <meta name="robots" content="noindex"/>
-    <script>
-      // GitHub Pages: send alle ukjente paths til index.html (SPA fallback),
-      // men bevar eventuelle hash (#) og query (?).
-      (function() {
-        var l = window.location;
-        var path = l.pathname;
-        // Finn base path til repo (antar prosjekt-side, ikke user/org root).
-        // Eksempel: https://user.github.io/myrepo/some/deep/link
-        // base blir "/myrepo/"
-        var parts = path.split("/").filter(Boolean);
-        var base = parts.length > 0 ? "/" + parts[0] + "/" : "/";
-        var target = base + "index.html" + l.search + l.hash;
-        window.location.replace(target);
-      })();
-    </script>
+    <meta http-equiv="refresh" content="0; url=/ManageProgress/" />
+    <script>location.href="/ManageProgress/";</script>
   </head>
-  <body>
-    Redirecting…
-  </body>
+  <body>Redirecting…</body>
 </html>
