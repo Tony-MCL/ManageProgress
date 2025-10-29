@@ -191,3 +191,63 @@ button:hover { outline: 2px solid var(--focus); }
   overflow-y: hidden;
 }
 /* ==== [BLOCK: Summary & Gantt] END ==== */
+/* ==== [BLOCK: SplitOverlay] BEGIN ==== */
+.split {
+  position: relative;
+  border: 1px solid var(--grid-border);
+  border-radius: 10px;
+  background: var(--panel);
+  overflow: hidden; /* klipp overlay */
+}
+
+/* Venstre lag (tabell) fyller hele flaten */
+.split-left {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Høyre lag (Gantt) ligger OVER og har bredde = percent% */
+.split-right {
+  position: absolute;
+  inset: 0 auto 0 0; /* top:0; right:auto; bottom:0; left:0 */
+  overflow: hidden;  /* la egen scroller innvendig gjøre jobben */
+  border-right: 1px solid var(--grid-border);
+  background: transparent;
+  pointer-events: auto; /* Gantt kan scrolles/klikkes */
+}
+
+/* Sørg for at både tabell og gantt kan bruke sin egen scroll */
+.split-left .table-wrap,
+.split-right .gantt-wrap {
+  height: 100%;
+}
+
+/* Drag-håndtaket */
+.split-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: color-mix(in oklab, var(--panel-2) 60%, transparent);
+  border-left: 1px solid var(--grid-border);
+  border-right: 1px solid var(--grid-border);
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  touch-action: none;
+}
+.split-handle .split-grip {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  opacity: 0.6;
+  user-select: none;
+  pointer-events: none;
+}
+.split-dragging .split-handle {
+  background: color-mix(in oklab, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+}
+/* ==== [BLOCK: SplitOverlay] END ==== */
