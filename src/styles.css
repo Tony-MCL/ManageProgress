@@ -246,4 +246,7 @@ button:hover { outline: 2px solid var(--focus); }
   background: color-mix(in oklab, var(--accent) 20%, transparent);
   border-color: var(--accent);
 }
+.split-left .table-wrap {
+  padding-right: var(--overlay-w, 0%); /* <— NØKKELEN */
+}
 /* ==== [BLOCK: SplitOverlay] END ==== */
