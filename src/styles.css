@@ -72,17 +72,18 @@ button:hover { outline: 2px solid var(--focus); }
 .table-wrap {
   border: 1px solid var(--grid-border);
   border-radius: 8px;
-  overflow: auto;
+  overflow-x: auto;     /* horisontal scroll når tabellen blir bredere */
+  overflow-y: auto;     /* vertikal scroll når det er mange rader */
   max-height: 70vh;
   background: var(--panel);
 }
 
 .table {
-  border-collapse: collapse;  /* Viktig: ingen ekstra spacing rundt celler */
+  border-collapse: collapse;  /* ingen ekstra spacing som “puffer” bredder */
   border-spacing: 0;
-  table-layout: fixed;        /* Stabil caret og faste kolonner */
-  min-width: 100%;            /* Fyll container minst */
-  width: auto;                /* Kan vokse utover container */
+  table-layout: fixed;        /* stabile kolonner, målt etter faste bredder */
+  width: auto;                /* total bredde styres i TS (sum av kolonner) */
+  /* Viktig: fjern min-width:100%; det tvinger omfordeling av bredder */
 }
 
 
