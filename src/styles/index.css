@@ -143,6 +143,31 @@ body {
   color: var(--muted);
   opacity: 0.8;
 }
+/* ==== [BLOCK: Force-LTR in editable cells] BEGIN ==== */
+.grid .cell {
+  /* skriv retning og caret blir korrekt, også når innholdet starter med tall */
+  direction: ltr;
+  unicode-bidi: plaintext;
+  text-align: left;
+
+  /* mer stabil redigering enn flex i contentEditable */
+  display: block;          /* erstatt ev. display:flex */
+  line-height: 28px;       /* samsvarer med cellehøyden */
+}
+
+/* Placeholder skal ikke forstyrre caret-posisjon */
+.grid .cell[data-col="start"]:focus:empty::before,
+.grid .cell[data-col="slutt"]:focus:empty::before {
+  position: absolute;
+  left: 8px;
+  line-height: 28px;
+}
+
+/* Penere tall (dato/varighet) uten at noe “hopper” */
+.grid .cell {
+  font-variant-numeric: tabular-nums;
+}
+/* ==== [BLOCK: Force-LTR in editable cells] END ==== */
 
 /* Område-markering – samme uttrykk som aktiv celle, uten ramme */
 .grid .selRect {
