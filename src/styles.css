@@ -78,13 +78,13 @@ button:hover { outline: 2px solid var(--focus); }
 }
 
 .table {
-  border-collapse: separate;
+  border-collapse: collapse;  /* Viktig: ingen ekstra spacing rundt celler */
   border-spacing: 0;
-  /* Viktig: la tabellen kunne bli bredere enn containeren */
-  table-layout: fixed;       /* stabil caret og layout */
-  min-width: 100%;           /* fyll container som minimum */
-  width: auto;               /* kan vokse når kolonner resizes */
+  table-layout: fixed;        /* Stabil caret og faste kolonner */
+  min-width: 100%;            /* Fyll container minst */
+  width: auto;                /* Kan vokse utover container */
 }
+
 
 .table thead th {
   position: sticky;
