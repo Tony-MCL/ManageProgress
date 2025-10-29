@@ -1,13 +1,15 @@
 /* =========================================================================
-   App-laget (Progress LITE) — Kolonnesett v1
-   - Alle felt som ren tekst i TableCore.
-   - App beregner "Varighet" (inkluderende dager) når Start/Slutt er ISO-datoer.
-   - Kolonner: #, Aktivitet, Start, Slutt, Varighet, Avhengighet, Ansvarlig, Farge, Kommentar
+   App-laget (Progress LITE) – Tabell + Toolbar + Summary + Gantt
+   - Alle felt i tabellen som ren tekst
+   - App beregner "Varighet" inklusivt når Start/Slutt er ISO
    ========================================================================= */
 
 /* ==== [BLOCK: Imports] BEGIN ==== */
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import TableCore, { TableCoreRef, TableColumn, TableEvent } from "./core/TableCore";
+import Toolbar from "./components/Toolbar";
+import SummaryBar from "./components/SummaryBar";
+import GanttLite from "./components/GanttLite";
 /* ==== [BLOCK: Imports] END ==== */
 
 /* ==== [BLOCK: Columns Definition] BEGIN ==== */
@@ -26,34 +28,28 @@ const COLUMNS: TableColumn[] = [
 
 /* ==== [BLOCK: Initial Rows] BEGIN ==== */
 const INITIAL: Record<string, string>[] = [
-  { nr: "1", aktivitet: "Oppstart",     start: "2025-11-03", slutt: "2025-11-05", varighet: "", avhengighet: "", ansvarlig: "TM", farge: "#6aa9ff", kommentar: "" },
-  { nr: "2", aktivitet: "Planlegging",  start: "2025-11-06", slutt: "2025-11-10", varighet: "", avhengighet: "1", ansvarlig: "PM", farge: "#a688ff", kommentar: "" },
+  { nr: "1", aktivitet: "Oppstart",     start: "2025-11-03", slutt: "2025-11-05", varighet: "", avhengighet: "",  ansvarlig: "TM",     farge: "#6aa9ff", kommentar: "" },
+  { nr: "2", aktivitet: "Planlegging",  start: "2025-11-06", slutt: "2025-11-10", varighet: "", avhengighet: "1", ansvarlig: "PM",     farge: "#a688ff", kommentar: "" },
   { nr: "3", aktivitet: "Utførelse",    start: "2025-11-11", slutt: "2025-11-20", varighet: "", avhengighet: "2", ansvarlig: "Team A", farge: "#7bd389", kommentar: "" }
 ];
 /* ==== [BLOCK: Initial Rows] END ==== */
 
 /* ==== [BLOCK: Helpers] BEGIN ==== */
-function isIsoDate(s: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(s);
-}
-function daysBetweenInclusive(a: string, b: string) {
+const isIsoDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+const daysBetweenIncl = (a: string, b: string) => {
   const d1 = new Date(a + "T00:00:00Z").getTime();
   const d2 = new Date(b + "T00:00:00Z").getTime();
   if (isNaN(d1) || isNaN(d2)) return "";
-  const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1; // inklusiv
+  const diff = Math.round((d2 - d1) / 86400000) + 1;
   return diff >= 0 ? String(diff) : "";
-}
-function applyDurations(rows: Record<string, string>[]) {
-  return rows.map((r) => {
-    const start = r.start ?? "";
-    const slutt = r.slutt ?? "";
-    const varighet = (isIsoDate(start) && isIsoDate(slutt)) ? daysBetweenInclusive(start, slutt) : "";
-    return (varighet === (r.varighet ?? "")) ? r : { ...r, varighet };
+};
+const applyDurations = (rows: Record<string, string>[]) =>
+  rows.map((r) => {
+    const s = r.start ?? "", e = r.slutt ?? "";
+    const v = (isIsoDate(s) && isIsoDate(e)) ? daysBetweenIncl(s, e) : "";
+    return v === (r.varighet ?? "") ? r : { ...r, varighet: v };
   });
-}
-function renumber(rows: Record<string, string>[]) {
-  return rows.map((r, i) => ({ ...r, nr: String(i + 1) }));
-}
+const renumber = (rows: Record<string, string>[]) => rows.map((r, i) => ({ ...r, nr: String(i + 1) }));
 /* ==== [BLOCK: Helpers] END ==== */
 
 /* ==== [BLOCK: Component] BEGIN ==== */
@@ -61,12 +57,14 @@ export default function App() {
   const apiRef = useRef<TableCoreRef>(null);
   const [rows, setRows] = useState(() => renumber(applyDurations(INITIAL)));
 
+  // Gantt-tilstand
+  const [pxPerDay, setPxPerDay] = useState<number>(20);
+  const [showToday, setShowToday] = useState<boolean>(true);
+
   const onGridChange = (next: Record<string, string>[], evt: TableEvent) => {
-    // Re-beregn varighet, og hold # sekvensen stram
     const withDur = applyDurations(next);
     const withNr = renumber(withDur);
     setRows(withNr);
-    // evt.type kan brukes senere (resize-logging, osv.)
   };
 
   const addRow = () => {
@@ -85,18 +83,37 @@ export default function App() {
 
   return (
     <div className="app">
-      <h1>Progress (LITE) – TableCore</h1>
-      <div className="toolbar">
+      <h1>Progress (LITE)</h1>
+
+      {/* Verktøylinje for Gantt */}
+      <Toolbar
+        pxPerDay={pxPerDay}
+        setPxPerDay={setPxPerDay}
+        showToday={showToday}
+        setShowToday={setShowToday}
+      />
+
+      {/* Sammendragslinje */}
+      <SummaryBar rows={rows} />
+
+      {/* Tabellkontroller */}
+      <div className="toolbar" style={{ marginTop: 8 }}>
         <button onClick={addRow}>+ Legg til rad</button>
         <button onClick={deleteLast}>− Slett siste rad</button>
       </div>
 
+      {/* Tabell */}
       <TableCore
         ref={apiRef}
         columns={COLUMNS}
         rows={rows}
         onChange={onGridChange}
       />
+
+      {/* Gantt */}
+      <div style={{ marginTop: 16 }}>
+        <GanttLite rows={rows} pxPerDay={pxPerDay} showToday={showToday} />
+      </div>
     </div>
   );
 }
