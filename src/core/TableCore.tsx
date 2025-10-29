@@ -297,3 +297,4 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
 /* ==== [BLOCK: Component] END ==== */
 
 export default TableCore;
+}
