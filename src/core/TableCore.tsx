@@ -1,19 +1,8 @@
 /* =========================================================================
    TableCore – nøytral grid-motor (tekst inn/ut)
-   - Ingen domene-logikk (dato, varighet etc. håndteres i App-laget)
-   - Støtter:
-     * Dynamiske rader/kolonner (styres av App gjennom props)
-     * Piltaster/Tab/Enter/Shift+Enter
-     * contentEditable med stabil caret
-     * Sticky header
-     * Kolonnebredde med drag-resize (min/max)
-     * Aktiv celle + enkel rektangulær seleksjon
-     * Lim inn fra Excel/CSV (tab/linjeskift), auto-utvide rader
-     * onChange(nextRows, event)
-     * Imperativt API via ref: getData(), setData()
+   + Rad-reorder (drag & drop) via # -kolonnen
    ========================================================================= */
 
-/* ==== [BLOCK: Imports] BEGIN ==== */
 import React, {
   useCallback,
   useEffect,
@@ -23,7 +12,6 @@ import React, {
   useState,
   forwardRef,
 } from "react";
-/* ==== [BLOCK: Imports] END ==== */
 
 /* ==== [BLOCK: Types] BEGIN ==== */
 export type TableColumn = {
@@ -37,7 +25,8 @@ export type TableColumn = {
 export type TableEvent =
   | { type: "edit"; row: number; colKey: string }
   | { type: "paste"; startRow: number; startCol: number; rows: number; cols: number }
-  | { type: "resize"; colKey: string; width: number };
+  | { type: "resize"; colKey: string; width: number }
+  | { type: "reorder-rows"; from: number; to: number };
 
 export type TableCoreProps = {
   columns: TableColumn[];
@@ -64,7 +53,6 @@ function splitClipboard(text: string): string[][] {
 }
 /* ==== [BLOCK: Helpers] END ==== */
 
-/* ==== [BLOCK: Component] BEGIN ==== */
 const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
   { columns, rows, onChange },
   ref
@@ -72,14 +60,9 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
   const [widths, setWidths] = useState<number[]>(
     () => columns.map((c) => c.width ?? 160)
   );
-
-  // Hold kolonnebredder i sync ved kolonneendringer
   useEffect(() => {
-    setWidths((prev) => {
-      const next = columns.map((c, i) => prev[i] ?? c.width ?? 160);
-      return next;
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setWidths((prev) => columns.map((c, i) => prev[i] ?? c.width ?? 160));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns.map((c) => c.key).join("|")]);
 
   const [active, setActive] = useState<{ r: number; c: number } | null>(null);
@@ -88,10 +71,9 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
   /* ---- Imperativt API ---- */
   const rowsRef = useRef(rows);
   useEffect(() => { rowsRef.current = rows; }, [rows]);
-
   useImperativeHandle(ref, () => ({
     getData: () => rowsRef.current,
-    setData: (next) => onChange(next, { type: "edit", row: -1, colKey: "" }),
+    setData: (next) => onChange(next, { type: "edit", row: -1, colKey: "" })
   }), [onChange]);
 
   /* ---- Focus + edit ---- */
@@ -135,7 +117,6 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
     const neededRows = active.r + matrix.length;
     let next = rowsRef.current.slice();
 
-    // utvid rader hvis nødvendig
     while (next.length < neededRows) {
       const empty: Record<string, string> = {};
       for (const col of columns) empty[col.key] = "";
@@ -248,79 +229,132 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
     };
   }, [columns, onChange, widths]);
 
- /* ---- Render ---- */
-const cols = columns;
-const totalWidth = useMemo(() => widths.reduce((a, b) => a + b, 0), [widths]);
+  /* ---- Row drag & drop reorder ---- */
+  const dragRow = useRef<number | null>(null);
+  const [overRow, setOverRow] = useState<number | null>(null);
 
-const colgroup = (
-  <colgroup>
-    {widths.map((w, i) => (
-      <col key={cols[i].key} style={{ width: w, minWidth: w, maxWidth: w }} />
-    ))}
-  </colgroup>
-);
+  const onRowDragStart = (r: number) => (e: React.DragEvent) => {
+    dragRow.current = r;
+    e.dataTransfer.effectAllowed = "move";
+    // lite “ghost” for bedre feedback
+    const ghost = document.createElement("div");
+    ghost.textContent = rowsRef.current[r]?.[columns[0]?.key] ?? String(r + 1);
+    ghost.style.padding = "4px 8px";
+    ghost.style.background = "#00000088";
+    ghost.style.color = "white";
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, -10, -10);
+    setTimeout(() => document.body.removeChild(ghost), 0);
+  };
 
-const header = (
-  <thead>
-    <tr>
-      {cols.map((c, i) => (
-        <th key={c.key} style={{ position: "sticky", top: 0, zIndex: 3 /* sticky header */ }}>
-          {c.title}
-          <span className="th-resizer" onMouseDown={(e) => onResizeDown(i, e)} />
-        </th>
+  const onRowDragOver = (r: number) => (e: React.DragEvent) => {
+    if (dragRow.current === null) return;
+    e.preventDefault(); // nødvendig for drop
+    setOverRow(r);
+  };
+
+  const onRowDrop = (r: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const from = dragRow.current;
+    dragRow.current = null;
+    setOverRow(null);
+    if (from === null || from === r) return;
+
+    const next = rowsRef.current.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(r, 0, moved);
+
+    onChange(next, { type: "reorder-rows", from, to: r });
+  };
+
+  const onRowDragEnd = () => {
+    dragRow.current = null;
+    setOverRow(null);
+  };
+
+  /* ---- Render ---- */
+  const cols = columns;
+  const totalWidth = useMemo(() => widths.reduce((a, b) => a + b, 0), [widths]);
+
+  const colgroup = (
+    <colgroup>
+      {widths.map((w, i) => (
+        <col key={cols[i].key} style={{ width: w, minWidth: w, maxWidth: w }} />
       ))}
-    </tr>
-  </thead>
-);
+    </colgroup>
+  );
 
-return (
-  <div className="table-wrap" onPaste={handlePaste}>
-    <table className="table" style={{ width: totalWidth }}>
-      {colgroup}
-      {header}
-      <tbody>
-        {rows.map((row, r) => (
-          <tr key={r}>
-            {cols.map((c, i) => {
-              const k = keyFor(r, i);
-              const isActive = active?.r === r && active?.c === i;
-              const inSel =
-                sel &&
-                r >= Math.min(sel.r1, sel.r2) &&
-                r <= Math.max(sel.r1, sel.r2) &&
-                i >= Math.min(sel.c1, sel.c2) &&
-                i <= Math.max(sel.c1, sel.c2);
-
-              return (
-                <td key={c.key}>
-                  <div
-                    ref={(el) => {
-                      if (el) tdRefs.current.set(k, el);
-                      else tdRefs.current.delete(k);
-                    }}
-                    className={`cell ${isActive ? "active" : ""} ${inSel ? "sel" : ""}`}
-                    contentEditable
-                    suppressContentEditableWarning
-                    onFocus={() => setActive({ r, c: i })}
-                    onBlur={(e) => onBlurCell(e, r, c.key)}
-                    onKeyDown={(e) => onKeyDownCell(e, r, i, c.key)}
-                    onMouseDown={onMouseDown(r, i)}
-                    onMouseEnter={() => onMouseEnter(r, i)}
-                    spellCheck={false}
-                  >
-                    {row[c.key] ?? ""}
-                  </div>
-                </td>
-              );
-            })}
-          </tr>
+  const header = (
+    <thead>
+      <tr>
+        {cols.map((c, i) => (
+          <th key={c.key} style={{ position: "sticky", top: 0, zIndex: 3 }}>
+            {c.title}
+            <span className="th-resizer" onMouseDown={(e) => onResizeDown(i, e)} />
+          </th>
         ))}
-      </tbody>
-    </table>
-  </div>
-);
+      </tr>
+    </thead>
+  );
 
+  return (
+    <div className="table-wrap" onPaste={handlePaste}>
+      <table className="table" style={{ width: totalWidth }}>
+        {colgroup}
+        {header}
+        <tbody>
+          {rows.map((row, r) => (
+            <tr
+              key={r}
+              className={overRow === r ? "tr-drag-over" : undefined}
+              onDragOver={onRowDragOver(r)}
+              onDrop={onRowDrop(r)}
+              onDragEnd={onRowDragEnd}
+            >
+              {cols.map((c, i) => {
+                const k = keyFor(r, i);
+                const isActive = active?.r === r && active?.c === i;
+                const inSel = sel &&
+                  r >= Math.min(sel.r1, sel.r2) && r <= Math.max(sel.r1, sel.r2) &&
+                  i >= Math.min(sel.c1, sel.c2) && i <= Math.max(sel.c1, sel.c2);
+
+                // # -kolonnen: vis håndtak og gjør cella ikke-redigerbar
+                const isHandle = c.key === "nr";
+                return (
+                  <td key={c.key}>
+                    {isHandle ? (
+                      <div className="row-handle" draggable
+                        onDragStart={onRowDragStart(r)}
+                        title="Dra for å flytte raden"
+                      >
+                        <span className="grip">⋮⋮</span>
+                        <span>{row[c.key] ?? String(r + 1)}</span>
+                      </div>
+                    ) : (
+                      <div
+                        ref={(el) => { if (el) tdRefs.current.set(k, el); else tdRefs.current.delete(k); }}
+                        className={`cell ${isActive ? "active" : ""} ${inSel ? "sel" : ""}`}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={() => setActive({ r, c: i })}
+                        onBlur={(e) => onBlurCell(e, r, c.key)}
+                        onKeyDown={(e) => onKeyDownCell(e, r, i, c.key)}
+                        onMouseDown={onMouseDown(r, i)}
+                        onMouseEnter={() => onMouseEnter(r, i)}
+                        spellCheck={false}
+                      >
+                        {row[c.key] ?? ""}
+                      </div>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 });
-/* ==== [BLOCK: Component] END ==== */
 
 export default TableCore;
