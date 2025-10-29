@@ -61,24 +61,21 @@ export default function SplitOverlay({
     };
   }, [onMouseMove, onTouchMove, stopDrag]);
 
-  // Håndtaket følger grensen mellom venstre (tabell) og høyre (gantt) — måles fra høyre
-  const handleStyle: React.CSSProperties = { right: `calc(${percent}% - 4px)` };
-  // Høyre overlay bredde = percent% (fra høyre kant)
+ const handleStyle: React.CSSProperties = { right: `calc(${percent}% - 4px)` };
   const rightStyle: React.CSSProperties = { width: `${percent}%` };
 
   return (
-    <div className={`split ${dragging ? "split-dragging" : ""}`} ref={wrapRef} style={{ height }}>
-      {/* Venstre: tabell fyller bakgrunn (100%) */}
+    <div
+      className={`split ${dragging ? "split-dragging" : ""}`}
+      ref={wrapRef}
+      style={{ height, /* NYTT: eksponer prosent som CSS-var */ ['--overlay-w' as any]: `${percent}%` }}
+    >
       <div className="split-left">
         {left}
       </div>
-
-      {/* Høyre: Gantt som overlay fra HØYRE → percent% */}
       <div className="split-right" style={rightStyle} aria-label="Gantt overlay">
         {right}
       </div>
-
-      {/* Drag-håndtak (posisjonert fra høyre) */}
       <div
         className="split-handle"
         style={handleStyle}
