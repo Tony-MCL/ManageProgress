@@ -72,9 +72,14 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
   const [widths, setWidths] = useState<number[]>(
     () => columns.map((c) => c.width ?? 160)
   );
+
+  // Hold kolonnebredder i sync ved kolonneendringer
   useEffect(() => {
-    setWidths(columns.map((c, i) => widths[i] ?? c.width ?? 160));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setWidths((prev) => {
+      const next = columns.map((c, i) => prev[i] ?? c.width ?? 160);
+      return next;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns.map((c) => c.key).join("|")]);
 
   const [active, setActive] = useState<{ r: number; c: number } | null>(null);
@@ -83,9 +88,10 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
   /* ---- Imperativt API ---- */
   const rowsRef = useRef(rows);
   useEffect(() => { rowsRef.current = rows; }, [rows]);
+
   useImperativeHandle(ref, () => ({
     getData: () => rowsRef.current,
-    setData: (next) => onChange(next, { type: "edit", row: -1, colKey: "" })
+    setData: (next) => onChange(next, { type: "edit", row: -1, colKey: "" }),
   }), [onChange]);
 
   /* ---- Focus + edit ---- */
@@ -119,7 +125,7 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
   }, [columns.length, focusCell]);
 
   /* ---- Pasting ---- */
-  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
     if (!active) return;
     const text = e.clipboardData.getData("text/plain");
     if (!text) return;
@@ -144,7 +150,13 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
         row[colKey] = line[j] ?? "";
       }
     }
-    onChange(next, { type: "paste", startRow: active.r, startCol: active.c, rows: matrix.length, cols: matrix[0]?.length ?? 1 });
+    onChange(next, {
+      type: "paste",
+      startRow: active.r,
+      startCol: active.c,
+      rows: matrix.length,
+      cols: matrix[0]?.length ?? 1,
+    });
   }, [active, columns, onChange]);
 
   /* ---- Key handling ---- */
@@ -156,12 +168,11 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
     else if (e.key === "ArrowLeft" && (window.getSelection()?.anchorOffset ?? 0) === 0) {
       e.preventDefault(); move(0, -1);
     } else if (e.key === "ArrowRight") {
-      const el = tdRefs.current.get(keyFor(r,c));
+      const el = tdRefs.current.get(keyFor(r, c));
       const len = el?.textContent?.length ?? 0;
       const off = window.getSelection()?.anchorOffset ?? 0;
       if (off >= len) { e.preventDefault(); move(0, 1); }
     } else if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) {
-      // select current cell text only
       e.preventDefault();
       focusCell(r, c, true);
     }
@@ -237,7 +248,7 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
     };
   }, [columns, onChange, widths]);
 
-    /* ---- Render ---- */
+  /* ---- Render ---- */
   const cols = columns; // alias for brevity
   const totalWidth = useMemo(() => widths.reduce((a, b) => a + b, 0), [widths]);
 
@@ -293,8 +304,7 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
       </table>
     </div>
   );
-
+});
 /* ==== [BLOCK: Component] END ==== */
 
 export default TableCore;
-}
