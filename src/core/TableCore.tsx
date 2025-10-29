@@ -237,8 +237,10 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
     };
   }, [columns, onChange, widths]);
 
-  /* ---- Render ---- */
+    /* ---- Render ---- */
   const cols = columns; // alias for brevity
+  const totalWidth = useMemo(() => widths.reduce((a, b) => a + b, 0), [widths]);
+
   const header = (
     <thead>
       <tr>
@@ -254,7 +256,7 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
 
   return (
     <div className="table-wrap" onPaste={handlePaste}>
-      <table className="table">
+      <table className="table" style={{ width: totalWidth }}>
         {header}
         <tbody>
           {rows.map((row, r) => (
@@ -291,7 +293,7 @@ const TableCore = forwardRef<TableCoreRef, TableCoreProps>(function TableCore(
       </table>
     </div>
   );
-});
+
 /* ==== [BLOCK: Component] END ==== */
 
 export default TableCore;
