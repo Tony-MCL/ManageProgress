@@ -191,34 +191,37 @@ button:hover { outline: 2px solid var(--focus); }
   border: 1px solid var(--grid-border);
   border-radius: 10px;
   background: var(--panel);
-  overflow: hidden; /* klipp overlay */
+  overflow: hidden;
 }
 
-/* Venstre lag (tabell) fyller hele flaten */
+/* Tabell bakgrunn */
 .split-left {
   position: relative;
   height: 100%;
   overflow: hidden;
 }
 
-/* Høyre lag (Gantt) ligger OVER og trekkes inn fra HØYRE */
+/* Gantt overlay – fader inn mot venstre */
 .split-right {
   position: absolute;
-  inset: 0 0 0 auto; /* top:0; right:0; bottom:0; left:auto */
-  overflow: hidden;   /* intern scroller håndterer */
+  inset: 0 0 0 auto;
+  overflow: hidden;
   border-left: 1px solid var(--grid-border);
   background: transparent;
   pointer-events: auto;
-  z-index: 4; 
+  z-index: 4;
+
+  /* toning (fade inn) */
+  -webkit-mask-image: linear-gradient(to left, black 70%, transparent 100%);
+  mask-image: linear-gradient(to left, black 70%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 200%;
+  mask-size: 200%;
+  transition: mask-position 0.3s ease;
 }
 
-/* Sørg for at både tabell og gantt kan bruke sin egen scroll */
-.split-left .table-wrap,
-.split-right .gantt-wrap {
-  height: 100%;
-}
-
-/* Drag-håndtak: posisjoneres fra høyre side */
+/* Drag-håndtak */
 .split-handle {
   position: absolute;
   top: 0;
@@ -233,8 +236,7 @@ button:hover { outline: 2px solid var(--focus); }
   justify-content: center;
   z-index: 5;
   touch-action: none;
-  right: 0; /* startverdi, overstyres inline-style */
-  z-index: 5;
+  right: 0;
 }
 .split-handle .split-grip {
   writing-mode: vertical-rl;
@@ -248,3 +250,4 @@ button:hover { outline: 2px solid var(--focus); }
   border-color: var(--accent);
 }
 /* ==== [BLOCK: SplitOverlay] END ==== */
+
