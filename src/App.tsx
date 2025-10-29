@@ -7,7 +7,7 @@
 /* ==== [BLOCK: Imports] BEGIN ==== */
 import React, { useRef, useState } from "react";
 import TableCore, { TableCoreRef, TableColumn, TableEvent } from "./core/TableCore";
-import Toolbar from "./components/Toolbar";
+import MainToolbar from "./components/MainToolbar";
 import SummaryBar from "./components/SummaryBar";
 import GanttLite from "./components/GanttLite";
 import SplitOverlay from "./components/SplitOverlay";
@@ -58,12 +58,9 @@ export default function App() {
   const apiRef = useRef<TableCoreRef>(null);
   const [rows, setRows] = useState(() => renumber(applyDurations(INITIAL)));
 
-  // Gantt-tilstand
   const [pxPerDay, setPxPerDay] = useState<number>(20);
   const [showToday, setShowToday] = useState<boolean>(true);
-
-  // Split: hvor mye av Gantt (høyre) som vises – 40% = 60/40 standard
-  const [ganttPercent, setGanttPercent] = useState<number>(40);
+  const [ganttPercent, setGanttPercent] = useState<number>(40); // 60/40 standard
 
   const onGridChange = (next: Record<string, string>[], evt: TableEvent) => {
     const withDur = applyDurations(next);
@@ -78,7 +75,6 @@ export default function App() {
     }];
     setRows(renumber(next));
   };
-
   const deleteLast = () => {
     if (!rows.length) return;
     const next = rows.slice(0, -1);
@@ -89,21 +85,24 @@ export default function App() {
     <div className="app">
       <h1>Progress (LITE)</h1>
 
-      <Toolbar
+      {/* Hovedverktøylinje */}
+      <MainToolbar
+        onAddRow={addRow}
+        onDeleteLast={deleteLast}
         pxPerDay={pxPerDay}
         setPxPerDay={setPxPerDay}
         showToday={showToday}
         setShowToday={setShowToday}
+        ganttPercent={ganttPercent}
+        setGanttPercent={setGanttPercent}
+        onSave={() => {/* placeholder – kobles senere */}}
+        onExport={() => {/* placeholder – kobles senere */}}
       />
 
+      {/* Sammendragslinje */}
       <SummaryBar rows={rows} />
 
-      <div className="toolbar" style={{ marginTop: 8 }}>
-        <button onClick={addRow}>+ Legg til rad</button>
-        <button onClick={deleteLast}>− Slett siste rad</button>
-      </div>
-
-      {/* SplitOverlay: Tabell under, Gantt som overlay – dragbar fra 0→100 */}
+      {/* Delt visning: Tabell (venstre, under) + Gantt (høyre, overlay) */}
       <div style={{ marginTop: 12 }}>
         <SplitOverlay
           percent={ganttPercent}
@@ -118,12 +117,12 @@ export default function App() {
             />
           }
           right={
-           <div className="gantt-wrap">
-             <div className="gantt-scroller">
-               <GanttLite rows={rows} pxPerDay={pxPerDay} showToday={showToday} />
-             </div>
-           </div>
-         }
+            <div className="gantt-wrap">
+              <div className="gantt-scroller">
+                <GanttLite rows={rows} pxPerDay={pxPerDay} showToday={showToday} />
+              </div>
+            </div>
+          }
         />
       </div>
     </div>
