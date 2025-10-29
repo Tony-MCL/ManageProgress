@@ -25,14 +25,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Install
-        run: npm ci
+      # Robust install: prøv ci hvis lock finnes, ellers vanlig install
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Lockfile found → npm ci"
+            npm ci --no-audit --no-fund
+          else
+            echo "No lockfile → npm install"
+            npm install --no-audit --no-fund
+          fi
 
       - name: Build
         run: npm run build
 
-      - name: Prepare artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
