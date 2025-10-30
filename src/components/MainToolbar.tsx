@@ -3,26 +3,29 @@ import React from "react";
 import { FeatureGate, useFeature } from "../core/featureFlags";
 
 export type MainToolbarProps = {
+  // Data/rader
   onAddRow: () => void;
   onDeleteLast: () => void;
 
+  // Gantt
   pxPerDay: number;
   setPxPerDay: (v: number) => void;
   showToday: boolean;
   setShowToday: (v: boolean) => void;
 
+  // Split (Tabell vs Gantt)
   ganttPercent: number;
   setGanttPercent: (p: number) => void;
 
   // LITE
-  onPrint: () => void;        // Åpner Fil-panelet
-  onClearTable: () => void;   // Brukes også inne i panelet
+  onPrint: () => void;        // (ikke brukt direkte – vi bruker paneltoggle)
+  onClearTable: () => void;
 
-  // Panel toggles
+  // Panel-toggles
   onToggleFilePanel: () => void;
   filePanelOpen: boolean;
 
-  // FULL – fremtid
+  // FULL (senere)
   onOpen?: () => void;
   onNew?: () => void;
   onSave?: () => void;
@@ -31,16 +34,25 @@ export type MainToolbarProps = {
 
 export default function MainToolbar(props: MainToolbarProps) {
   const {
-    onAddRow, onDeleteLast,
-    pxPerDay, setPxPerDay, showToday, setShowToday,
-    ganttPercent, setGanttPercent,
+    onAddRow,
+    onDeleteLast,
+    pxPerDay,
+    setPxPerDay,
+    showToday,
+    setShowToday,
+    ganttPercent,
+    setGanttPercent,
     onClearTable,
-    onToggleFilePanel, filePanelOpen,
-    onOpen, onNew, onSave, onExport,
+    onToggleFilePanel,
+    filePanelOpen,
+    onOpen,
+    onNew,
+    onSave,
+    onExport,
   } = props;
 
-  const zoomIn  = () => setPxPerDay(Math.min(80, Math.round(pxPerDay + 5)));
-  const zoomOut = () => setPxPerDay(Math.max(8,  Math.round(pxPerDay - 5)));
+  const zoomIn = () => setPxPerDay(Math.min(80, Math.round(pxPerDay + 5)));
+  const zoomOut = () => setPxPerDay(Math.max(8, Math.round(pxPerDay - 5)));
   const zoomReset = () => setPxPerDay(20);
   const preset = (p: number) => () => setGanttPercent(p);
 
@@ -53,7 +65,6 @@ export default function MainToolbar(props: MainToolbarProps) {
       <div className={`group ${filePanelOpen ? "group-active" : ""}`}>
         <div className="group-title">Fil</div>
         <div className="group-body">
-          {/* I LITE: denne knappen åpner panelet med printvalg */}
           <button title="Skriv ut" onClick={onToggleFilePanel} disabled={!canPrint}>
             Skriv ut
           </button>
@@ -61,7 +72,7 @@ export default function MainToolbar(props: MainToolbarProps) {
             Tøm tabell
           </button>
 
-          {/* FULL – vises kun i full edition (kommer senere) */}
+          {/* FULL (vises kun i full edition) */}
           <FeatureGate feature="file.new">
             <button title="Ny" onClick={onNew}>Ny</button>
           </FeatureGate>
@@ -109,7 +120,11 @@ export default function MainToolbar(props: MainToolbarProps) {
             <button title="Reset zoom" onClick={zoomReset}>Reset</button>
           </div>
           <label className="chk" title="Vis vertikal i dag-linje">
-            <input type="checkbox" checked={showToday} onChange={(e) => setShowToday(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={showToday}
+              onChange={(e) => setShowToday(e.target.checked)}
+            />
             I dag
           </label>
         </div>
