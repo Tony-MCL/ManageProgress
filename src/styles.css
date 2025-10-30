@@ -340,3 +340,31 @@ button:hover { outline: 2px solid var(--focus); }
   .app { padding: 0 !important; }
 }
 /* ==== [BLOCK: Print Styles] END ==== */
+/* ==== [BLOCK: Ribbon Panel] BEGIN ==== */
+.ribbon { position: sticky; top: 0; z-index: 30; }
+
+.ribbon-panel {
+  position: sticky;
+  top: 52px; /* høyden på ribbon (tilpass hvis ulik) */
+  z-index: 40;
+  background: var(--panel);
+  border: 1px solid var(--grid-border);
+  border-radius: 10px;
+  margin-top: 6px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+.ribbon-panel-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 10px;
+}
+.rp-section { display: grid; gap: 6px; }
+.rp-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.rp-body { display: flex; gap: 8px; flex-wrap: wrap; }
+.rp-divider { width: 1px; background: var(--grid-border); }
+.rp-spacer { flex: 1; }
+.rp-close { border: 1px solid var(--grid-border); border-radius: 8px; background: var(--panel-2); padding: 8px 10px; }
+/* Merk aktiv gruppe visuelt */
+.group.group-active { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* ==== [BLOCK: Ribbon Panel] END ==== */
