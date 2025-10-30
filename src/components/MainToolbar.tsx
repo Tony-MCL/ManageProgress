@@ -68,7 +68,6 @@ export default function MainToolbar(props: MainToolbarProps) {
   const zoomIn  = () => setPxPerDay(Math.min(80, Math.round(pxPerDay + 5)));
   const zoomOut = () => setPxPerDay(Math.max(8,  Math.round(pxPerDay - 5)));
   const zoomReset = () => setPxPerDay(20);
-  const preset = (p: number) => () => setGanttPercent(p);
 
   const canPrint = useFeature("file.print");
   const canClear = useFeature("file.clear");
@@ -76,6 +75,12 @@ export default function MainToolbar(props: MainToolbarProps) {
   const choosePrint = (mode: PrintMode) => {
     onPrintMode(mode);
     setFileMenuOpen(false);
+  };
+
+  // Visnings-presets
+  const preset = (p: number) => () => {
+    setGanttPercent(p);
+    setTableMenuOpen(false);
   };
 
   return (
@@ -103,15 +108,12 @@ export default function MainToolbar(props: MainToolbarProps) {
                 <button role="menuitem" onClick={() => choosePrint("gantt")}>Kun Gantt</button>
                 <button role="menuitem" onClick={() => choosePrint("both")}>Tabell + Gantt</button>
                 <div className="menu-sep" />
-                <button role="menuitem" onClick={() => { onClearTable(); setFileMenuOpen(false); }}>Tøm tabell</button>
+                <button role="menuitem" onClick={() => { onClearTable(); setFileMenuOpen(false); }} disabled={!canClear}>
+                  Tøm tabell
+                </button>
               </div>
             )}
           </div>
-
-          {/* (valgfri) ekstra knapp – beholder denne for rask tilgang */}
-          <button title="Tøm alle rader i tabellen" onClick={onClearTable} disabled={!canClear}>
-            Tøm tabell
-          </button>
 
           {/* FULL – vises kun i full edition (kommer senere) */}
           <FeatureGate feature="file.new">
@@ -129,7 +131,7 @@ export default function MainToolbar(props: MainToolbarProps) {
         </div>
       </div>
 
-      {/* TABELL (tidl. Rediger) */}
+      {/* TABELL (inkluderer tidligere Rediger + Visning) */}
       <div className="group">
         <div className="group-title">Tabell</div>
         <div className="group-body">
@@ -137,7 +139,7 @@ export default function MainToolbar(props: MainToolbarProps) {
           {/* Tabell-dropdown */}
           <div className="menu-anchor" ref={tableBtnRef}>
             <button
-              title="Tabell-handlinger"
+              title="Tabell-handlinger og visning"
               onClick={() => setTableMenuOpen(v => !v)}
               aria-haspopup="menu"
               aria-expanded={tableMenuOpen}
@@ -147,6 +149,7 @@ export default function MainToolbar(props: MainToolbarProps) {
 
             {tableMenuOpen && (
               <div className="menu" role="menu" aria-label="Tabellvalg">
+                {/* Radhandlinger */}
                 <button role="menuitem" onClick={() => { onAddRow(); setTableMenuOpen(false); }}>
                   Legg til rad
                 </button>
@@ -157,25 +160,16 @@ export default function MainToolbar(props: MainToolbarProps) {
                 <button role="menuitem" onClick={() => { onClearTable(); setTableMenuOpen(false); }}>
                   Tøm tabell
                 </button>
+
+                {/* Visning */}
+                <div className="menu-sep" />
+                <div style={{ padding: "4px 8px", fontSize: 12, opacity: .7 }}>Visning</div>
+                <button role="menuitem" onClick={preset(0)}>Bare tabell (0%)</button>
+                <button role="menuitem" onClick={preset(40)}>60% tabell / 40% Gantt</button>
+                <button role="menuitem" onClick={preset(60)}>40% tabell / 60% Gantt</button>
+                <button role="menuitem" onClick={preset(100)}>Bare Gantt (100%)</button>
               </div>
             )}
-          </div>
-
-          {/* (valgfritt) behold hurtigknapper – kan fjernes hvis du vil bare ha meny */}
-          <button title="Legg til rad (Ctrl+Enter)" onClick={onAddRow}>+ Rad</button>
-          <button title="Slett siste rad" onClick={onDeleteLast}>− Rad</button>
-        </div>
-      </div>
-
-      {/* VISNING */}
-      <div className="group">
-        <div className="group-title">Visning</div>
-        <div className="group-body">
-          <div className="seg">
-            <button title="Bare tabell" onClick={preset(0)}>Tabell</button>
-            <button title="60/40 (standard)" onClick={preset(40)}>60/40</button>
-            <button title="40/60" onClick={preset(60)}>40/60</button>
-            <button title="Bare Gantt" onClick={preset(100)}>Gantt</button>
           </div>
         </div>
       </div>
