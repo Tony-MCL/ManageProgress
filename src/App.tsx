@@ -69,16 +69,50 @@ export default function App() {
   };
 
   const addRow = () => {
-    const next = [...rows, {
-      nr: "", aktivitet: "", start: "", slutt: "", varighet: "",
-      avhengighet: "", ansvarlig: "", farge: "", kommentar: ""
-    }];
+    const next = [
+      ...rows,
+      {
+        nr: "",
+        aktivitet: "",
+        start: "",
+        slutt: "",
+        varighet: "",
+        avhengighet: "",
+        ansvarlig: "",
+        farge: "",
+        kommentar: "",
+      },
+    ];
     setRows(renumber(next));
   };
+
   const deleteLast = () => {
     if (!rows.length) return;
     const next = rows.slice(0, -1);
     setRows(renumber(next));
+  };
+
+  // LITE: Skriv ut (papir/PDF via nettleserens dialog)
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // LITE: Tøm tabell (reset til én tom rad)
+  const handleClearTable = () => {
+    const empty = [
+      {
+        nr: "1",
+        aktivitet: "",
+        start: "",
+        slutt: "",
+        varighet: "",
+        avhengighet: "",
+        ansvarlig: "",
+        farge: "",
+        kommentar: "",
+      },
+    ];
+    setRows(empty);
   };
 
   return (
@@ -95,8 +129,8 @@ export default function App() {
         setShowToday={setShowToday}
         ganttPercent={ganttPercent}
         setGanttPercent={setGanttPercent}
-        onSave={() => {/* placeholder – kobles senere */}}
-        onExport={() => {/* placeholder – kobles senere */}}
+        onPrint={handlePrint}             {/* LITE */}
+        onClearTable={handleClearTable}   {/* LITE */}
       />
 
       {/* Sammendragslinje */}
@@ -129,3 +163,8 @@ export default function App() {
   );
 }
 /* ==== [BLOCK: Component] END ==== */
+
+
+
+
+
