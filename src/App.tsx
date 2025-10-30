@@ -10,7 +10,6 @@ import TableCore, { TableCoreRef, TableColumn, TableEvent } from "./core/TableCo
 import MainToolbar from "./components/MainToolbar";
 import SummaryBar from "./components/SummaryBar";
 import GanttLite from "./components/GanttLite";
-import PrintModal from "./components/PrintModal";
 import SplitOverlay from "./components/SplitOverlay";
 import { FilePanel } from "./components/ToolbarPanels";
 /* ==== [BLOCK: Imports] END ==== */
