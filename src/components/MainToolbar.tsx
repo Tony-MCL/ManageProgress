@@ -105,7 +105,7 @@ export default function MainToolbar(props: MainToolbarProps) {
         <div className="group-body">
           <div className="seg">
             <button title="Zoom ut" onClick={zoomOut}>−</button>
-            <button title="Zoom inn" onClick={zoomIn}>+</</button>
+            <button title="Zoom inn" onClick={zoomIn}>+</button>
             <button title="Reset zoom" onClick={zoomReset}>Reset</button>
           </div>
           <label className="chk" title="Vis vertikal i dag-linje">
