@@ -14,11 +14,15 @@ export type MainToolbarProps = {
   ganttPercent: number;
   setGanttPercent: (p: number) => void;
 
-  // Fil-aksjoner
-  onPrint: () => void;
-  onClearTable: () => void;
+  // LITE
+  onPrint: () => void;        // Åpner Fil-panelet
+  onClearTable: () => void;   // Brukes også inne i panelet
 
-  // (Full-versjon – valgfritt senere)
+  // Panel toggles
+  onToggleFilePanel: () => void;
+  filePanelOpen: boolean;
+
+  // FULL – fremtid
   onOpen?: () => void;
   onNew?: () => void;
   onSave?: () => void;
@@ -30,7 +34,9 @@ export default function MainToolbar(props: MainToolbarProps) {
     onAddRow, onDeleteLast,
     pxPerDay, setPxPerDay, showToday, setShowToday,
     ganttPercent, setGanttPercent,
-    onPrint, onClearTable, onOpen, onNew, onSave, onExport
+    onClearTable,
+    onToggleFilePanel, filePanelOpen,
+    onOpen, onNew, onSave, onExport,
   } = props;
 
   const zoomIn  = () => setPxPerDay(Math.min(80, Math.round(pxPerDay + 5)));
@@ -38,26 +44,29 @@ export default function MainToolbar(props: MainToolbarProps) {
   const zoomReset = () => setPxPerDay(20);
   const preset = (p: number) => () => setGanttPercent(p);
 
-  // Kan brukes til å disable knapper (ikke bare skjule)
   const canPrint = useFeature("file.print");
   const canClear = useFeature("file.clear");
 
   return (
     <div className="ribbon" role="toolbar" aria-label="Hovedverktøylinje">
-      {/* Fil */}
-      <div className="group">
+      {/* FIL */}
+      <div className={`group ${filePanelOpen ? "group-active" : ""}`}>
         <div className="group-title">Fil</div>
         <div className="group-body">
-          {/* LITE */}
-          <button title="Skriv ut (papir eller PDF)" onClick={onPrint} disabled={!canPrint}>Skriv ut</button>
-          <button title="Tøm alle rader i tabellen" onClick={onClearTable} disabled={!canClear}>Tøm tabell</button>
+          {/* I LITE: denne knappen åpner panelet med printvalg */}
+          <button title="Skriv ut" onClick={onToggleFilePanel} disabled={!canPrint}>
+            Skriv ut
+          </button>
+          <button title="Tøm alle rader i tabellen" onClick={onClearTable} disabled={!canClear}>
+            Tøm tabell
+          </button>
 
-          {/* FULL – vises bare når feature er aktiv */}
-          <FeatureGate feature="file.open">
-            <button title="Åpne" onClick={onOpen}>Åpne</button>
-          </FeatureGate>
+          {/* FULL – vises kun i full edition (kommer senere) */}
           <FeatureGate feature="file.new">
             <button title="Ny" onClick={onNew}>Ny</button>
+          </FeatureGate>
+          <FeatureGate feature="file.open">
+            <button title="Åpne" onClick={onOpen}>Åpne</button>
           </FeatureGate>
           <FeatureGate feature="file.save">
             <button title="Lagre" onClick={onSave}>Lagre</button>
@@ -68,7 +77,7 @@ export default function MainToolbar(props: MainToolbarProps) {
         </div>
       </div>
 
-      {/* Rediger */}
+      {/* REDIGER */}
       <div className="group">
         <div className="group-title">Rediger</div>
         <div className="group-body">
@@ -77,7 +86,7 @@ export default function MainToolbar(props: MainToolbarProps) {
         </div>
       </div>
 
-      {/* Visning */}
+      {/* VISNING */}
       <div className="group">
         <div className="group-title">Visning</div>
         <div className="group-body">
@@ -90,13 +99,13 @@ export default function MainToolbar(props: MainToolbarProps) {
         </div>
       </div>
 
-      {/* Gantt */}
+      {/* GANTT */}
       <div className="group">
         <div className="group-title">Gantt</div>
         <div className="group-body">
           <div className="seg">
             <button title="Zoom ut" onClick={zoomOut}>−</button>
-            <button title="Zoom inn" onClick={zoomIn}>+</button>
+            <button title="Zoom inn" onClick={zoomIn}>+</</button>
             <button title="Reset zoom" onClick={zoomReset}>Reset</button>
           </div>
           <label className="chk" title="Vis vertikal i dag-linje">
@@ -106,7 +115,7 @@ export default function MainToolbar(props: MainToolbarProps) {
         </div>
       </div>
 
-      {/* Data (placeholder) */}
+      {/* DATA (placeholder) */}
       <div className="group">
         <div className="group-title">Data</div>
         <div className="group-body">
