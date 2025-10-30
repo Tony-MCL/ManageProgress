@@ -368,3 +368,35 @@ button:hover { outline: 2px solid var(--focus); }
 /* Merk aktiv gruppe visuelt */
 .group.group-active { outline: 2px solid var(--focus); outline-offset: 2px; }
 /* ==== [BLOCK: Ribbon Panel] END ==== */
+/* ==== [BLOCK: Dropdown Menu] BEGIN ==== */
+.menu-anchor { position: relative; display: inline-block; }
+.menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 60;
+  background: var(--panel);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 10px 20px rgba(0,0,0,.2);
+  min-width: 180px;
+}
+.menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+.menu button:hover {
+  background: var(--panel-2);
+}
+.menu-sep {
+  height: 1px;
+  background: var(--grid-border);
+  margin: 6px 2px;
+}
+/* ==== [BLOCK: Dropdown Menu] END ==== */
