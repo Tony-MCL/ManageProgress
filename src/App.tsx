@@ -11,7 +11,6 @@ import MainToolbar from "./components/MainToolbar";
 import SummaryBar from "./components/SummaryBar";
 import GanttLite from "./components/GanttLite";
 import SplitOverlay from "./components/SplitOverlay";
-import { FilePanel } from "./components/ToolbarPanels";
 /* ==== [BLOCK: Imports] END ==== */
 
 /* ==== [BLOCK: Columns Definition] BEGIN ==== */
@@ -120,18 +119,8 @@ export default function App() {
         setShowToday={setShowToday}
         ganttPercent={ganttPercent}
         setGanttPercent={setGanttPercent}
-        onPrint={() => setFileOpen((v) => !v)}
         onClearTable={handleClearTable}
-        onToggleFilePanel={() => setFileOpen((v) => !v)}
-        filePanelOpen={fileOpen}
-      />
-
-      {/* Panel-bannere under verktøylinja */}
-      <FilePanel
-        open={fileOpen}
-        onClose={() => setFileOpen(false)}
-        onPrint={doPrint}
-        onClear={handleClearTable}
+        onPrintMode={doPrint}
       />
 
       {/* Sammendragslinje (øverst – blir alltid med i print) */}
