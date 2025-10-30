@@ -23,7 +23,7 @@ export type MainToolbarProps = {
   onClearTable: () => void;
   onPrintMode: (mode: PrintMode) => void;
 
-  // Disse finnes fra før i App – de ignoreres nå, men beholdes for kompatibilitet
+  // (bakoverkomp. – ignoreres nå)
   onPrint?: () => void;
   onToggleFilePanel?: () => void;
   filePanelOpen?: boolean;
@@ -42,25 +42,28 @@ export default function MainToolbar(props: MainToolbarProps) {
     showToday, setShowToday,
     ganttPercent, setGanttPercent,
     onClearTable, onPrintMode,
-    // ubrukte, for bakoverkomp.
     onOpen, onNew, onSave, onExport,
   } = props;
 
+  // Dropdown-stater
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
+  const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const fileBtnRef = useRef<HTMLDivElement | null>(null);
+  const tableBtnRef = useRef<HTMLDivElement | null>(null);
 
-  // Klikk utenfor → lukk meny
+  // Klikk utenfor → lukk menyer
   useEffect(() => {
-    if (!fileMenuOpen) return;
+    if (!fileMenuOpen && !tableMenuOpen) return;
     const onDoc = (e: MouseEvent) => {
-      if (!fileBtnRef.current) return;
-      const el = fileBtnRef.current;
-      if (el.contains(e.target as Node)) return;
+      const t = e.target as Node;
+      if (fileBtnRef.current && fileBtnRef.current.contains(t)) return;
+      if (tableBtnRef.current && tableBtnRef.current.contains(t)) return;
       setFileMenuOpen(false);
+      setTableMenuOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [fileMenuOpen]);
+  }, [fileMenuOpen, tableMenuOpen]);
 
   const zoomIn  = () => setPxPerDay(Math.min(80, Math.round(pxPerDay + 5)));
   const zoomOut = () => setPxPerDay(Math.max(8,  Math.round(pxPerDay - 5)));
@@ -105,6 +108,7 @@ export default function MainToolbar(props: MainToolbarProps) {
             )}
           </div>
 
+          {/* (valgfri) ekstra knapp – beholder denne for rask tilgang */}
           <button title="Tøm alle rader i tabellen" onClick={onClearTable} disabled={!canClear}>
             Tøm tabell
           </button>
@@ -125,10 +129,39 @@ export default function MainToolbar(props: MainToolbarProps) {
         </div>
       </div>
 
-      {/* REDIGER */}
+      {/* TABELL (tidl. Rediger) */}
       <div className="group">
-        <div className="group-title">Rediger</div>
+        <div className="group-title">Tabell</div>
         <div className="group-body">
+
+          {/* Tabell-dropdown */}
+          <div className="menu-anchor" ref={tableBtnRef}>
+            <button
+              title="Tabell-handlinger"
+              onClick={() => setTableMenuOpen(v => !v)}
+              aria-haspopup="menu"
+              aria-expanded={tableMenuOpen}
+            >
+              Tabell ▾
+            </button>
+
+            {tableMenuOpen && (
+              <div className="menu" role="menu" aria-label="Tabellvalg">
+                <button role="menuitem" onClick={() => { onAddRow(); setTableMenuOpen(false); }}>
+                  Legg til rad
+                </button>
+                <button role="menuitem" onClick={() => { onDeleteLast(); setTableMenuOpen(false); }}>
+                  Fjern siste rad
+                </button>
+                <div className="menu-sep" />
+                <button role="menuitem" onClick={() => { onClearTable(); setTableMenuOpen(false); }}>
+                  Tøm tabell
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* (valgfritt) behold hurtigknapper – kan fjernes hvis du vil bare ha meny */}
           <button title="Legg til rad (Ctrl+Enter)" onClick={onAddRow}>+ Rad</button>
           <button title="Slett siste rad" onClick={onDeleteLast}>− Rad</button>
         </div>
