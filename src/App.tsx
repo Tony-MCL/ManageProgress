@@ -129,8 +129,8 @@ export default function App() {
         setShowToday={setShowToday}
         ganttPercent={ganttPercent}
         setGanttPercent={setGanttPercent}
-        onPrint={handlePrint}             {/* LITE */}
-        onClearTable={handleClearTable}   {/* LITE */}
+        onPrint={handlePrint}             
+        onClearTable={handleClearTable}   
       />
 
       {/* Sammendragslinje */}
