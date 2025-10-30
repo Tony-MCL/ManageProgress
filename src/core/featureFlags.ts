@@ -1,4 +1,5 @@
-// src/core/featureFlags.ts
+// src/core/featureFlags.tsx
+import React, { useSyncExternalStore } from "react";
 import { getEdition, type Edition } from "../config/edition";
 
 type FeatureKey =
@@ -8,8 +9,7 @@ type FeatureKey =
   | "file.new"
   | "file.save"
   | "file.export"
-  | "file.printAdvanced" // f.eks. egen print-layout
-  ;
+  | "file.printAdvanced";
 
 type FeatureMatrix = Record<FeatureKey, boolean>;
 
@@ -37,41 +37,49 @@ function matrixFor(edition: Edition): FeatureMatrix {
   return edition === "full" ? FULL : LITE;
 }
 
-// Enkel “singleton” tilstand (kan byttes til Context senere)
+// Intern tilstand for edition/feature-matrise
 let currentEdition: Edition = getEdition();
 let currentMatrix: FeatureMatrix = matrixFor(currentEdition);
+
+// Abonnement (for React hook)
+const subs = new Set<() => void>();
+function subscribe(cb: () => void) {
+  subs.add(cb);
+  return () => subs.delete(cb);
+}
+function notify() {
+  subs.forEach((f) => f());
+}
 
 export function getEditionNow(): Edition {
   return currentEdition;
 }
-
 export function setEditionNow(edition: Edition) {
   currentEdition = edition;
   currentMatrix = matrixFor(edition);
+  notify();
 }
-
 export function hasFeature(key: FeatureKey): boolean {
   return !!currentMatrix[key];
 }
-
-// React-hjelpere
-import { useSyncExternalStore } from "react";
-
-// mini-bus for oppdateringer (om vi senere lar brukeren skifte edition i UI)
-const subs = new Set<() => void>();
-function subscribe(cb: () => void) { subs.add(cb); return () => subs.delete(cb); }
-function notify() { subs.forEach(f => f()); }
-
-/** (Valgfritt) kall denne hvis du endrer edition i runtime */
-export function refreshFeatures() { currentMatrix = matrixFor(currentEdition); notify(); }
-
-/** Hook: rerender når matrix/edition endres */
-export function useFeature(key: FeatureKey): boolean {
-  useSyncExternalStore(subscribe, () => hasFeature(key));
-  return hasFeature(key);
+export function refreshFeatures() {
+  currentMatrix = matrixFor(currentEdition);
+  notify();
 }
 
-/** Gate-komponent */
-import React from "react";
-export const FeatureGate: React.FC<{ feature: FeatureKey; children: React.ReactNode; fallback?: React.ReactNode }> =
-  ({ feature, children, fallback = null }) => (hasFeature(feature) ? <>{children}</> : <>{fallback}</>);
+// Hook: les et flagg og rerender ved endring
+export function useFeature(key: FeatureKey): boolean {
+  // snapshot-funksjon må være stabil og ikke allokere nytt objekt
+  const getSnapshot = () => hasFeature(key);
+  // useSyncExternalStore krever samme subscribe for mount/unmount
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+// Liten gate-komponent for å vise/skjule UI
+export const FeatureGate: React.FC<{
+  feature: FeatureKey;
+  fallback?: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ feature, fallback = null, children }) => {
+  return hasFeature(feature) ? <>{children}</> : <>{fallback}</>;
+};
