@@ -316,3 +316,27 @@ button:hover { outline: 2px solid var(--focus); }
   background: var(--panel);
 }
 /* ==== [BLOCK: Ribbon] END ==== */
+/* ==== [BLOCK: Print Styles] BEGIN ==== */
+@media print {
+  /* Skjul ting vi aldri vil ha på papir */
+  .no-print, .ribbon, .modal-backdrop { display: none !important; }
+
+  body { background: white; }
+
+  /* Vis kun hovedinnholdet pent */
+  .split { border: 0; border-radius: 0; }
+  .gantt-wrap, .summarybar { border: 0; }
+  .gantt-scroller { overflow: visible; } /* la SVG få full høyde/bredde */
+  .table-wrap { overflow: visible; }
+
+  /* Moduser */
+  body.print-table .split-right { display: none !important; }   /* bare tabell */
+  body.print-gantt .split-left  { display: none !important; }   /* bare gantt */
+
+  /* Ved “begge”: behold slik bruker har valgt (vi har evt. satt 60/40) */
+
+  /* Optional: kompakt marger for papir */
+  @page { margin: 12mm; }
+  .app { padding: 0 !important; }
+}
+/* ==== [BLOCK: Print Styles] END ==== */
