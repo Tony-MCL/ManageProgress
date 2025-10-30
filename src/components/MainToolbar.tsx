@@ -1,6 +1,8 @@
 // src/components/MainToolbar.tsx
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FeatureGate, useFeature } from "../core/featureFlags";
+
+export type PrintMode = "table" | "gantt" | "both";
 
 export type MainToolbarProps = {
   // Data/rader
@@ -18,12 +20,13 @@ export type MainToolbarProps = {
   setGanttPercent: (p: number) => void;
 
   // LITE
-  onPrint: () => void;        // (ikke brukt direkte – vi bruker paneltoggle)
   onClearTable: () => void;
+  onPrintMode: (mode: PrintMode) => void;
 
-  // Panel-toggles
-  onToggleFilePanel: () => void;
-  filePanelOpen: boolean;
+  // Disse finnes fra før i App – de ignoreres nå, men beholdes for kompatibilitet
+  onPrint?: () => void;
+  onToggleFilePanel?: () => void;
+  filePanelOpen?: boolean;
 
   // FULL (senere)
   onOpen?: () => void;
@@ -34,45 +37,79 @@ export type MainToolbarProps = {
 
 export default function MainToolbar(props: MainToolbarProps) {
   const {
-    onAddRow,
-    onDeleteLast,
-    pxPerDay,
-    setPxPerDay,
-    showToday,
-    setShowToday,
-    ganttPercent,
-    setGanttPercent,
-    onClearTable,
-    onToggleFilePanel,
-    filePanelOpen,
-    onOpen,
-    onNew,
-    onSave,
-    onExport,
+    onAddRow, onDeleteLast,
+    pxPerDay, setPxPerDay,
+    showToday, setShowToday,
+    ganttPercent, setGanttPercent,
+    onClearTable, onPrintMode,
+    // ubrukte, for bakoverkomp.
+    onOpen, onNew, onSave, onExport,
   } = props;
 
-  const zoomIn = () => setPxPerDay(Math.min(80, Math.round(pxPerDay + 5)));
-  const zoomOut = () => setPxPerDay(Math.max(8, Math.round(pxPerDay - 5)));
+  const [fileMenuOpen, setFileMenuOpen] = useState(false);
+  const fileBtnRef = useRef<HTMLDivElement | null>(null);
+
+  // Klikk utenfor → lukk meny
+  useEffect(() => {
+    if (!fileMenuOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!fileBtnRef.current) return;
+      const el = fileBtnRef.current;
+      if (el.contains(e.target as Node)) return;
+      setFileMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [fileMenuOpen]);
+
+  const zoomIn  = () => setPxPerDay(Math.min(80, Math.round(pxPerDay + 5)));
+  const zoomOut = () => setPxPerDay(Math.max(8,  Math.round(pxPerDay - 5)));
   const zoomReset = () => setPxPerDay(20);
   const preset = (p: number) => () => setGanttPercent(p);
 
   const canPrint = useFeature("file.print");
   const canClear = useFeature("file.clear");
 
+  const choosePrint = (mode: PrintMode) => {
+    onPrintMode(mode);
+    setFileMenuOpen(false);
+  };
+
   return (
     <div className="ribbon" role="toolbar" aria-label="Hovedverktøylinje">
       {/* FIL */}
-      <div className={`group ${filePanelOpen ? "group-active" : ""}`}>
+      <div className="group">
         <div className="group-title">Fil</div>
         <div className="group-body">
-          <button title="Skriv ut" onClick={onToggleFilePanel} disabled={!canPrint}>
-            Skriv ut
-          </button>
+
+          {/* Print dropdown */}
+          <div className="menu-anchor" ref={fileBtnRef}>
+            <button
+              title="Skriv ut"
+              onClick={() => setFileMenuOpen(v => !v)}
+              disabled={!canPrint}
+              aria-haspopup="menu"
+              aria-expanded={fileMenuOpen}
+            >
+              Skriv ut ▾
+            </button>
+
+            {fileMenuOpen && (
+              <div className="menu" role="menu" aria-label="Utskriftsvalg">
+                <button role="menuitem" onClick={() => choosePrint("table")}>Kun tabell</button>
+                <button role="menuitem" onClick={() => choosePrint("gantt")}>Kun Gantt</button>
+                <button role="menuitem" onClick={() => choosePrint("both")}>Tabell + Gantt</button>
+                <div className="menu-sep" />
+                <button role="menuitem" onClick={() => { onClearTable(); setFileMenuOpen(false); }}>Tøm tabell</button>
+              </div>
+            )}
+          </div>
+
           <button title="Tøm alle rader i tabellen" onClick={onClearTable} disabled={!canClear}>
             Tøm tabell
           </button>
 
-          {/* FULL (vises kun i full edition) */}
+          {/* FULL – vises kun i full edition (kommer senere) */}
           <FeatureGate feature="file.new">
             <button title="Ny" onClick={onNew}>Ny</button>
           </FeatureGate>
@@ -120,11 +157,7 @@ export default function MainToolbar(props: MainToolbarProps) {
             <button title="Reset zoom" onClick={zoomReset}>Reset</button>
           </div>
           <label className="chk" title="Vis vertikal i dag-linje">
-            <input
-              type="checkbox"
-              checked={showToday}
-              onChange={(e) => setShowToday(e.target.checked)}
-            />
+            <input type="checkbox" checked={showToday} onChange={(e) => setShowToday(e.target.checked)} />
             I dag
           </label>
         </div>
