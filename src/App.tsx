@@ -10,6 +10,7 @@ import TableCore, { TableCoreRef, TableColumn, TableEvent } from "./core/TableCo
 import MainToolbar from "./components/MainToolbar";
 import SummaryBar from "./components/SummaryBar";
 import GanttLite from "./components/GanttLite";
+import PrintModal from "./components/PrintModal";
 import SplitOverlay from "./components/SplitOverlay";
 /* ==== [BLOCK: Imports] END ==== */
 
@@ -62,6 +63,8 @@ export default function App() {
   const [showToday, setShowToday] = useState<boolean>(true);
   const [ganttPercent, setGanttPercent] = useState<number>(40); // 60/40 standard
 
+  const [printOpen, setPrintOpen] = useState(false);
+
   const onGridChange = (next: Record<string, string>[], evt: TableEvent) => {
     const withDur = applyDurations(next);
     const withNr = renumber(withDur);
@@ -71,17 +74,7 @@ export default function App() {
   const addRow = () => {
     const next = [
       ...rows,
-      {
-        nr: "",
-        aktivitet: "",
-        start: "",
-        slutt: "",
-        varighet: "",
-        avhengighet: "",
-        ansvarlig: "",
-        farge: "",
-        kommentar: "",
-      },
+      { nr: "", aktivitet: "", start: "", slutt: "", varighet: "", avhengighet: "", ansvarlig: "", farge: "", kommentar: "" },
     ];
     setRows(renumber(next));
   };
@@ -92,32 +85,44 @@ export default function App() {
     setRows(renumber(next));
   };
 
-  // LITE: Skriv ut (papir/PDF via nettleserens dialog)
-  const handlePrint = () => {
-    window.print();
+  // Tøm tabell (reset til én tom rad)
+  const handleClearTable = () => {
+    const empty = [{ nr: "1", aktivitet: "", start: "", slutt: "", varighet: "", avhengighet: "", ansvarlig: "", farge: "", kommentar: "" }];
+    setRows(empty);
   };
 
-  // LITE: Tøm tabell (reset til én tom rad)
-  const handleClearTable = () => {
-    const empty = [
-      {
-        nr: "1",
-        aktivitet: "",
-        start: "",
-        slutt: "",
-        varighet: "",
-        avhengighet: "",
-        ansvarlig: "",
-        farge: "",
-        kommentar: "",
-      },
-    ];
-    setRows(empty);
+  // Åpne print-valg
+  const handlePrint = () => setPrintOpen(true);
+
+  // Utfør print iht. valgt modus
+  const doPrint = (mode: "table" | "gantt" | "both") => {
+    setPrintOpen(false);
+
+    // midlertidig justering for "begge"
+    const prev = ganttPercent;
+    if (mode === "both" && (prev === 0 || prev === 100)) {
+      setGanttPercent(40);
+    }
+
+    // sett klasse på body for print-CSS
+    const cls = `print-${mode}`;
+    document.body.classList.add(cls);
+
+    const restore = () => {
+      document.body.classList.remove(cls);
+      if (mode === "both" && (prev === 0 || prev === 100)) {
+        setGanttPercent(prev);
+      }
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+
+    window.print();
   };
 
   return (
     <div className="app">
-      <h1>Progress (LITE)</h1>
+      <h1 className="no-print">Progress (LITE)</h1>
 
       {/* Hovedverktøylinje */}
       <MainToolbar
@@ -129,15 +134,17 @@ export default function App() {
         setShowToday={setShowToday}
         ganttPercent={ganttPercent}
         setGanttPercent={setGanttPercent}
-        onPrint={handlePrint}             
-        onClearTable={handleClearTable}   
+        onPrint={handlePrint}
+        onClearTable={handleClearTable}
       />
 
-      {/* Sammendragslinje */}
-      <SummaryBar rows={rows} />
+      {/* Sammendragslinje – pakkes i en wrapper-klasse for print */}
+      <div className="summarybar">
+        <SummaryBar rows={rows} />
+      </div>
 
       {/* Delt visning: Tabell (venstre, under) + Gantt (høyre, overlay) */}
-      <div style={{ marginTop: 12 }}>
+      <div className="print-area" style={{ marginTop: 12 }}>
         <SplitOverlay
           percent={ganttPercent}
           onPercentChange={setGanttPercent}
@@ -159,10 +166,19 @@ export default function App() {
           }
         />
       </div>
+
+      {/* Print-modal */}
+      <PrintModal
+        open={printOpen}
+        onCancel={() => setPrintOpen(false)}
+        onConfirm={doPrint}
+        initial="both"
+      />
     </div>
   );
 }
 /* ==== [BLOCK: Component] END ==== */
+
 
 
 
