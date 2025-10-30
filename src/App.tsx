@@ -12,6 +12,7 @@ import SummaryBar from "./components/SummaryBar";
 import GanttLite from "./components/GanttLite";
 import PrintModal from "./components/PrintModal";
 import SplitOverlay from "./components/SplitOverlay";
+import { FilePanel } from "./components/ToolbarPanels";
 /* ==== [BLOCK: Imports] END ==== */
 
 /* ==== [BLOCK: Columns Definition] BEGIN ==== */
