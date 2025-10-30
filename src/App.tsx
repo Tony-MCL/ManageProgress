@@ -63,7 +63,8 @@ export default function App() {
   const [showToday, setShowToday] = useState<boolean>(true);
   const [ganttPercent, setGanttPercent] = useState<number>(40); // 60/40 standard
 
-  const [printOpen, setPrintOpen] = useState(false);
+  // Ribbon-panels
+  const [fileOpen, setFileOpen] = useState(false);
 
   const onGridChange = (next: Record<string, string>[], evt: TableEvent) => {
     const withDur = applyDurations(next);
@@ -72,47 +73,33 @@ export default function App() {
   };
 
   const addRow = () => {
-    const next = [
-      ...rows,
-      { nr: "", aktivitet: "", start: "", slutt: "", varighet: "", avhengighet: "", ansvarlig: "", farge: "", kommentar: "" },
-    ];
+    const next = [...rows, { nr: "", aktivitet: "", start: "", slutt: "", varighet: "", avhengighet: "", ansvarlig: "", farge: "", kommentar: "" }];
     setRows(renumber(next));
   };
-
   const deleteLast = () => {
     if (!rows.length) return;
     const next = rows.slice(0, -1);
     setRows(renumber(next));
   };
 
-  // Tøm tabell (reset til én tom rad)
   const handleClearTable = () => {
     const empty = [{ nr: "1", aktivitet: "", start: "", slutt: "", varighet: "", avhengighet: "", ansvarlig: "", farge: "", kommentar: "" }];
     setRows(empty);
   };
 
-  // Åpne print-valg
-  const handlePrint = () => setPrintOpen(true);
-
-  // Utfør print iht. valgt modus
+  // Utskrift via body-klasse
   const doPrint = (mode: "table" | "gantt" | "both") => {
-    setPrintOpen(false);
+    setFileOpen(false);
 
-    // midlertidig justering for "begge"
     const prev = ganttPercent;
-    if (mode === "both" && (prev === 0 || prev === 100)) {
-      setGanttPercent(40);
-    }
+    if (mode === "both" && (prev === 0 || prev === 100)) setGanttPercent(40);
 
-    // sett klasse på body for print-CSS
     const cls = `print-${mode}`;
     document.body.classList.add(cls);
 
     const restore = () => {
       document.body.classList.remove(cls);
-      if (mode === "both" && (prev === 0 || prev === 100)) {
-        setGanttPercent(prev);
-      }
+      if (mode === "both" && (prev === 0 || prev === 100)) setGanttPercent(prev);
       window.removeEventListener("afterprint", restore);
     };
     window.addEventListener("afterprint", restore);
@@ -124,7 +111,6 @@ export default function App() {
     <div className="app">
       <h1 className="no-print">Progress (LITE)</h1>
 
-      {/* Hovedverktøylinje */}
       <MainToolbar
         onAddRow={addRow}
         onDeleteLast={deleteLast}
@@ -134,16 +120,26 @@ export default function App() {
         setShowToday={setShowToday}
         ganttPercent={ganttPercent}
         setGanttPercent={setGanttPercent}
-        onPrint={handlePrint}
+        onPrint={() => setFileOpen((v) => !v)}
         onClearTable={handleClearTable}
+        onToggleFilePanel={() => setFileOpen((v) => !v)}
+        filePanelOpen={fileOpen}
       />
 
-      {/* Sammendragslinje – pakkes i en wrapper-klasse for print */}
+      {/* Panel-bannere under verktøylinja */}
+      <FilePanel
+        open={fileOpen}
+        onClose={() => setFileOpen(false)}
+        onPrint={doPrint}
+        onClear={handleClearTable}
+      />
+
+      {/* Sammendragslinje (øverst – blir alltid med i print) */}
       <div className="summarybar">
         <SummaryBar rows={rows} />
       </div>
 
-      {/* Delt visning: Tabell (venstre, under) + Gantt (høyre, overlay) */}
+      {/* Delt visning */}
       <div className="print-area" style={{ marginTop: 12 }}>
         <SplitOverlay
           percent={ganttPercent}
@@ -166,21 +162,8 @@ export default function App() {
           }
         />
       </div>
-
-      {/* Print-modal */}
-      <PrintModal
-        open={printOpen}
-        onCancel={() => setPrintOpen(false)}
-        onConfirm={doPrint}
-        initial="both"
-      />
     </div>
   );
 }
 /* ==== [BLOCK: Component] END ==== */
-
-
-
-
-
 
