@@ -332,7 +332,7 @@ button:hover,
 .group-title {
   font-size: 12px;
   font-weight: 700;
-  color: var(--focus);
+  color: var(--ribbon-heading); /* <— var(--focus) -> var(--ribbon-heading) */
   text-transform: uppercase;
   letter-spacing: .6px;
 }
