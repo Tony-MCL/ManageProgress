@@ -1,49 +1,48 @@
 // src/components/ThemeToggle.tsx
 import React, { useEffect, useState } from "react";
 
-function isDarkNow(): boolean {
-  const html = document.documentElement;
-  return html.getAttribute("data-theme") === "dark" || html.classList.contains("dark");
-}
-
-function applyDark(dark: boolean) {
+function applyTheme(explicit: "light" | "dark") {
   const html = document.documentElement;
   const body = document.body;
 
-  if (dark) {
-    html.setAttribute("data-theme", "dark");
-    html.classList.add("dark");
-    body.setAttribute("data-theme", "dark");
-    body.classList.add("dark");
-    try { localStorage.setItem("mcl.theme", "dark"); } catch {}
-  } else {
-    html.removeAttribute("data-theme");
-    html.classList.remove("dark");
-    body.removeAttribute("data-theme");
-    body.classList.remove("dark");
-    try { localStorage.setItem("mcl.theme", "light"); } catch {}
-  }
+  // nullstill begge retninger
+  html.classList.remove("light", "dark");
+  body.classList.remove("light", "dark");
+  html.removeAttribute("data-theme");
+  body.removeAttribute("data-theme");
 
-  // (valgfritt) tving lett repaint
-  void html.offsetHeight; // no-op som sikrer reflow i noen nettlesere
+  // sett eksplisitt valg
+  html.classList.add(explicit);
+  body.classList.add(explicit);
+  html.setAttribute("data-theme", explicit);
+  body.setAttribute("data-theme", explicit);
+
+  try { localStorage.setItem("mcl.theme", explicit); } catch {}
 }
 
 export default function ThemeToggle() {
-  const [dark, setDark] = useState<boolean>(() => isDarkNow());
+  const [mode, setMode] = useState<"light" | "dark">(() =>
+    (document.documentElement.getAttribute("data-theme") as "light" | "dark") || "light"
+  );
 
   useEffect(() => {
-    const saved = localStorage.getItem("mcl.theme");
-    if (saved === "dark") { applyDark(true); setDark(true); }
-    else if (saved === "light") { applyDark(false); setDark(false); }
-    else { setDark(isDarkNow()); }
+    const saved = localStorage.getItem("mcl.theme") as "light" | "dark" | null;
+    applyTheme(saved ?? "light");
+    setMode(saved ?? "light");
   }, []);
+
+  const toggle = () => {
+    const next = mode === "dark" ? "light" : "dark";
+    applyTheme(next);
+    setMode(next);
+  };
 
   return (
     <button
-      title={dark ? "Bytt til lyst tema" : "Bytt til mørkt tema"}
-      onClick={() => { applyDark(!dark); setDark(!dark); }}
+      title={mode === "dark" ? "Bytt til lyst tema" : "Bytt til mørkt tema"}
+      onClick={toggle}
     >
-      {dark ? "🌙 Mørk" : "☀️ Lys"}
+      {mode === "dark" ? "🌙 Mørk" : "☀️ Lys"}
     </button>
   );
 }
