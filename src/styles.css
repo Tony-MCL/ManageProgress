@@ -46,7 +46,7 @@ body.dark {
   --mcl-brand:    #D7C2A8; /* Cappuccino som “lys” brand */
   --mcl-accent:   #C2A58F; /* Lys mokka */
   --mcl-outline:  #2D2B28; /* Subtil separasjon */
-  /* --mcl-header forblir #D7C2A8 i mørk modus */
+  /* --mcl-header beholdes */
 
   --elev-1: 0 4px 10px rgba(0,0,0,.6);
   --elev-2: 0 10px 24px rgba(0,0,0,.7);
@@ -124,7 +124,6 @@ button:hover,
   color: var(--button-text);
 }
 /* ==== [BLOCK: App Layout] END ==== */
-
 
 
 /* ==== [BLOCK: TableCore Styles] BEGIN ==== */
@@ -310,9 +309,41 @@ button:hover,
   color: var(--muted);
   font-style: italic;
 }
+
+/* --- Sammendragsbar med skravering og label, lik hoved-Gantt --- */
+.ps-bar--summary {
+  position: absolute;
+  top: 4px; bottom: 4px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--focus) 70%, var(--panel) 30%) 0 10px,
+      color-mix(in oklab, var(--focus) 40%, var(--panel) 60%) 10px 20px
+    );
+  outline: 1px solid color-mix(in oklab, var(--focus) 50%, var(--grid-border) 50%);
+  box-shadow: inset 0 1px 0 rgba(0,0,0,.12);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.ps-bar--summary .ps-bar-label {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .2px;
+  color: color-mix(in oklab, var(--panel) 0%, #fff 100%);
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
+  padding: 0 8px;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] .ps-bar--summary .ps-bar-label,
+body[data-theme="dark"] .ps-bar--summary .ps-bar-label,
+html.dark .ps-bar--summary .ps-bar-label,
+body.dark .ps-bar--summary .ps-bar-label {
+  color: var(--mcl-text);
+  text-shadow: none;
+}
 /* ==== [BLOCK: Summary & Gantt] END ==== */
-
-
 
 
 /* ==== [BLOCK: SplitOverlay] BEGIN ==== */
@@ -335,14 +366,21 @@ button:hover,
   inset: 0 0 0 auto;
   overflow: hidden;
   border-left: 1px solid var(--grid-border);
-  background: transparent;
+  background: var(--panel);           /* ← Tett bakgrunn, dekker tabellen */
   pointer-events: auto;
   z-index: 4;
+  box-shadow: inset 1px 0 0 var(--grid-border);
 }
 
 .split-left .table-wrap,
 .split-right .gantt-wrap {
   height: 100%;
+}
+.gantt-wrap { background: var(--panel); }  /* tving tett flate */
+.gantt-scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--panel);                /* ← hindrer “ghosting” */
 }
 
 /* Drag-håndtak */
@@ -379,7 +417,6 @@ button:hover,
   gap: 10px;
   align-items: stretch;
   padding: 8px 10px;
-  /* Helt sømløs flate */
   border: 0;
   border-radius: 10px;
   background: var(--mcl-header);
@@ -396,39 +433,35 @@ button:hover,
   align-content: start;
   gap: 6px;
   padding: 8px;
-  border: 0;                         /* ⬅ fjernet */
+  border: 0;
   border-radius: 8px;
-  background: var(--mcl-header);     /* ⬅ samme som ribbon/knapper */
+  background: var(--mcl-header);
   min-width: 160px;
 }
-
 .group-title {
   font-size: 12px;
   font-weight: 700;
-  color: var(--ribbon-heading); /* <— var(--focus) -> var(--ribbon-heading) */
+  color: var(--ribbon-heading);
   text-transform: uppercase;
   letter-spacing: .6px;
 }
-.group-body {
-  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-}
+.group-body { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 /* Segmenterte knappegrupper – flat og sømløs */
 .group .seg {
   display: inline-flex;
-  border: 0;                         /* ⬅ fjernet */
+  border: 0;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--mcl-header);     /* ⬅ samme flate */
+  background: var(--mcl-header);
 }
 .group .seg > button {
   border: 0;
-  background: var(--mcl-header);     /* ⬅ samme flate */
+  background: var(--mcl-header);
   padding: 8px 10px;
   color: var(--button-text);
 }
-.group .seg > button + button { border-left: 0; } /* ⬅ fjernet skillelinje */
-/* Ingen hover i verktøylinja */
+.group .seg > button + button { border-left: 0; }
 .group .seg > button:hover { background: var(--mcl-header); color: var(--button-text); }
 
 /* “Checkbox”-chips – samme flate, ingen kant */
@@ -437,12 +470,11 @@ button:hover,
   gap: 6px;
   align-items: center;
   padding: 6px 8px;
-  border: 0;                         /* ⬅ fjernet */
+  border: 0;
   border-radius: 8px;
-  background: var(--mcl-header);     /* ⬅ samme flate */
+  background: var(--mcl-header);
 }
 /* ==== [BLOCK: Ribbon] END ==== */
-
 
 
 /* ==== [BLOCK: Ribbon Panel] BEGIN ==== */
@@ -505,9 +537,7 @@ button:hover,
 }
 /* Policy: også menyvalg uten hover-effekt */
 .menu button:hover { background: transparent; color: var(--menu-text); }
-.menu-sep {
-  height: 1px; background: var(--grid-border); margin: 6px 2px;
-}
+.menu-sep { height: 1px; background: var(--grid-border); margin: 6px 2px; }
 /* ==== [BLOCK: Dropdown Menu] END ==== */
 
 
@@ -541,7 +571,6 @@ button:hover,
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]),
   body:not([data-theme]) {
-    /* Samme som mørk modus-verdiene dine */
     --mcl-bg:       #12110F;
     --mcl-surface:  #1B1A17;
     --mcl-altbg:    #3B2E23;
@@ -572,13 +601,12 @@ button:hover,
 * {
   transition: background-color .25s linear, color .25s linear, border-color .25s linear;
 }
+
 /* ==== [THEME OVERRIDE: manual beats system] ==== */
-/* Eksplisitt MØRK modus vinner alltid */
 :root[data-theme="dark"],
 body[data-theme="dark"],
 html.dark,
 body.dark {
-  /* mørke variabler (samme som din mørk-blokk) */
   --mcl-bg:       #12110F;
   --mcl-surface:  #1B1A17;
   --mcl-altbg:    #3B2E23;
@@ -605,7 +633,6 @@ body.dark {
   --menu-text:    var(--mcl-text);
 }
 
-/* Eksplisitt LYST modus vinner alltid (revert system-dark) */
 :root[data-theme="light"],
 body[data-theme="light"],
 html.light,
