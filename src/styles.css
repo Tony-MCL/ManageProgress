@@ -663,3 +663,109 @@ body.light {
   --button-text:  var(--mcl-text);
   --menu-text:    var(--mcl-text);
 }
+/* ==== [BLOCK: GanttMini Header] BEGIN ==== */
+.g-mini {
+  position: relative;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--grid-border);
+  background: var(--panel);
+}
+
+/* Month axis (slim, just like the main one but compact) */
+.g-mini-months {
+  position: relative;
+  height: 20px;
+  border: 1px solid var(--grid-border);
+  border-radius: 10px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.g-mini-m {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Track + summary bar */
+.g-mini-track {
+  position: relative;
+  height: 26px;
+  margin-top: 6px;
+  border: 1px solid var(--grid-border);
+  border-radius: 10px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.g-mini-bar {
+  position: absolute;
+  top: 3px; bottom: 3px;
+  left: 0;
+  border-radius: 8px;
+  outline: 1px solid color-mix(in oklab, var(--focus) 50%, var(--grid-border) 50%);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--focus) 70%, var(--panel) 30%) 0 10px,
+      color-mix(in oklab, var(--focus) 40%, var(--panel) 60%) 10px 20px
+    );
+  display: grid; place-items: center;
+}
+.g-mini-bar span {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .2px;
+  color: color-mix(in oklab, var(--panel) 0%, #fff 100%);
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
+}
+:root[data-theme="dark"] .g-mini-bar span,
+body[data-theme="dark"] .g-mini-bar span,
+html.dark .g-mini-bar span,
+body.dark .g-mini-bar span { color: var(--mcl-text); text-shadow: none; }
+
+.g-mini-empty {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--muted); font-style: italic;
+}
+/* ==== [BLOCK: GanttMini Header] END ==== */
+
+/* ==== [BLOCK: Gantt Core (container you already have) — safe defaults] ==== */
+.gantt { position: relative; }
+.g-months { position: relative; height: 28px; }
+.g-month {
+  position: absolute; top: 0; transform: translateX(-50%);
+  height: 24px; line-height: 24px;
+  color: var(--muted); font-size: 12px;
+  padding: 0 4px;
+  background: var(--panel-2);
+  border-radius: 6px;
+}
+.g-week {
+  position: absolute; top: 28px; bottom: 0;
+  width: 1px; background: color-mix(in oklab, var(--grid-border) 70%, transparent);
+}
+.g-today {
+  position: absolute; top: 0; bottom: 0;
+  width: 2px; background: var(--focus); opacity: .7;
+}
+.g-bars { position: relative; }
+.g-bar {
+  position: absolute; height: 18px; border-radius: 6px;
+  background: color-mix(in oklab, var(--accent) 45%, var(--focus) 55%);
+  box-shadow: inset 0 1px 0 rgba(0,0,0,.14);
+  display: grid; place-items: center;
+}
+.g-bar > span {
+  font-size: 11px; font-weight: 700;
+  color: color-mix(in oklab, var(--panel) 0%, #fff 100%);
+}
+:root[data-theme="dark"] .g-bar > span,
+body[data-theme="dark"] .g-bar > span,
+html.dark .g-bar > span,
+body.dark .g-bar > span { color: var(--mcl-text); }
+/* ==== [END] ==== */
