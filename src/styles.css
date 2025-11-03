@@ -1,36 +1,79 @@
-/* ==== [BLOCK: MCL Light Theme] BEGIN ==== */
+/* ==== [MCL THEME: Light & Dark] BEGIN ==== */
+/* ☀️ Lys modus – “Fløte med kaffe” */
 :root {
-  /* ☀️ MCL Standardfarger – Lys modus */
-  --mcl-bg:        #FFFaf4;  /* app-bakgrunn */
-  --mcl-surface:   #FFFFFF;  /* paneler, kort */
-  --mcl-text:      #1B1A17;  /* primær tekst */
-  --mcl-muted:     #6B655F;  /* sekundær tekst */
-  --mcl-brand:     #8B5E34;  /* espresso-brun (hovedfarge) */
-  --mcl-accent:    #B08968;  /* karamell-latte (hover/aksent) */
-  --mcl-outline:   #E8DFD5;  /* rammer, linjer */
-  --mcl-header:    #D7C2A8;  /* header-bakgrunn */
+  /* Palett */
+  --mcl-bg:       #FFFaf4; /* App-bakgrunn */
+  --mcl-surface:  #FFFFFF; /* Kort/fliser */
+  --mcl-text:     #1B1A17; /* Primær tekst */
+  --mcl-muted:    #6B655F; /* Sekundær tekst */
+  --mcl-brand:    #8B5E34; /* Espresso-brun (brand) */
+  --mcl-accent:   #B08968; /* Karamell-latte (sekundær) */
+  --mcl-outline:  #E8DFD5; /* Delikate linjer */
+  --mcl-header:   #D7C2A8; /* Cappuccino – header/toolbar/knapp */
+  --radius:       16px;
 
-  /* Overstyr eksisterende temavariabler slik at hele appen “tar fargen” */
-  --bg: var(--mcl-bg);
-  --panel: var(--mcl-surface);
-  --panel-2: var(--mcl-header);
-  --text: var(--mcl-text);
-  --muted: var(--mcl-muted);
-  --focus: var(--mcl-brand);
-  --accent: var(--mcl-accent);
-  --grid-border: var(--mcl-outline);
+  /* Elevation (lys) */
+  --elev-1: 0 4px 10px rgba(0,0,0,.08);
+  --elev-2: 0 10px 24px rgba(0,0,0,.12);
+
+  /* App-variabler (mappet fra MCL) */
+  --bg:           var(--mcl-bg);
+  --panel:        var(--mcl-surface);
+  --panel-2:      var(--mcl-header);
+  --text:         var(--mcl-text);
+  --muted:        var(--mcl-muted);
+  --focus:        var(--mcl-brand);
+  --accent:       var(--mcl-accent);
+  --grid-border:  var(--mcl-outline);
+  --corner:       var(--radius);
+
+  --ribbon-text:  var(--mcl-text);
+  --button-text:  var(--mcl-text);
+  --menu-text:    var(--mcl-text);
 }
-/* ==== [BLOCK: MCL Light Theme] END ==== */
+
+/* 🌙 Mørk modus – “Mørk mokka” */
+:root[data-theme="dark"],
+body[data-theme="dark"] {
+  --mcl-bg:       #12110F; /* App-bakgrunn */
+  --mcl-surface:  #1B1A17; /* Kort/fliser */
+  --mcl-altbg:    #3B2E23; /* Kontrastflate */
+  --mcl-text:     #F7F3ED; /* Primær tekst lys */
+  --mcl-muted:    #CFC7BF; /* Sekundær tekst lys */
+  --mcl-brand:    #D7C2A8; /* Cappuccino som “lys” brand */
+  --mcl-accent:   #C2A58F; /* Lys mokka */
+  --mcl-outline:  #2D2B28; /* Subtil separasjon */
+  /* --mcl-header forblir #D7C2A8 i mørk modus */
+
+  --elev-1: 0 4px 10px rgba(0,0,0,.6);
+  --elev-2: 0 10px 24px rgba(0,0,0,.7);
+
+  --bg:           var(--mcl-bg);
+  --panel:        var(--mcl-surface);
+  --panel-2:      var(--mcl-altbg);
+  --text:         var(--mcl-text);
+  --muted:        var(--mcl-muted);
+  --focus:        var(--mcl-brand);
+  --accent:       var(--mcl-accent);
+  --grid-border:  var(--mcl-outline);
+  --corner:       var(--radius);
+
+  --ribbon-text:  #1B1A17; /* kontrast over lys cappuccino */
+  --button-text:  #1B1A17;
+  --menu-text:    var(--mcl-text);
+}
+/* ==== [MCL THEME: Light & Dark] END ==== */
+
 
 /* ==== [BLOCK: App Layout] BEGIN ==== */
-html, body, #root {
-  height: 100%;
-}
+html, body, #root { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(1200px 800px at 80% -10%, var(--panel-2), transparent) no-repeat, var(--bg);
+  background:
+    radial-gradient(1200px 800px at 80% -10%, var(--panel-2), transparent) no-repeat,
+    var(--bg);
   color: var(--text);
-  font: 14px/1.2 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  font: 14px/1.2 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
 .app {
   max-width: 1200px;
@@ -52,34 +95,35 @@ body {
   margin: 8px 0 16px;
 }
 button {
-  background: var(--panel-2);
-  color: var(--text);
+  background: var(--mcl-header); /* policy: samme flate som header */
+  color: var(--button-text);
   border: 1px solid var(--grid-border);
   border-radius: 8px;
   padding: 8px 10px;
   cursor: pointer;
+  box-shadow: none;
 }
-button:hover { outline: 2px solid var(--focus); }
+/* Policy: flate knapper – ingen hover-effekt */
+button:hover { background: var(--mcl-header); color: var(--button-text); }
 /* ==== [BLOCK: App Layout] END ==== */
+
 
 /* ==== [BLOCK: TableCore Styles] BEGIN ==== */
 .table-wrap {
   border: 1px solid var(--grid-border);
   border-radius: 8px;
-  overflow-x: auto;     /* horisontal scroll når tabellen blir bredere */
-  overflow-y: auto;     /* vertikal scroll når det er mange rader */
+  overflow-x: auto;  /* horisontal scroll */
+  overflow-y: auto;  /* vertikal scroll */
   max-height: 70vh;
   background: var(--panel);
 }
 
 .table {
-  border-collapse: collapse;  /* ingen ekstra spacing som “puffer” bredder */
+  border-collapse: collapse;
   border-spacing: 0;
-  table-layout: fixed;        /* stabile kolonner, målt etter faste bredder */
-  width: auto;                /* total bredde styres i TS (sum av kolonner) */
-  /* Viktig: fjern min-width:100%; det tvinger omfordeling av bredder */
+  table-layout: fixed;
+  width: auto;        /* styres av sum kolonnebredder */
 }
-
 
 .table thead th {
   position: sticky;
@@ -89,9 +133,9 @@ button:hover { outline: 2px solid var(--focus); }
   color: var(--muted);
   font-weight: 600;
   text-align: left;
-  padding: 0 8px;                 /* <— ikke vertikal padding */
-  height: var(--header-h);        /* <— felles headerhøyde */
-  line-height: var(--header-h);   /* <— vertikal sentrering av tekst */
+  padding: 0 8px;
+  height: var(--header-h);
+  line-height: var(--header-h);
   border-bottom: 1px solid var(--grid-border);
   border-right: 1px solid var(--grid-border);
   user-select: none;
@@ -106,34 +150,35 @@ button:hover { outline: 2px solid var(--focus); }
   cursor: col-resize;
 }
 
-.table tbody td { border-right: 1px solid var(--grid-border); border-bottom: 1px solid var(--grid-border); padding: 0; background: var(--panel); }
+.table tbody td {
+  border-right: 1px solid var(--grid-border);
+  border-bottom: 1px solid var(--grid-border);
+  padding: 0;
+  background: var(--panel);
+}
 .table tbody tr:nth-child(even) td { background: var(--row-alt); }
 
 .cell {
   display: block;
   height: var(--row-h);
-  line-height: var(--row-h);   /* jevn caret-linje, god vertikal plass */
-  padding: 0 8px;              /* kun horisontal padding */
+  line-height: var(--row-h);
+  padding: 0 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   unicode-bidi: isolate;
 }
 
-
 .cell[contenteditable="true"]:focus {
   outline: 2px solid var(--focus);
   background: color-mix(in oklab, var(--panel) 85%, var(--accent) 15%);
 }
 
-.active {
-  background: var(--select);
-}
-
-.sel {
-  background: var(--select);
-}
+.active { background: var(--select); }
+.sel    { background: var(--select); }
 /* ==== [BLOCK: TableCore Styles] END ==== */
+
+
 /* ==== [BLOCK: Row Drag Handle] BEGIN ==== */
 .row-handle {
   display: inline-flex;
@@ -144,25 +189,26 @@ button:hover { outline: 2px solid var(--focus); }
   opacity: 0.8;
 }
 .row-handle:active { cursor: grabbing; }
-.row-handle .grip {
-  font-size: 12px;
-  opacity: 0.7;
-}
+.row-handle .grip { font-size: 12px; opacity: 0.7; }
 .tr-drag-over td {
   outline: 2px dashed var(--accent);
   outline-offset: -2px;
 }
 /* ==== [BLOCK: Row Drag Handle] END ==== */
+
+
 /* ==== [BLOCK: Summary & Gantt] BEGIN ==== */
 .summarybar {
   display: grid;
   grid-template-columns: repeat(4, max-content);
   gap: 16px 24px;
-  background: var(--panel-2);
+  background: var(--mcl-header);
   border: 1px solid var(--grid-border);
   border-radius: 8px;
   padding: 8px 12px;
   margin: 8px 0 6px;
+  color: var(--ribbon-text);
+  box-shadow: var(--elev-1);
 }
 
 .gantt-wrap {
@@ -175,6 +221,8 @@ button:hover { outline: 2px solid var(--focus); }
   overflow-y: hidden;
 }
 /* ==== [BLOCK: Summary & Gantt] END ==== */
+
+
 /* ==== [BLOCK: SplitOverlay] BEGIN ==== */
 .split {
   position: relative;
@@ -184,62 +232,55 @@ button:hover { outline: 2px solid var(--focus); }
   overflow: hidden;
 }
 
-/* Tabell bakgrunn */
 .split-left {
   position: relative;
   height: 100%;
   overflow: hidden;
 }
 
-/* Gantt overlay – uten toning, trekkes inn fra høyre */
 .split-right {
   position: absolute;
-  inset: 0 0 0 auto;  /* top:0; right:0; bottom:0; left:auto */
+  inset: 0 0 0 auto;
   overflow: hidden;
   border-left: 1px solid var(--grid-border);
   background: transparent;
   pointer-events: auto;
-  z-index: 4; /* over tabell-header (z=3) */
+  z-index: 4;
 }
 
-/* Sørg for at begge kan scrolle i eget område */
 .split-left .table-wrap,
 .split-right .gantt-wrap {
   height: 100%;
 }
 
-/* Drag-håndtak (uendret) */
+/* Drag-håndtak */
 .split-handle {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 0; bottom: 0;
   width: 8px;
   background: color-mix(in oklab, var(--panel-2) 60%, transparent);
   border-left: 1px solid var(--grid-border);
   border-right: 1px solid var(--grid-border);
   cursor: col-resize;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   z-index: 5;
   touch-action: none;
-  right: 0; /* posisjoneres via inline-style fra komponenten */
+  right: 0;
 }
 .split-handle .split-grip {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   opacity: 0.6;
-  user-select: none;
-  pointer-events: none;
+  user-select: none; pointer-events: none;
 }
 .split-dragging .split-handle {
   background: color-mix(in oklab, var(--accent) 20%, transparent);
   border-color: var(--accent);
 }
-.split-left .table-wrap {
-  padding-right: var(--overlay-w, 0%); /* <— NØKKELEN */
-}
+.split-left .table-wrap { padding-right: var(--overlay-w, 0%); }
 /* ==== [BLOCK: SplitOverlay] END ==== */
+
+
 /* ==== [BLOCK: Ribbon] BEGIN ==== */
 .ribbon {
   display: flex;
@@ -248,9 +289,11 @@ button:hover { outline: 2px solid var(--focus); }
   padding: 8px 10px;
   border: 1px solid var(--grid-border);
   border-radius: 10px;
-  background: var(--panel);
+  background: var(--mcl-header);
   margin-bottom: 10px;
-  flex-wrap: wrap; /* responsiv */
+  flex-wrap: wrap;
+  color: var(--ribbon-text);
+  box-shadow: var(--elev-2);
 }
 
 .group {
@@ -267,15 +310,12 @@ button:hover { outline: 2px solid var(--focus); }
 .group-title {
   font-size: 12px;
   font-weight: 700;
-  color: var(--muted);
+  color: var(--focus);
   text-transform: uppercase;
   letter-spacing: .6px;
 }
 .group-body {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
 
 .group .seg {
@@ -288,13 +328,11 @@ button:hover { outline: 2px solid var(--focus); }
   border: 0;
   background: var(--panel);
   padding: 8px 10px;
+  color: var(--text);
 }
-.group .seg > button + button {
-  border-left: 1px solid var(--grid-border);
-}
-.group .seg > button:hover {
-  outline: 2px solid var(--focus);
-}
+.group .seg > button + button { border-left: 1px solid var(--grid-border); }
+/* Policy: ingen hover på knapper */
+.group .seg > button:hover { background: var(--panel); color: var(--text); }
 
 .group .chk {
   display: inline-flex;
@@ -306,42 +344,20 @@ button:hover { outline: 2px solid var(--focus); }
   background: var(--panel);
 }
 /* ==== [BLOCK: Ribbon] END ==== */
-/* ==== [BLOCK: Print Styles] BEGIN ==== */
-@media print {
-  /* Skjul ting vi aldri vil ha på papir */
-  .no-print, .ribbon, .modal-backdrop { display: none !important; }
 
-  body { background: white; }
 
-  /* Vis kun hovedinnholdet pent */
-  .split { border: 0; border-radius: 0; }
-  .gantt-wrap, .summarybar { border: 0; }
-  .gantt-scroller { overflow: visible; } /* la SVG få full høyde/bredde */
-  .table-wrap { overflow: visible; }
-
-  /* Moduser */
-  body.print-table .split-right { display: none !important; }   /* bare tabell */
-  body.print-gantt .split-left  { display: none !important; }   /* bare gantt */
-
-  /* Ved “begge”: behold slik bruker har valgt (vi har evt. satt 60/40) */
-
-  /* Optional: kompakt marger for papir */
-  @page { margin: 12mm; }
-  .app { padding: 0 !important; }
-}
-/* ==== [BLOCK: Print Styles] END ==== */
 /* ==== [BLOCK: Ribbon Panel] BEGIN ==== */
 .ribbon { position: sticky; top: 0; z-index: 30; }
 
 .ribbon-panel {
   position: sticky;
-  top: 52px; /* høyden på ribbon (tilpass hvis ulik) */
+  top: 52px;
   z-index: 40;
   background: var(--panel);
   border: 1px solid var(--grid-border);
   border-radius: 10px;
   margin-top: 6px;
-  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  box-shadow: var(--elev-2);
 }
 .ribbon-panel-inner {
   display: flex;
@@ -354,23 +370,29 @@ button:hover { outline: 2px solid var(--focus); }
 .rp-body { display: flex; gap: 8px; flex-wrap: wrap; }
 .rp-divider { width: 1px; background: var(--grid-border); }
 .rp-spacer { flex: 1; }
-.rp-close { border: 1px solid var(--grid-border); border-radius: 8px; background: var(--panel-2); padding: 8px 10px; }
+.rp-close {
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  background: var(--mcl-header);
+  padding: 8px 10px;
+  color: var(--button-text);
+}
 /* Merk aktiv gruppe visuelt */
 .group.group-active { outline: 2px solid var(--focus); outline-offset: 2px; }
 /* ==== [BLOCK: Ribbon Panel] END ==== */
+
+
 /* ==== [BLOCK: Dropdown Menu] BEGIN ==== */
 .menu-anchor { position: relative; display: inline-block; }
 .menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 60;
+  position: absolute; top: 100%; left: 0; z-index: 60;
   background: var(--panel);
   border: 1px solid var(--grid-border);
   border-radius: 8px;
   padding: 6px;
-  box-shadow: 0 10px 20px rgba(0,0,0,.2);
+  box-shadow: var(--elev-2);
   min-width: 180px;
+  color: var(--menu-text);
 }
 .menu button {
   display: block;
@@ -380,63 +402,38 @@ button:hover { outline: 2px solid var(--focus); }
   border: 0;
   padding: 8px 10px;
   border-radius: 6px;
+  color: var(--menu-text);
 }
-.menu button:hover {
-  background: var(--panel-2);
-}
+/* Policy: også menyvalg uten hover-effekt */
+.menu button:hover { background: transparent; color: var(--menu-text); }
 .menu-sep {
-  height: 1px;
-  background: var(--grid-border);
-  margin: 6px 2px;
+  height: 1px; background: var(--grid-border); margin: 6px 2px;
 }
 /* ==== [BLOCK: Dropdown Menu] END ==== */
-/* ==== [BLOCK: MCL Component Styling] BEGIN ==== */
 
-/* App-bakgrunn og tekst */
-body, .app {
-  background: var(--mcl-bg);
-  color: var(--mcl-text);
-}
 
-/* Ribbon / verktøylinje */
-.ribbon {
-  background: var(--mcl-header);
-  border-bottom: 1px solid var(--mcl-outline);
+/* ==== [BLOCK: Focus & Accessibility] BEGIN ==== */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: calc(var(--corner) - 2px);
 }
-.group-title {
-  color: var(--mcl-brand);
-}
-.group-body button {
-  background: var(--mcl-surface);
-  border: 1px solid var(--mcl-outline);
-  color: var(--mcl-text);
-}
-.group-body button:hover {
-  background: var(--mcl-accent);
-  color: #fff;
-}
+/* ==== [BLOCK: Focus & Accessibility] END ==== */
 
-/* Dropdown-meny */
-.menu {
-  background: var(--mcl-surface);
-  border-color: var(--mcl-outline);
-}
-.menu button:hover {
-  background: var(--mcl-accent);
-  color: #fff;
-}
 
-/* Tabell / Gantt linjer */
-.table-wrap, .gantt-wrap {
-  background: var(--mcl-surface);
-  border-color: var(--mcl-outline);
-}
+/* ==== [BLOCK: Print Styles] BEGIN ==== */
+@media print {
+  .no-print, .ribbon, .modal-backdrop, .menu { display: none !important; }
+  body { background: white; color: #000; }
+  .split { border: 0; border-radius: 0; }
+  .gantt-wrap, .summarybar { border: 0; }
+  .gantt-scroller { overflow: visible; }
+  .table-wrap { overflow: visible; }
 
-/* Sammendragslinje */
-.summarybar {
-  background: var(--mcl-header);
-  border-bottom: 1px solid var(--mcl-outline);
-  color: var(--mcl-text);
-}
+  body.print-table .split-right { display: none !important; }
+  body.print-gantt .split-left  { display: none !important; }
 
-/* ==== [BLOCK: MCL Component Styling] END ==== */
+  @page { margin: 12mm; }
+  .app { padding: 0 !important; }
+}
+/* ==== [BLOCK: Print Styles] END ==== */
