@@ -1,126 +1,192 @@
-// src/components/GanttLite.tsx
-import React, { useMemo } from "react";
+// src/core/GanttLite.tsx
+/* ==== [BLOCK: Imports] BEGIN ==== */
+import React, { useMemo, useRef, useEffect } from "react";
+/* ==== [BLOCK: Imports] END ==== */
 
+export type Row = Record<string, string>;
 export type GanttLiteProps = {
-  rows: Record<string, string>[];
+  rows: Row[];
   pxPerDay: number;
-  showToday?: boolean;
+  showToday: boolean;
 };
 
-const isIso = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
-const dayMs = 86400000;
+const dayMs = 86_400_000;
+const isISO = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+const toUTC0 = (iso: string) => {
+  const [Y, M, D] = iso.split("-").map(Number);
+  return Date.UTC(Y, (M ?? 1) - 1, D ?? 1);
+};
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-function parseDate(s: string): number | null {
-  if (!isIso(s)) return null;
-  const t = new Date(s + "T00:00:00Z").getTime();
-  return isNaN(t) ? null : t;
-}
+/* ==== [BLOCK: Model] BEGIN ==== */
+function buildModel(rows: Row[]) {
+  const withDates = rows.filter(r => isISO(r.start) && isISO(r.slutt));
+  if (!withDates.length) {
+    const today = new Date();
+    const a = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+    return {
+      hasRange: false,
+      min: a,
+      max: a + 14 * dayMs,
+      items: [] as {
+        idx: number; name: string; start: number; end: number; color?: string;
+      }[]
+    };
+  }
 
-function formatISO(t: number): string {
-  const d = new Date(t);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const da = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
-}
-
-function cssPxVar(name: string, fallback: number) {
-  if (typeof window === "undefined") return fallback;
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const n = Number(v.replace("px", ""));
-  return Number.isFinite(n) && n > 0 ? n : fallback;
-}
-
-export default function GanttLite({ rows, pxPerDay, showToday = true }: GanttLiteProps) {
-  const headerH = cssPxVar("--header-h", 30);
-  const rowH = cssPxVar("--row-h", 24);
-  const gap = 6;
-
-  const model = useMemo(() => {
-    const items = rows.map((r, idx) => {
-      const s = parseDate(r.start ?? "");
-      const e = parseDate(r.slutt ?? "");
-      return { idx, s, e, color: (r.farge ?? "").trim() || "#6aa9ff", label: r.aktivitet ?? (`Rad ${idx+1}`) };
-    });
-    const valid = items.filter(x => x.s !== null && x.e !== null && (x.e as number) >= (x.s as number));
-    const allTimes = valid.flatMap(x => [x.s as number, x.e as number]);
-    const minT = allTimes.length ? Math.min(...allTimes) : null;
-    const maxT = allTimes.length ? Math.max(...allTimes) : null;
-    if (minT === null || maxT === null) return { items: valid, minT: null, maxT: null, days: 0 };
-    const days = Math.round((maxT - minT) / dayMs) + 1;
-    return { items: valid, minT, maxT, days };
-  }, [rows]);
-
-  const contentH = rows.length * (rowH + 1) + 12;
-  const totalH = headerH + contentH;
-  const width = Math.max(400, (model.days || 30) * pxPerDay + 60);
-
-  const todayT = (() => {
-    const now = new Date();
-    return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  })();
-
-  const dayX = (t: number) => {
-    if (!model.minT) return 0;
-    const d = Math.round((t - model.minT) / dayMs);
-    return d * pxPerDay;
-  };
-
-  const bars = model.items.map((it) => {
-    const y = headerH + it.idx * (rowH + 1) + gap / 2;
-    const x1 = dayX(it.s as number);
-    const x2 = dayX(it.e as number) + pxPerDay;
-    const w = Math.max(4, x2 - x1);
-    return (
-      <g key={it.idx} aria-label={it.label}>
-        <rect x={x1} y={y} width={w} height={rowH - gap} rx={4} ry={4} fill={it.color} opacity={0.9} />
-        <text x={x1 + 6} y={y + (rowH - gap) / 2 + 4} fontSize={11} fill="#fff">
-          {it.label}
-        </text>
-      </g>
-    );
+  const items = withDates.map((r, idx) => {
+    const start = toUTC0(r.start!);
+    const end   = toUTC0(r.slutt!);
+    return {
+      idx,
+      name: r.aktivitet || r.navn || r.activity || `Aktivitet ${idx + 1}`,
+      start,
+      end,
+      color: r.farge || r.color
+    };
   });
 
-  const headerTicks = (() => {
-    const ticks: JSX.Element[] = [];
-    if (!model.minT || !model.days) return ticks;
-    for (let i = 0; i < model.days; i++) {
-      const t = model.minT + i * dayMs;
-      const x = dayX(t);
-      if (i % 5 === 0 || i === 0) {
-        ticks.push(
-          <g key={i}>
-            <line x1={x} y1={0} x2={x} y2={totalH} stroke="#3a4259" strokeWidth={1} />
-            <text x={x + 4} y={Math.round(headerH / 2) + 4} fontSize={11} fill="#a6accd">
-              {formatISO(t)}
-            </text>
-          </g>
-        );
-      } else {
-        ticks.push(<line key={i} x1={x} y1={headerH} x2={x} y2={totalH} stroke="#2a3144" strokeWidth={1} />);
-      }
-    }
-    return ticks;
-  })();
+  const min = Math.min(...items.map(i => i.start));
+  const max = Math.max(...items.map(i => i.end));
 
-  const todayLine =
-    showToday && model.minT && model.maxT
-      ? (() => {
-          if (todayT < model.minT! || todayT > model.maxT!) return null;
-          const x = dayX(todayT);
-          return <line x1={x} y1={0} x2={x} y2={totalH} stroke="#ff6363" strokeWidth={2} strokeDasharray="4 3" />;
-        })()
-      : null;
+  return { hasRange: true, min, max, items };
+}
+/* ==== [BLOCK: Model] END ==== */
+
+/* ==== [BLOCK: Helpers] BEGIN ==== */
+const monthEdges = (a: number, b: number) => {
+  const out: number[] = [];
+  let d = new Date(a);
+  d.setUTCDate(1);
+  d.setUTCHours(0,0,0,0);
+  while (d.getTime() <= b) {
+    out.push(d.getTime());
+    d.setUTCMonth(d.getUTCMonth() + 1, 1);
+  }
+  if (!out.length || out[out.length - 1] < b) out.push(b);
+  return out;
+};
+const fmtMonthShort = (ts: number) =>
+  new Intl.DateTimeFormat("no-NO", { month: "short", year: "2-digit" })
+    .format(new Date(ts)).replace(".", "");
+
+const fmtISO = (ts: number) => new Date(ts).toISOString().slice(0,10);
+/* ==== [BLOCK: Helpers] END ==== */
+
+export default function GanttLite({ rows, pxPerDay, showToday }: GanttLiteProps) {
+  const model = useMemo(() => buildModel(rows), [rows]);
+  const { min, max, hasRange, items } = model;
+
+  const totalDays = Math.max(1, Math.round((max - min) / dayMs) + 1);
+  const widthPx   = totalDays * pxPerDay;
+
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-center today when it exists & range is valid (only first mount)
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || !showToday) return;
+    const today = Date.UTC(
+      new Date().getUTCFullYear(),
+      new Date().getUTCMonth(),
+      new Date().getUTCDate()
+    );
+    if (today < min || today > max) return;
+    const x = ((today - min) / dayMs) * pxPerDay - el.clientWidth / 2;
+    el.scrollLeft = clamp(x, 0, widthPx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Scale helpers
+  const xFor = (ts: number) => ((ts - min) / dayMs) * pxPerDay;
+
+  // Month ticks for header(s)
+  const months = monthEdges(min, max);
 
   return (
-    <div className="gantt-wrap" role="figure" aria-label="Gantt-oversikt">
-      <div className="gantt-scroller">
-        <svg width={width} height={totalH} role="img" aria-label="Gantt-diagram">
-          <rect x={0} y={0} width={width} height={headerH} fill="var(--panel-2)" />
-          {headerTicks}
-          {todayLine}
-          {bars}
-        </svg>
+    <div className="gantt-wrap">
+      {/* Slim project summary header (replaces old SummaryBar) */}
+      <div className="g-mini">
+        <div className="g-mini-months" style={{ width: widthPx }}>
+          {months.map((t, i) => (
+            <div
+              key={t}
+              className="g-mini-m"
+              style={{ left: `${(xFor(t) / widthPx) * 100}%` }}
+            >
+              {fmtMonthShort(t)}
+            </div>
+          ))}
+        </div>
+        <div className="g-mini-track" style={{ width: widthPx }}>
+          {hasRange ? (
+            <div
+              className="g-mini-bar"
+              style={{ left: 0, width: widthPx }}
+              title={`${fmtISO(min)} → ${fmtISO(max)}`}
+            >
+              <span>Prosjektsammendrag</span>
+            </div>
+          ) : (
+            <div className="g-mini-empty">Legg til aktiviteter med dato</div>
+          )}
+        </div>
+      </div>
+
+      {/* Main calendar + bars */}
+      <div className="gantt-scroller" ref={scrollerRef}>
+        <div className="gantt" style={{ width: widthPx }}>
+          {/* Top month header (same scale as mini) */}
+          <div className="g-months">
+            {months.map((t) => (
+              <div key={t} className="g-month" style={{ left: xFor(t) }}>
+                {fmtMonthShort(t)}
+              </div>
+            ))}
+          </div>
+
+          {/* Today line */}
+          {showToday && (
+            (() => {
+              const now = Date.UTC(
+                new Date().getUTCFullYear(),
+                new Date().getUTCMonth(),
+                new Date().getUTCDate()
+              );
+              if (now < min || now > max) return null;
+              return <div className="g-today" style={{ left: xFor(now) }} />;
+            })()
+          )}
+
+          {/* Day grid lines (weekly is enough to keep it light) */}
+          {Array.from({ length: totalDays }, (_, i) => min + i * dayMs)
+            .filter((ts) => new Date(ts).getUTCDay() === 1) // Mondays
+            .map((ts) => (
+              <div key={ts} className="g-week" style={{ left: xFor(ts) }} />
+            ))}
+
+          {/* Bars */}
+          <div className="g-bars">
+            {items.map((it, rowIdx) => {
+              const left = xFor(it.start);
+              const width = Math.max(pxPerDay, xFor(it.end) - xFor(it.start) + pxPerDay);
+              return (
+                <div
+                  key={rowIdx}
+                  className="g-bar"
+                  style={{
+                    left,
+                    top: rowIdx * 26 + 64, // space under header
+                    width
+                  }}
+                  title={`${it.name}: ${fmtISO(it.start)} → ${fmtISO(it.end)}`}
+                >
+                  <span>{it.name}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
