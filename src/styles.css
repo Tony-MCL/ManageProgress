@@ -34,7 +34,9 @@
 
 /* 🌙 Mørk modus – “Mørk mokka” */
 :root[data-theme="dark"],
-body[data-theme="dark"] {
+body[data-theme="dark"],
+html.dark,
+body.dark {
   --mcl-bg:       #12110F; /* App-bakgrunn */
   --mcl-surface:  #1B1A17; /* Kort/fliser */
   --mcl-altbg:    #3B2E23; /* Kontrastflate */
