@@ -470,3 +470,6 @@ button:hover { background: var(--mcl-header); color: var(--button-text); }
     --menu-text:    var(--mcl-text);
   }
 }
+* {
+  transition: background-color .25s linear, color .25s linear, border-color .25s linear;
+}
