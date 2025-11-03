@@ -11,6 +11,7 @@
   --mcl-outline:  #E8DFD5; /* Delikate linjer */
   --mcl-header:   #D7C2A8; /* Cappuccino – header/toolbar/knapp */
   --radius:       16px;
+  --ribbon-heading: #8B5E34; /* Fast tittel-farge for gruppene (lik i lys + mørk) */
 
   /* Elevation (lys) */
   --elev-1: 0 4px 10px rgba(0,0,0,.08);
@@ -63,7 +64,6 @@ body.dark {
   --ribbon-text:  #1B1A17; /* kontrast over lys cappuccino */
   --button-text:  #1B1A17;
   --menu-text:    var(--mcl-text);
-  --ribbon-heading: #8B5E34; /* Fast tittel-farge for gruppene (lik i lys + mørk) */
 }
 /* ==== [MCL THEME: Light & Dark] END ==== */
 
