@@ -1,36 +1,26 @@
-/* ==== [BLOCK: CSS Variables / Theme] BEGIN ==== */
+/* ==== [BLOCK: MCL Light Theme] BEGIN ==== */
 :root {
-  --bg: #0f1115;
-  --panel: #151821;
-  --panel-2: #1b2030;
-  --text: #e6e8ee;
-  --muted: #a6accd;
-  --accent: #4ea1ff;
-  --grid-border: #2a3144;
-  --row-alt: #121521;
-  --focus: #7bb0ff55;
-  --select: #4ea1ff33;
-  --header-h: 30px; /* felles headerhøyde (tabellheader + gantt-kalender) */
-  --row-h: 24px;    /* felles radhøyde (tabell & gantt) */
-}
+  /* ☀️ MCL Standardfarger – Lys modus */
+  --mcl-bg:        #FFFaf4;  /* app-bakgrunn */
+  --mcl-surface:   #FFFFFF;  /* paneler, kort */
+  --mcl-text:      #1B1A17;  /* primær tekst */
+  --mcl-muted:     #6B655F;  /* sekundær tekst */
+  --mcl-brand:     #8B5E34;  /* espresso-brun (hovedfarge) */
+  --mcl-accent:    #B08968;  /* karamell-latte (hover/aksent) */
+  --mcl-outline:   #E8DFD5;  /* rammer, linjer */
+  --mcl-header:    #D7C2A8;  /* header-bakgrunn */
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f6f7fb;
-    --panel: #ffffff;
-    --panel-2: #f0f3ff;
-    --text: #1b2236;
-    --muted: #4c546a;
-    --accent: #1a5fff;
-    --grid-border: #dde2f2;
-    --row-alt: #f9fafe;
-    --focus: #1a5fff22;
-    --select: #1a5fff1c;
-    --header-h: 34px; /* felles header-høyde (tabellheader + gantt-kalender) */
-    --row-h: 28px;    /* felles radhøyde */
-  }
+  /* Overstyr eksisterende temavariabler slik at hele appen “tar fargen” */
+  --bg: var(--mcl-bg);
+  --panel: var(--mcl-surface);
+  --panel-2: var(--mcl-header);
+  --text: var(--mcl-text);
+  --muted: var(--mcl-muted);
+  --focus: var(--mcl-brand);
+  --accent: var(--mcl-accent);
+  --grid-border: var(--mcl-outline);
 }
-/* ==== [BLOCK: CSS Variables / Theme] END ==== */
+/* ==== [BLOCK: MCL Light Theme] END ==== */
 
 /* ==== [BLOCK: App Layout] BEGIN ==== */
 html, body, #root {
@@ -400,3 +390,53 @@ button:hover { outline: 2px solid var(--focus); }
   margin: 6px 2px;
 }
 /* ==== [BLOCK: Dropdown Menu] END ==== */
+/* ==== [BLOCK: MCL Component Styling] BEGIN ==== */
+
+/* App-bakgrunn og tekst */
+body, .app {
+  background: var(--mcl-bg);
+  color: var(--mcl-text);
+}
+
+/* Ribbon / verktøylinje */
+.ribbon {
+  background: var(--mcl-header);
+  border-bottom: 1px solid var(--mcl-outline);
+}
+.group-title {
+  color: var(--mcl-brand);
+}
+.group-body button {
+  background: var(--mcl-surface);
+  border: 1px solid var(--mcl-outline);
+  color: var(--mcl-text);
+}
+.group-body button:hover {
+  background: var(--mcl-accent);
+  color: #fff;
+}
+
+/* Dropdown-meny */
+.menu {
+  background: var(--mcl-surface);
+  border-color: var(--mcl-outline);
+}
+.menu button:hover {
+  background: var(--mcl-accent);
+  color: #fff;
+}
+
+/* Tabell / Gantt linjer */
+.table-wrap, .gantt-wrap {
+  background: var(--mcl-surface);
+  border-color: var(--mcl-outline);
+}
+
+/* Sammendragslinje */
+.summarybar {
+  background: var(--mcl-header);
+  border-bottom: 1px solid var(--mcl-outline);
+  color: var(--mcl-text);
+}
+
+/* ==== [BLOCK: MCL Component Styling] END ==== */
