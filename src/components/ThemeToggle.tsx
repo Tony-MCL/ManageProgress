@@ -1,44 +1,40 @@
 // src/components/ThemeToggle.tsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
+function getIsDark(): boolean {
+  return document.documentElement.getAttribute("data-theme") === "dark";
+}
 
 export default function ThemeToggle() {
-  const [dark, setDark] = useState(() =>
-    document.documentElement.getAttribute("data-theme") === "dark"
-  );
+  const [isDark, setIsDark] = useState<boolean>(() => getIsDark());
 
-  // lagre valget i localStorage
-  useEffect(() => {
+  const apply = (dark: boolean) => {
     const html = document.documentElement;
     if (dark) {
       html.setAttribute("data-theme", "dark");
-      localStorage.setItem("mcl.theme", "dark");
+      try { localStorage.setItem("mcl.theme", "dark"); } catch {}
     } else {
       html.removeAttribute("data-theme");
-      localStorage.setItem("mcl.theme", "light");
+      try { localStorage.setItem("mcl.theme", "light"); } catch {}
     }
-  }, [dark]);
+    setIsDark(dark);
+  };
 
-  // last lagret preferanse ved start
+  // last lagret preferanse én gang (uten “auto”)
   useEffect(() => {
     const saved = localStorage.getItem("mcl.theme");
-    if (saved === "dark") setDark(true);
+    if (saved === "dark") apply(true);
+    else if (saved === "light") apply(false);
+    else setIsDark(getIsDark()); // respekter evt. eksisterende attr
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <button
-      title={dark ? "Bytt til lyst tema" : "Bytt til mørkt tema"}
-      onClick={() => setDark(!dark)}
-      style={{
-        fontSize: "16px",
-        border: "1px solid var(--grid-border)",
-        borderRadius: "8px",
-        padding: "6px 10px",
-        background: "var(--mcl-header)",
-        color: "var(--button-text)",
-        cursor: "pointer",
-      }}
+      title={isDark ? "Bytt til lyst tema" : "Bytt til mørkt tema"}
+      onClick={() => apply(!isDark)}
     >
-      {dark ? "🌙 Mørk" : "☀️ Lys"}
+      {isDark ? "🌙 Mørk" : "☀️ Lys"}
     </button>
   );
 }
