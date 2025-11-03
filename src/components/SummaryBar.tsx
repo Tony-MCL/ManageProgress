@@ -64,7 +64,6 @@ function monthTicksBetween(a: number, b: number) {
     const d = new Date(t);
     t = toUTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
   }
-  // sørg for at sluttens måned er med
   if (ticks.length === 0 || ticks[ticks.length - 1] !== firstOfMonth(end)) {
     ticks.push(firstOfMonth(end));
   }
@@ -95,16 +94,13 @@ export default function SummaryBar({ rows }: SummaryBarProps) {
     };
   }, [rows]);
 
-  const { hasRange, startTs, endTs, spanDays, months } = model;
+  const { hasRange, startTs, endTs, months } = model;
 
   // pos i % for timeline
   const toPct = (ts: number) =>
     startTs === null || endTs === null || endTs === startTs
       ? 0
       : ((ts - startTs) / (endTs - startTs)) * 100;
-
-  const leftPct  = hasRange ? 0 : 0;
-  const widthPct = hasRange ? 100 : 0;
 
   return (
     <div className="summarybar" aria-label="Prosjektsammendrag">
@@ -117,7 +113,7 @@ export default function SummaryBar({ rows }: SummaryBarProps) {
         <div className="ps-timeline" role="img" aria-label="Prosjekttidslinje">
           {/* Topp-akse: månedsetiketter */}
           <div className="ps-months">
-            {hasRange && months.map((t, i) => (
+            {hasRange && months.map((t) => (
               <div
                 key={t}
                 className="ps-mtick"
@@ -132,10 +128,13 @@ export default function SummaryBar({ rows }: SummaryBarProps) {
           <div className="ps-track">
             {hasRange ? (
               <div
-                className="ps-bar"
-                style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                className="ps-bar ps-bar--summary"
+                style={{ left: `0%`, width: `100%` }}
                 title={`${fmtISO(startTs)} → ${fmtISO(endTs)}`}
-              />
+                aria-label={`Prosjektsammendrag ${fmtISO(startTs)} til ${fmtISO(endTs)}`}
+              >
+                <span className="ps-bar-label">Prosjektsammendrag</span>
+              </div>
             ) : (
               <div className="ps-empty">Legg til aktiviteter med dato i tidslinjen</div>
             )}
