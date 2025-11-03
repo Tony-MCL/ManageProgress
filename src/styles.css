@@ -96,8 +96,10 @@ body {
   gap: 8px;
   margin: 8px 0 16px;
 }
+
+/* Global button – beholdes for resten av appen */
 button {
-  background: var(--mcl-header); /* policy: samme flate som header */
+  background: var(--mcl-header);
   color: var(--button-text);
   border: 1px solid var(--grid-border);
   border-radius: 8px;
@@ -105,9 +107,23 @@ button {
   cursor: pointer;
   box-shadow: none;
 }
+
+/* 🔸 Verktøylinje-knapper: helt flate, ingen kantlinje */
+.ribbon button {
+  background: var(--mcl-header);
+  color: var(--button-text);
+  border: 0;
+  box-shadow: none;
+}
+
 /* Policy: flate knapper – ingen hover-effekt */
-button:hover { background: var(--mcl-header); color: var(--button-text); }
+button:hover,
+.ribbon button:hover {
+  background: var(--mcl-header);
+  color: var(--button-text);
+}
 /* ==== [BLOCK: App Layout] END ==== */
+
 
 
 /* ==== [BLOCK: TableCore Styles] BEGIN ==== */
@@ -289,7 +305,8 @@ button:hover { background: var(--mcl-header); color: var(--button-text); }
   gap: 10px;
   align-items: stretch;
   padding: 8px 10px;
-  border: 1px solid var(--grid-border);
+  /* Helt sømløs flate */
+  border: 0;
   border-radius: 10px;
   background: var(--mcl-header);
   margin-bottom: 10px;
@@ -298,17 +315,19 @@ button:hover { background: var(--mcl-header); color: var(--button-text); }
   box-shadow: var(--elev-2);
 }
 
+/* Gruppekort – samme flate som ribbon/knapper, ingen kantlinje */
 .group {
   display: grid;
   grid-template-rows: auto 1fr;
   align-content: start;
   gap: 6px;
   padding: 8px;
-  border: 1px solid var(--grid-border);
+  border: 0;                         /* ⬅ fjernet */
   border-radius: 8px;
-  background: var(--panel-2);
+  background: var(--mcl-header);     /* ⬅ samme som ribbon/knapper */
   min-width: 160px;
 }
+
 .group-title {
   font-size: 12px;
   font-weight: 700;
@@ -320,32 +339,36 @@ button:hover { background: var(--mcl-header); color: var(--button-text); }
   display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
 
+/* Segmenterte knappegrupper – flat og sømløs */
 .group .seg {
   display: inline-flex;
-  border: 1px solid var(--grid-border);
+  border: 0;                         /* ⬅ fjernet */
   border-radius: 8px;
   overflow: hidden;
+  background: var(--mcl-header);     /* ⬅ samme flate */
 }
 .group .seg > button {
   border: 0;
-  background: var(--panel);
+  background: var(--mcl-header);     /* ⬅ samme flate */
   padding: 8px 10px;
-  color: var(--text);
+  color: var(--button-text);
 }
-.group .seg > button + button { border-left: 1px solid var(--grid-border); }
-/* Policy: ingen hover på knapper */
-.group .seg > button:hover { background: var(--panel); color: var(--text); }
+.group .seg > button + button { border-left: 0; } /* ⬅ fjernet skillelinje */
+/* Ingen hover i verktøylinja */
+.group .seg > button:hover { background: var(--mcl-header); color: var(--button-text); }
 
+/* “Checkbox”-chips – samme flate, ingen kant */
 .group .chk {
   display: inline-flex;
   gap: 6px;
   align-items: center;
   padding: 6px 8px;
-  border: 1px solid var(--grid-border);
+  border: 0;                         /* ⬅ fjernet */
   border-radius: 8px;
-  background: var(--panel);
+  background: var(--mcl-header);     /* ⬅ samme flate */
 }
 /* ==== [BLOCK: Ribbon] END ==== */
+
 
 
 /* ==== [BLOCK: Ribbon Panel] BEGIN ==== */
