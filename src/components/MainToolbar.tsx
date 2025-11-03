@@ -1,6 +1,7 @@
 // src/components/MainToolbar.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { FeatureGate, useFeature } from "../core/featureFlags";
+import ThemeToggle from "./ThemeToggle";
 
 export type PrintMode = "table" | "gantt" | "both";
 
@@ -200,28 +201,31 @@ export default function MainToolbar(props: MainToolbarProps) {
         </div>
       </div>
 
-      {/* DATA */}
-      <div className="group">
-        <div className="group-title">Data</div>
-        <div className="group-body">
-          <div className="menu-anchor" ref={dataRef}>
-            <button
-              title="Data"
-              onClick={() => setDataOpen(v => !v)}
-              aria-haspopup="menu"
-              aria-expanded={dataOpen}
-            >
-              Data ▾
-            </button>
-            {dataOpen && (
-              <div className="menu" role="menu" aria-label="Datavalg">
-                <button role="menuitem" disabled>Sorter (kommer)</button>
-                <button role="menuitem" disabled>Filter (kommer)</button>
-              </div>
-            )}
-          </div>
+     {/* DATA */}
+<div className="group">
+  <div className="group-title">Data</div>
+  <div className="group-body">
+    <div className="menu-anchor" ref={dataRef}>
+      <button
+        title="Data"
+        onClick={() => setDataOpen(v => !v)}
+        aria-haspopup="menu"
+        aria-expanded={dataOpen}
+      >
+        Data ▾
+      </button>
+      {dataOpen && (
+        <div className="menu" role="menu" aria-label="Datavalg">
+          <button role="menuitem" disabled>Sorter (kommer)</button>
+          <button role="menuitem" disabled>Filter (kommer)</button>
         </div>
-      </div>
+      )}
     </div>
-  );
+
+    {/* Lys/Mørk-knapp */}
+    <ThemeToggle />
+  </div>
+</div>
+</div>
+);
 }
