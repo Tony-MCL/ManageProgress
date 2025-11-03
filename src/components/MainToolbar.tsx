@@ -23,11 +23,6 @@ export type MainToolbarProps = {
   onClearTable: () => void;
   onPrintMode: (mode: PrintMode) => void;
 
-  // (bakoverkomp. – ignoreres nå)
-  onPrint?: () => void;
-  onToggleFilePanel?: () => void;
-  filePanelOpen?: boolean;
-
   // FULL (senere)
   onOpen?: () => void;
   onNew?: () => void;
@@ -46,25 +41,35 @@ export default function MainToolbar(props: MainToolbarProps) {
   } = props;
 
   // Dropdown-stater
-  const [fileMenuOpen, setFileMenuOpen] = useState(false);
-  const [tableMenuOpen, setTableMenuOpen] = useState(false);
-  const fileBtnRef = useRef<HTMLDivElement | null>(null);
-  const tableBtnRef = useRef<HTMLDivElement | null>(null);
+  const [fileOpen, setFileOpen]       = useState(false);
+  const [tableOpen, setTableOpen]     = useState(false);
+  const [viewOpen, setViewOpen]       = useState(false);
+  const [ganttOpen, setGanttOpen]     = useState(false);
+  const [dataOpen, setDataOpen]       = useState(false);
 
-  // Klikk utenfor → lukk menyer
+  const fileRef  = useRef<HTMLDivElement | null>(null);
+  const tableRef = useRef<HTMLDivElement | null>(null);
+  const viewRef  = useRef<HTMLDivElement | null>(null);
+  const ganttRef = useRef<HTMLDivElement | null>(null);
+  const dataRef  = useRef<HTMLDivElement | null>(null);
+
+  // Klikk utenfor → lukk menyene
   useEffect(() => {
-    if (!fileMenuOpen && !tableMenuOpen) return;
+    if (!fileOpen && !tableOpen && !viewOpen && !ganttOpen && !dataOpen) return;
     const onDoc = (e: MouseEvent) => {
       const t = e.target as Node;
-      if (fileBtnRef.current && fileBtnRef.current.contains(t)) return;
-      if (tableBtnRef.current && tableBtnRef.current.contains(t)) return;
-      setFileMenuOpen(false);
-      setTableMenuOpen(false);
+      if (fileRef.current  && fileRef.current.contains(t))  return;
+      if (tableRef.current && tableRef.current.contains(t)) return;
+      if (viewRef.current  && viewRef.current.contains(t))  return;
+      if (ganttRef.current && ganttRef.current.contains(t)) return;
+      if (dataRef.current  && dataRef.current.contains(t))  return;
+      setFileOpen(false); setTableOpen(false); setViewOpen(false); setGanttOpen(false); setDataOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [fileMenuOpen, tableMenuOpen]);
+  }, [fileOpen, tableOpen, viewOpen, ganttOpen, dataOpen]);
 
+  // Hjelpere
   const zoomIn  = () => setPxPerDay(Math.min(80, Math.round(pxPerDay + 5)));
   const zoomOut = () => setPxPerDay(Math.max(8,  Math.round(pxPerDay - 5)));
   const zoomReset = () => setPxPerDay(20);
@@ -74,13 +79,12 @@ export default function MainToolbar(props: MainToolbarProps) {
 
   const choosePrint = (mode: PrintMode) => {
     onPrintMode(mode);
-    setFileMenuOpen(false);
+    setFileOpen(false);
   };
 
-  // Visnings-presets
-  const preset = (p: number) => () => {
+  const presetSplit = (p: number) => () => {
     setGanttPercent(p);
-    setTableMenuOpen(false);
+    setViewOpen(false);
   };
 
   return (
@@ -89,26 +93,23 @@ export default function MainToolbar(props: MainToolbarProps) {
       <div className="group">
         <div className="group-title">Fil</div>
         <div className="group-body">
-
-          {/* Print dropdown */}
-          <div className="menu-anchor" ref={fileBtnRef}>
+          <div className="menu-anchor" ref={fileRef}>
             <button
               title="Skriv ut"
-              onClick={() => setFileMenuOpen(v => !v)}
+              onClick={() => setFileOpen(v => !v)}
               disabled={!canPrint}
               aria-haspopup="menu"
-              aria-expanded={fileMenuOpen}
+              aria-expanded={fileOpen}
             >
               Skriv ut ▾
             </button>
-
-            {fileMenuOpen && (
+            {fileOpen && (
               <div className="menu" role="menu" aria-label="Utskriftsvalg">
                 <button role="menuitem" onClick={() => choosePrint("table")}>Kun tabell</button>
                 <button role="menuitem" onClick={() => choosePrint("gantt")}>Kun Gantt</button>
                 <button role="menuitem" onClick={() => choosePrint("both")}>Tabell + Gantt</button>
                 <div className="menu-sep" />
-                <button role="menuitem" onClick={() => { onClearTable(); setFileMenuOpen(false); }} disabled={!canClear}>
+                <button role="menuitem" onClick={() => { onClearTable(); setFileOpen(false); }} disabled={!canClear}>
                   Tøm tabell
                 </button>
               </div>
@@ -116,58 +117,53 @@ export default function MainToolbar(props: MainToolbarProps) {
           </div>
 
           {/* FULL – vises kun i full edition (kommer senere) */}
-          <FeatureGate feature="file.new">
-            <button title="Ny" onClick={onNew}>Ny</button>
-          </FeatureGate>
-          <FeatureGate feature="file.open">
-            <button title="Åpne" onClick={onOpen}>Åpne</button>
-          </FeatureGate>
-          <FeatureGate feature="file.save">
-            <button title="Lagre" onClick={onSave}>Lagre</button>
-          </FeatureGate>
-          <FeatureGate feature="file.export">
-            <button title="Eksporter" onClick={onExport}>Eksporter</button>
-          </FeatureGate>
+          <FeatureGate feature="file.new"><button title="Ny" onClick={onNew}>Ny</button></FeatureGate>
+          <FeatureGate feature="file.open"><button title="Åpne" onClick={onOpen}>Åpne</button></FeatureGate>
+          <FeatureGate feature="file.save"><button title="Lagre" onClick={onSave}>Lagre</button></FeatureGate>
+          <FeatureGate feature="file.export"><button title="Eksporter" onClick={onExport}>Eksporter</button></FeatureGate>
         </div>
       </div>
 
-      {/* TABELL (inkluderer tidligere Rediger + Visning) */}
+      {/* TABELL */}
       <div className="group">
         <div className="group-title">Tabell</div>
         <div className="group-body">
-
-          {/* Tabell-dropdown */}
-          <div className="menu-anchor" ref={tableBtnRef}>
+          {/* Tabell ▾ */}
+          <div className="menu-anchor" ref={tableRef}>
             <button
-              title="Tabell-handlinger og visning"
-              onClick={() => setTableMenuOpen(v => !v)}
+              title="Tabell-handlinger"
+              onClick={() => setTableOpen(v => !v)}
               aria-haspopup="menu"
-              aria-expanded={tableMenuOpen}
+              aria-expanded={tableOpen}
             >
               Tabell ▾
             </button>
-
-            {tableMenuOpen && (
+            {tableOpen && (
               <div className="menu" role="menu" aria-label="Tabellvalg">
-                {/* Radhandlinger */}
-                <button role="menuitem" onClick={() => { onAddRow(); setTableMenuOpen(false); }}>
-                  Legg til rad
-                </button>
-                <button role="menuitem" onClick={() => { onDeleteLast(); setTableMenuOpen(false); }}>
-                  Fjern siste rad
-                </button>
+                <button role="menuitem" onClick={() => { onAddRow(); setTableOpen(false); }}>Legg til rad</button>
+                <button role="menuitem" onClick={() => { onDeleteLast(); setTableOpen(false); }}>Fjern siste rad</button>
                 <div className="menu-sep" />
-                <button role="menuitem" onClick={() => { onClearTable(); setTableMenuOpen(false); }}>
-                  Tøm tabell
-                </button>
+                <button role="menuitem" onClick={() => { onClearTable(); setTableOpen(false); }}>Tøm tabell</button>
+              </div>
+            )}
+          </div>
 
-                {/* Visning */}
-                <div className="menu-sep" />
-                <div style={{ padding: "4px 8px", fontSize: 12, opacity: .7 }}>Visning</div>
-                <button role="menuitem" onClick={preset(0)}>Bare tabell (0%)</button>
-                <button role="menuitem" onClick={preset(40)}>60% tabell / 40% Gantt</button>
-                <button role="menuitem" onClick={preset(60)}>40% tabell / 60% Gantt</button>
-                <button role="menuitem" onClick={preset(100)}>Bare Gantt (100%)</button>
+          {/* Visning ▾ */}
+          <div className="menu-anchor" ref={viewRef}>
+            <button
+              title="Visningsvalg"
+              onClick={() => setViewOpen(v => !v)}
+              aria-haspopup="menu"
+              aria-expanded={viewOpen}
+            >
+              Visning ▾
+            </button>
+            {viewOpen && (
+              <div className="menu" role="menu" aria-label="Visningsvalg">
+                <button role="menuitem" onClick={presetSplit(0)}>Bare tabell (0%)</button>
+                <button role="menuitem" onClick={presetSplit(40)}>60% tabell / 40% Gantt</button>
+                <button role="menuitem" onClick={presetSplit(60)}>40% tabell / 60% Gantt</button>
+                <button role="menuitem" onClick={presetSplit(100)}>Bare Gantt (100%)</button>
               </div>
             )}
           </div>
@@ -178,24 +174,52 @@ export default function MainToolbar(props: MainToolbarProps) {
       <div className="group">
         <div className="group-title">Gantt</div>
         <div className="group-body">
-          <div className="seg">
-            <button title="Zoom ut" onClick={zoomOut}>−</button>
-            <button title="Zoom inn" onClick={zoomIn}>+</button>
-            <button title="Reset zoom" onClick={zoomReset}>Reset</button>
+          {/* Gantt ▾ */}
+          <div className="menu-anchor" ref={ganttRef}>
+            <button
+              title="Gantt-alternativer"
+              onClick={() => setGanttOpen(v => !v)}
+              aria-haspopup="menu"
+              aria-expanded={ganttOpen}
+            >
+              Gantt ▾
+            </button>
+            {ganttOpen && (
+              <div className="menu" role="menu" aria-label="Ganttvalg">
+                <button role="menuitem" onClick={() => { zoomOut(); setGanttOpen(false); }}>Zoom ut</button>
+                <button role="menuitem" onClick={() => { zoomIn(); setGanttOpen(false); }}>Zoom inn</button>
+                <button role="menuitem" onClick={() => { zoomReset(); setGanttOpen(false); }}>Reset zoom</button>
+                <div className="menu-sep" />
+                <label className="menu-item" role="menuitemcheckbox" aria-checked={showToday} style={{ padding: "6px 8px", display: "flex", gap: 8, alignItems: "center" }}>
+                  <input type="checkbox" checked={showToday} onChange={(e) => setShowToday(e.target.checked)} />
+                  I dag
+                </label>
+              </div>
+            )}
           </div>
-          <label className="chk" title="Vis vertikal i dag-linje">
-            <input type="checkbox" checked={showToday} onChange={(e) => setShowToday(e.target.checked)} />
-            I dag
-          </label>
         </div>
       </div>
 
-      {/* DATA (placeholder) */}
+      {/* DATA */}
       <div className="group">
         <div className="group-title">Data</div>
         <div className="group-body">
-          <button disabled title="Sortering (kommer)">Sorter</button>
-          <button disabled title="Filter (kommer)">Filter</button>
+          <div className="menu-anchor" ref={dataRef}>
+            <button
+              title="Data"
+              onClick={() => setDataOpen(v => !v)}
+              aria-haspopup="menu"
+              aria-expanded={dataOpen}
+            >
+              Data ▾
+            </button>
+            {dataOpen && (
+              <div className="menu" role="menu" aria-label="Datavalg">
+                <button role="menuitem" disabled>Sorter (kommer)</button>
+                <button role="menuitem" disabled>Filter (kommer)</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
