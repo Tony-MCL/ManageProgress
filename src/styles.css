@@ -437,3 +437,36 @@ button:hover { background: var(--mcl-header); color: var(--button-text); }
   .app { padding: 0 !important; }
 }
 /* ==== [BLOCK: Print Styles] END ==== */
+
+/* ==== [AUTO THEME: follow system if no manual override] ==== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]),
+  body:not([data-theme]) {
+    /* Samme som mørk modus-verdiene dine */
+    --mcl-bg:       #12110F;
+    --mcl-surface:  #1B1A17;
+    --mcl-altbg:    #3B2E23;
+    --mcl-text:     #F7F3ED;
+    --mcl-muted:    #CFC7BF;
+    --mcl-brand:    #D7C2A8;
+    --mcl-accent:   #C2A58F;
+    --mcl-outline:  #2D2B28;
+
+    --elev-1: 0 4px 10px rgba(0,0,0,.6);
+    --elev-2: 0 10px 24px rgba(0,0,0,.7);
+
+    --bg:           var(--mcl-bg);
+    --panel:        var(--mcl-surface);
+    --panel-2:      var(--mcl-altbg);
+    --text:         var(--mcl-text);
+    --muted:        var(--mcl-muted);
+    --focus:        var(--mcl-brand);
+    --accent:       var(--mcl-accent);
+    --grid-border:  var(--mcl-outline);
+    --corner:       var(--radius);
+
+    --ribbon-text:  #1B1A17;
+    --button-text:  #1B1A17;
+    --menu-text:    var(--mcl-text);
+  }
+}
