@@ -8,131 +8,145 @@ export type SummaryBarProps = {
 };
 
 const isIso = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
-const toMidnightUTC = (iso: string) => new Date(`${iso}T00:00:00Z`).getTime();
 const dayMs = 86400000;
-const fmt = (t: number | null) =>
-  t === null ? "—" : new Date(t).toISOString().slice(0, 10);
+
+const toUTC = (y: number, m: number, d: number) =>
+  Date.UTC(y, m, d); // ren UTC-timestamp (ms)
+
+const toMidnightUTC = (iso: string) => {
+  const [Y, M, D] = iso.split("-").map(Number);
+  return toUTC(Y, (M ?? 1) - 1, D ?? 1);
+};
+
+const fmtISO = (ts: number | null) =>
+  ts === null ? "—" : new Date(ts).toISOString().slice(0, 10);
+
+/** Norsk: "fr 31.10.25" (kort ukedag + dd.MM.yy) */
+function fmtNoShort(ts: number | null) {
+  if (ts === null) return "—";
+  const d = new Date(ts);
+  const weekday = new Intl.DateTimeFormat("no-NO", { weekday: "short" }).format(d).replace(".", "");
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yy = String(d.getUTCFullYear()).slice(2);
+  return `${weekday} ${dd}.${mm}.${yy}`;
+}
+
+/** "apr 23", "nov 24" … */
+function fmtMonthNo(ts: number) {
+  const d = new Date(ts);
+  const month = new Intl.DateTimeFormat("no-NO", { month: "short" }).format(d).replace(".", "");
+  const yy = String(d.getUTCFullYear()).slice(2);
+  return `${month} ${yy}`;
+}
+
+/** Første dag i måneden for gitt ts (UTC) */
+function firstOfMonth(ts: number) {
+  const d = new Date(ts);
+  return toUTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+}
+/** Siste dag i måneden for gitt ts (UTC) */
+function lastOfMonth(ts: number) {
+  const d = new Date(ts);
+  const y = d.getUTCFullYear();
+  const m = d.getUTCMonth();
+  // dag 0 i neste mnd = siste dag i denne mnd
+  return toUTC(y, m + 1, 0);
+}
+
+/** Alle månedsskift mellom a..b (inkluder start og slutt-måned) */
+function monthTicksBetween(a: number, b: number) {
+  const ticks: number[] = [];
+  let t = firstOfMonth(a);
+  const end = lastOfMonth(b);
+  while (t <= end) {
+    ticks.push(t);
+    const d = new Date(t);
+    t = toUTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+  }
+  // sørg for at sluttens måned er med
+  if (ticks.length === 0 || ticks[ticks.length - 1] !== firstOfMonth(end)) {
+    ticks.push(firstOfMonth(end));
+  }
+  return ticks;
+}
 
 export default function SummaryBar({ rows }: SummaryBarProps) {
   const model = useMemo(() => {
-    // Finn tidligste start og seneste slutt
-    const valid = rows.filter(r => isIso(r.start ?? "") && isIso(r.slutt ?? ""));
-    if (!valid.length) {
+    const withDates = rows.filter(r => isIso(r.start ?? "") && isIso(r.slutt ?? ""));
+    if (!withDates.length) {
       return {
-        count: rows.length,
-        withDates: 0,
-        missingDates: rows.length,
+        hasRange: false,
         startTs: null as number | null,
         endTs: null as number | null,
         spanDays: 0,
-        ticks: [] as number[],
+        months: [] as number[],
+        count: rows.length,
       };
     }
-
-    const startTs = Math.min(...valid.map(r => toMidnightUTC(r.start!)));
-    const endTs   = Math.max(...valid.map(r => toMidnightUTC(r.slutt!)));
+    const startTs = Math.min(...withDates.map(r => toMidnightUTC(r.start!)));
+    const endTs   = Math.max(...withDates.map(r => toMidnightUTC(r.slutt!)));
     const spanDays = Math.max(1, Math.round((endTs - startTs) / dayMs) + 1);
-
-    // Velg tick-intervall
-    let step = 1;
-    if (spanDays > 14 && spanDays <= 35) step = 7;
-    else if (spanDays > 35 && spanDays <= 120) step = 14;
-    else if (spanDays > 120) step = 30;
-
-    // Generer ticks
-    const ticks: number[] = [];
-    for (let t = startTs; t <= endTs; t += step * dayMs) ticks.push(t);
-    if (ticks[ticks.length - 1] !== endTs) ticks.push(endTs);
-
+    const months = monthTicksBetween(startTs, endTs);
     return {
+      hasRange: true,
+      startTs, endTs, spanDays, months,
       count: rows.length,
-      withDates: valid.length,
-      missingDates: rows.length - valid.length,
-      startTs,
-      endTs,
-      spanDays,
-      ticks,
     };
   }, [rows]);
 
-  const { startTs, endTs, spanDays, ticks } = model;
+  const { hasRange, startTs, endTs, spanDays, months } = model;
 
-  // Posisjonering i prosent for Gantt
+  // pos i % for timeline
   const toPct = (ts: number) =>
     startTs === null || endTs === null || endTs === startTs
       ? 0
       : ((ts - startTs) / (endTs - startTs)) * 100;
 
-  const barLeft = startTs !== null ? toPct(startTs) : 0;
-  const barW = startTs !== null && endTs !== null
-    ? Math.max(0.5, toPct(endTs) - toPct(startTs))
-    : 0;
+  const leftPct  = hasRange ? 0 : 0;
+  const widthPct = hasRange ? 100 : 0;
 
   return (
     <div className="summarybar" aria-label="Prosjektsammendrag">
-      {/* Tabell-del (meta) */}
-      <div className="summary-meta" role="table" aria-label="Metadata for prosjektsammendrag">
-        <div className="meta-row" role="row">
-          <div className="meta-cell meta-label" role="cell">Aktivitet</div>
-          <div className="meta-cell meta-value" role="cell">Prosjektsammendrag</div>
+      <div className="ps-row">
+        <div className="ps-side ps-left">
+          <div className="ps-side-title">Start</div>
+          <div className="ps-side-date">{fmtNoShort(startTs)}</div>
         </div>
-        <div className="meta-row" role="row">
-          <div className="meta-cell meta-label" role="cell">Start</div>
-          <div className="meta-cell meta-value" role="cell">{fmt(startTs)}</div>
-        </div>
-        <div className="meta-row" role="row">
-          <div className="meta-cell meta-label" role="cell">Slutt</div>
-          <div className="meta-cell meta-value" role="cell">{fmt(endTs)}</div>
-        </div>
-        <div className="meta-row" role="row">
-          <div className="meta-cell meta-label" role="cell">Total tidslinje</div>
-          <div className="meta-cell meta-value" role="cell">
-            {spanDays ? `${spanDays} dager` : "—"}
+
+        <div className="ps-timeline" role="img" aria-label="Prosjekttidslinje">
+          {/* Topp-akse: månedsetiketter */}
+          <div className="ps-months">
+            {hasRange && months.map((t, i) => (
+              <div
+                key={t}
+                className="ps-mtick"
+                style={{ left: `${toPct(t)}%` }}
+              >
+                {fmtMonthNo(t)}
+              </div>
+            ))}
+          </div>
+
+          {/* Selve sporet + bar (hele prosjektspennet) */}
+          <div className="ps-track">
+            {hasRange ? (
+              <div
+                className="ps-bar"
+                style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                title={`${fmtISO(startTs)} → ${fmtISO(endTs)}`}
+              />
+            ) : (
+              <div className="ps-empty">Legg til aktiviteter med dato i tidslinjen</div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Gantt-del (mini) */}
-      <div className="summary-gantt" aria-hidden={startTs === null}>
-        <div className="sg-header">
-          {ticks.map((t, i) => (
-            <div
-              key={t}
-              className="sg-tick"
-              style={{ left: `${toPct(t)}%` }}
-              title={new Date(t).toISOString().slice(0, 10)}
-            >
-              {labelForTick(t, i, ticks.length, spanDays)}
-            </div>
-          ))}
-        </div>
-        <div className="sg-track">
-          {startTs !== null && endTs !== null && (
-            <div
-              className="sg-bar"
-              style={{ left: `${barLeft}%`, width: `${barW}%` }}
-              aria-label="Prosjektsammendrag bar"
-            >
-              {/* valgfri tekst inni baren – rolig og kort */}
-              {/* <span>Prosjektsammendrag</span> */}
-            </div>
-          )}
+        <div className="ps-side ps-right">
+          <div className="ps-side-title">Slutt</div>
+          <div className="ps-side-date">{fmtNoShort(endTs)}</div>
         </div>
       </div>
     </div>
   );
-}
-
-/** Kort og ryddig label for ticks – viser kun passende granularitet */
-function labelForTick(ts: number, index: number, total: number, spanDays: number) {
-  const d = new Date(ts);
-  const iso = d.toISOString().slice(0, 10);
-  if (spanDays <= 14) return iso;                 // hver dag
-  if (spanDays <= 35) return iso;                 // ca ukevis, men vi viser datoen
-  if (spanDays <= 120) return iso.slice(0, 7);    // YYYY-MM
-  // lange tidslinjer – vis bare start/midt/slutt tydelig
-  if (index === 0) return iso;
-  if (index === Math.floor(total / 2)) return iso.slice(0, 7);
-  if (index === total - 1) return iso;
-  return ""; // tynne markører uten tekst
 }
