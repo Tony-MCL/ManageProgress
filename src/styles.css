@@ -63,6 +63,7 @@ body.dark {
   --ribbon-text:  #1B1A17; /* kontrast over lys cappuccino */
   --button-text:  #1B1A17;
   --menu-text:    var(--mcl-text);
+  --ribbon-heading: #8B5E34; /* Fast tittel-farge for gruppene (lik i lys + mørk) */
 }
 /* ==== [MCL THEME: Light & Dark] END ==== */
 
