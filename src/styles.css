@@ -475,3 +475,67 @@ button:hover { background: var(--mcl-header); color: var(--button-text); }
 * {
   transition: background-color .25s linear, color .25s linear, border-color .25s linear;
 }
+/* ==== [THEME OVERRIDE: manual beats system] ==== */
+/* Eksplisitt MØRK modus vinner alltid */
+:root[data-theme="dark"],
+body[data-theme="dark"],
+html.dark,
+body.dark {
+  /* mørke variabler (samme som din mørk-blokk) */
+  --mcl-bg:       #12110F;
+  --mcl-surface:  #1B1A17;
+  --mcl-altbg:    #3B2E23;
+  --mcl-text:     #F7F3ED;
+  --mcl-muted:    #CFC7BF;
+  --mcl-brand:    #D7C2A8;
+  --mcl-accent:   #C2A58F;
+  --mcl-outline:  #2D2B28;
+
+  --elev-1: 0 4px 10px rgba(0,0,0,.6);
+  --elev-2: 0 10px 24px rgba(0,0,0,.7);
+
+  --bg:           var(--mcl-bg);
+  --panel:        var(--mcl-surface);
+  --panel-2:      var(--mcl-altbg);
+  --text:         var(--mcl-text);
+  --muted:        var(--mcl-muted);
+  --focus:        var(--mcl-brand);
+  --accent:       var(--mcl-accent);
+  --grid-border:  var(--mcl-outline);
+
+  --ribbon-text:  #1B1A17;
+  --button-text:  #1B1A17;
+  --menu-text:    var(--mcl-text);
+}
+
+/* Eksplisitt LYST modus vinner alltid (revert system-dark) */
+:root[data-theme="light"],
+body[data-theme="light"],
+html.light,
+body.light {
+  --mcl-bg:       #FFFaf4;
+  --mcl-surface:  #FFFFFF;
+  --mcl-text:     #1B1A17;
+  --mcl-muted:    #6B655F;
+  --mcl-brand:    #8B5E34;
+  --mcl-accent:   #B08968;
+  --mcl-outline:  #E8DFD5;
+  --mcl-header:   #D7C2A8;
+  --radius:       16px;
+
+  --elev-1: 0 4px 10px rgba(0,0,0,.08);
+  --elev-2: 0 10px 24px rgba(0,0,0,.12);
+
+  --bg:           var(--mcl-bg);
+  --panel:        var(--mcl-surface);
+  --panel-2:      var(--mcl-header);
+  --text:         var(--mcl-text);
+  --muted:        var(--mcl-muted);
+  --focus:        var(--mcl-brand);
+  --accent:       var(--mcl-accent);
+  --grid-border:  var(--mcl-outline);
+
+  --ribbon-text:  var(--mcl-text);
+  --button-text:  var(--mcl-text);
+  --menu-text:    var(--mcl-text);
+}
