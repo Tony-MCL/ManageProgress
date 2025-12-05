@@ -30,13 +30,13 @@ const defaultInfo: ProjectInfo = {
   projectManager: "",
   notes: "",
   workSaturday: false,
-  workSunday: false
+  workSunday: false,
 };
 
 function loadFromStorage(): ProjectInfo {
   if (typeof window === "undefined") return defaultInfo;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultInfo;
     const parsed = JSON.parse(raw) as Partial<ProjectInfo>;
     return {
@@ -48,7 +48,7 @@ function loadFromStorage(): ProjectInfo {
       projectManager: parsed.projectManager ?? "",
       notes: parsed.notes ?? "",
       workSaturday: !!parsed.workSaturday,
-      workSunday: !!parsed.workSunday
+      workSunday: !!parsed.workSunday,
     };
   } catch {
     return defaultInfo;
@@ -57,11 +57,16 @@ function loadFromStorage(): ProjectInfo {
 
 function saveToStorage(info: ProjectInfo) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
-  } catch {}
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
+  } catch {
+    // Ignorer lagringsfeil – best effort
+  }
 }
 
-export default function ProjectInfoModal({ open, onClose }: ProjectInfoModalProps) {
+export default function ProjectInfoModal({
+  open,
+  onClose,
+}: ProjectInfoModalProps) {
   const [info, setInfo] = useState<ProjectInfo>(defaultInfo);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
@@ -84,20 +89,17 @@ export default function ProjectInfoModal({ open, onClose }: ProjectInfoModalProp
         loaded.notes ||
         loaded.responsible;
 
-      // Hvis data finnes → start i lese-modus
+      // Hvis vi har noe som helst lagret → start i lese-modus
       setIsEditing(!exists);
-
       setHasLoaded(true);
     }
   }, [open, hasLoaded]);
 
-  // Toast timer
+  // Toast-timer (4 sekunder)
   useEffect(() => {
     if (!savedToast) return;
-
-    const id = setTimeout(() => setSavedToast(false), 2000);
-    return () => clearTimeout(id);
-
+    const id = window.setTimeout(() => setSavedToast(false), 4000);
+    return () => window.clearTimeout(id);
   }, [savedToast]);
 
   if (!open) return null;
@@ -107,7 +109,7 @@ export default function ProjectInfoModal({ open, onClose }: ProjectInfoModalProp
   const onChange =
     (field: keyof ProjectInfo) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (!isEditing) return;
+      if (!isEditing) return; // ingen endring i lese-modus
       const value =
         e.target.type === "checkbox"
           ? (e.target as HTMLInputElement).checked
@@ -125,34 +127,58 @@ export default function ProjectInfoModal({ open, onClose }: ProjectInfoModalProp
       projectManager: info.projectManager.trim(),
       notes: info.notes.trim(),
       workSaturday: info.workSaturday,
-      workSunday: info.workSunday
+      workSunday: info.workSunday,
     };
 
     saveToStorage(trimmed);
     setInfo(trimmed);
 
-    // Gå til lese-modus
+    // Lås felter
     setIsEditing(false);
-
-    // Vis liten bekreftelse
+    // Vis toast
     setSavedToast(true);
   };
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // bare lukk hvis vi klikker direkte på bakteppet, ikke inne i modalen
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="mcl-modal-backdrop" onClick={() => onClose()}>
-      <div className="mcl-modal" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="mcl-modal-backdrop"
+      onClick={handleBackdropClick}
+      role="presentation"
+    >
+      <div
+        className="mcl-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Prosjektinformasjon"
+      >
+        {/* Flytende toast, sentrert over modalen */}
+        {savedToast && (
+          <div className="mcl-modal-toast-overlay">
+            <div className="mcl-modal-toast">Prosjektinformasjon lagret</div>
+          </div>
+        )}
+
         <div className="mcl-modal-header">
           <h2>Prosjektinformasjon</h2>
-          <button className="mcl-modal-close" onClick={onClose}>×</button>
+          <button
+            className="mcl-modal-close"
+            type="button"
+            onClick={onClose}
+            aria-label="Lukk"
+          >
+            ×
+          </button>
         </div>
 
         <div className="mcl-modal-body">
-          {savedToast && (
-            <div className="mcl-modal-toast">
-              Prosjektinformasjon lagret
-            </div>
-          )}
-
           <div className="calendar-section">
             <h3>Grunnleggende informasjon</h3>
             <div className="calendar-form-grid">
@@ -254,14 +280,21 @@ export default function ProjectInfoModal({ open, onClose }: ProjectInfoModalProp
 
         <div className="mcl-modal-footer">
           {isEditing ? (
-            <button onClick={handleSave}>Lagre prosjektinfo</button>
+            <button type="button" onClick={handleSave}>
+              Lagre prosjektinfo
+            </button>
           ) : (
-            <button onClick={() => setIsEditing(true)}>
+            <button type="button" onClick={() => setIsEditing(true)}>
               Rediger prosjektinfo
             </button>
           )}
 
-          <button className="secondary" onClick={onClose}>
+          <button
+            type="button"
+            className="secondary"
+            onClick={onClose}
+            style={{ marginLeft: "0.5rem" }}
+          >
             Lukk
           </button>
         </div>
