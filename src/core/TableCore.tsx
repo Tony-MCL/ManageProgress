@@ -747,77 +747,84 @@ export default function TableCore(props:ExtendedTableCoreProps){
         )}
       </div>
 
-            {showSummary && (() => {
-        // Hvis vi en dag sender inn ferdigberegnede summaryValues, respekter dem
+                  {showSummary && (() => {
+        // Hvis vi en dag sender inn ferdigberegnede summaryValues, respekter dem –
+        // men overstyr tittel / dato / varighet med props hvis de finnes.
         if (summaryValues) {
+          const base: Record<string, CellValue> = { ...summaryValues };
+
+          // Tittelkolonne: prosjektnummer + prosjektnavn
+          const titleCol = cols.find((c) => c.isTitle);
+          if (titleCol && summaryTitle) {
+            base[titleCol.key] = summaryTitle;
+          }
+
+          // Dato/varighet legges i sine egne kolonner
+          if (summaryStart) {
+            base['fra'] = summaryStart;
+          }
+          if (summaryEnd) {
+            base['til'] = summaryEnd;
+          }
+          if (summaryDuration != null) {
+            base['varighet'] = summaryDuration;
+          }
+
           return (
             <div className="tc-row tc-summary" style={{ gridTemplateColumns: gridCols }}>
               <div className="tc-cell tc-idx"></div>
-              {cols.map((col) => {
-                const val = summaryValues[col.key];
-                if (col.isTitle) {
-                  return (
-                    <div key={col.key} className="tc-cell tc-summary-cell tc-summary-title">
-                      <div className="tc-summary-title-main">
-                        {summaryTitle}
-                      </div>
-                      {summaryStart && summaryEnd && summaryDuration != null && (
-                        <div className="tc-summary-title-sub">
-                          {summaryStart} → {summaryEnd} ({summaryDuration} dager)
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-                return (
-                  <div key={col.key} className="tc-cell tc-summary-cell">
-                    {String(val ?? '')}
-                  </div>
-                );
-              })}
+              {cols.map((col) => (
+                <div key={col.key} className="tc-cell">
+                  {String(base[col.key] ?? '')}
+                </div>
+              ))}
             </div>
           );
         }
 
-        // Standard: regn ut summer for numeriske kolonner
+        // Standard: regn ut summer for numeriske kolonner,
+        // legg inn tittel + start/slutt/varighet i riktige kolonner.
         const s: Record<string, CellValue> = {};
         cols.forEach((c) => {
           if (isNumericColumn(c) && c.summarizable) s[c.key] = 0;
         });
+
         data.forEach((r) =>
           cols.forEach((c) => {
             if (isNumericColumn(c) && c.summarizable) {
               const v = r.cells[c.key];
-              if (typeof v === 'number') s[c.key] = (s[c.key] as number) + v;
+              if (typeof v === 'number') {
+                s[c.key] = (s[c.key] as number) + v;
+              }
             }
           })
         );
 
+        // Tittel → prosjektinfo
+        const titleCol = cols.find((c) => c.isTitle);
+        if (titleCol && summaryTitle) {
+          s[titleCol.key] = summaryTitle;
+        }
+
+        // Start / slutt / varighet i sine egne kolonner
+        if (summaryStart) {
+          s['fra'] = summaryStart;
+        }
+        if (summaryEnd) {
+          s['til'] = summaryEnd;
+        }
+        if (summaryDuration != null) {
+          s['varighet'] = summaryDuration;
+        }
+
         return (
           <div className="tc-row tc-summary" style={{ gridTemplateColumns: gridCols }}>
             <div className="tc-cell tc-idx"></div>
-            {cols.map((col) => {
-              if (col.isTitle) {
-                return (
-                  <div key={col.key} className="tc-cell tc-summary-cell tc-summary-title">
-                    <div className="tc-summary-title-main">
-                      {summaryTitle}
-                    </div>
-                    {summaryStart && summaryEnd && summaryDuration != null && (
-                      <div className="tc-summary-title-sub">
-                        {summaryStart} → {summaryEnd} ({summaryDuration} dager)
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              return (
-                <div key={col.key} className="tc-cell tc-summary-cell">
-                  {String(s[col.key] ?? '')}
-                </div>
-              );
-            })}
+            {cols.map((col) => (
+              <div key={col.key} className="tc-cell">
+                {String(s[col.key] ?? '')}
+              </div>
+            ))}
           </div>
         );
       })()}
