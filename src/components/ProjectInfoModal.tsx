@@ -8,12 +8,12 @@ type ProjectInfo = {
   projectNumber: string;
   projectName: string;
   responsible: string;
-  workSaturday: boolean;
-  workSunday: boolean;
   customer: string;
   contractValue: string;
   projectManager: string;
   notes: string;
+  workSaturday: boolean;
+  workSunday: boolean;
 };
 
 type ProjectInfoModalProps = {
@@ -25,30 +25,30 @@ const defaultInfo: ProjectInfo = {
   projectNumber: "",
   projectName: "",
   responsible: "",
-  workSaturday: false,
-  workSunday: false,
   customer: "",
   contractValue: "",
   projectManager: "",
   notes: "",
+  workSaturday: false,
+  workSunday: false
 };
 
 function loadFromStorage(): ProjectInfo {
   if (typeof window === "undefined") return defaultInfo;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultInfo;
     const parsed = JSON.parse(raw) as Partial<ProjectInfo>;
     return {
       projectNumber: parsed.projectNumber ?? "",
       projectName: parsed.projectName ?? "",
       responsible: parsed.responsible ?? "",
-      workSaturday: !!parsed.workSaturday,
-      workSunday: !!parsed.workSunday,
       customer: parsed.customer ?? "",
       contractValue: parsed.contractValue ?? "",
       projectManager: parsed.projectManager ?? "",
       notes: parsed.notes ?? "",
+      workSaturday: !!parsed.workSaturday,
+      workSunday: !!parsed.workSunday
     };
   } catch {
     return defaultInfo;
@@ -56,57 +56,63 @@ function loadFromStorage(): ProjectInfo {
 }
 
 function saveToStorage(info: ProjectInfo) {
-  if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
-  } catch {
-    // stille feil – lagring er "best effort"
-  }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
+  } catch {}
 }
 
-/**
- * Prosjektinfo-modal
- * - Grunnleggende prosjektdata (nr/navn/ansvarlige)
- * - Kunde / kontraktsverdi / prosjektleder
- * - Valg for arbeid på lørdag/søndag
- * - Frie notater
- */
-const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({ open, onClose }) => {
+export default function ProjectInfoModal({ open, onClose }: ProjectInfoModalProps) {
   const [info, setInfo] = useState<ProjectInfo>(defaultInfo);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
+  const [savedToast, setSavedToast] = useState(false);
 
-  // Last verdier fra storage når modalen åpnes første gang
+  // Last data når modalen åpnes
   useEffect(() => {
     if (!open) return;
+
     if (!hasLoaded) {
-      setInfo(loadFromStorage());
+      const loaded = loadFromStorage();
+      setInfo(loaded);
+
+      const exists =
+        loaded.projectNumber ||
+        loaded.projectName ||
+        loaded.customer ||
+        loaded.contractValue ||
+        loaded.projectManager ||
+        loaded.notes ||
+        loaded.responsible;
+
+      // Hvis data finnes → start i lese-modus
+      setIsEditing(!exists);
+
       setHasLoaded(true);
     }
   }, [open, hasLoaded]);
 
-  // Escape lukker modalen
+  // Toast timer
   useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+    if (!savedToast) return;
+
+    const id = setTimeout(() => setSavedToast(false), 2000);
+    return () => clearTimeout(id);
+
+  }, [savedToast]);
 
   if (!open) return null;
 
-  const handleChange =
+  const disable = !isEditing;
+
+  const onChange =
     (field: keyof ProjectInfo) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (!isEditing) return;
       const value =
         e.target.type === "checkbox"
           ? (e.target as HTMLInputElement).checked
           : e.target.value;
-      setInfo((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
+      setInfo((prev) => ({ ...prev, [field]: value }));
     };
 
   const handleSave = () => {
@@ -114,172 +120,152 @@ const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({ open, onClose }) =>
       projectNumber: info.projectNumber.trim(),
       projectName: info.projectName.trim(),
       responsible: info.responsible.trim(),
-      workSaturday: info.workSaturday,
-      workSunday: info.workSunday,
       customer: info.customer.trim(),
       contractValue: info.contractValue.trim(),
       projectManager: info.projectManager.trim(),
       notes: info.notes.trim(),
+      workSaturday: info.workSaturday,
+      workSunday: info.workSunday
     };
-    saveToStorage(trimmed);
-    onClose();
-  };
 
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    saveToStorage(trimmed);
+    setInfo(trimmed);
+
+    // Gå til lese-modus
+    setIsEditing(false);
+
+    // Vis liten bekreftelse
+    setSavedToast(true);
   };
 
   return (
-    <div
-      className="mcl-modal-backdrop"
-      onClick={handleBackdropClick}
-      role="presentation"
-    >
-      <div
-        className="mcl-modal"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Prosjektinformasjon"
-      >
+    <div className="mcl-modal-backdrop" onClick={() => onClose()}>
+      <div className="mcl-modal" onClick={(e) => e.stopPropagation()}>
         <div className="mcl-modal-header">
           <h2>Prosjektinformasjon</h2>
-          <button
-            type="button"
-            className="mcl-modal-close"
-            onClick={onClose}
-            aria-label="Lukk"
-          >
-            ×
-          </button>
+          <button className="mcl-modal-close" onClick={onClose}>×</button>
         </div>
 
         <div className="mcl-modal-body">
-          {/* Grunnleggende info */}
+          {savedToast && (
+            <div className="mcl-modal-toast">
+              Prosjektinformasjon lagret
+            </div>
+          )}
+
           <div className="calendar-section">
             <h3>Grunnleggende informasjon</h3>
             <div className="calendar-form-grid">
               <label>
                 Prosjektnummer
                 <input
-                  type="text"
+                  disabled={disable}
                   value={info.projectNumber}
-                  onChange={handleChange("projectNumber")}
-                  placeholder="F.eks. 12345"
+                  onChange={onChange("projectNumber")}
                 />
               </label>
+
               <label>
                 Prosjektnavn
                 <input
-                  type="text"
+                  disabled={disable}
                   value={info.projectName}
-                  onChange={handleChange("projectName")}
-                  placeholder="F.eks. Hodnaberg – styringsanlegg"
+                  onChange={onChange("projectName")}
                 />
               </label>
+
               <label>
                 Ansvarlige
                 <textarea
-                  value={info.responsible}
-                  onChange={handleChange("responsible")}
-                  placeholder="Navn, roller eller avdelinger (komma-separert)"
+                  disabled={disable}
                   rows={3}
+                  value={info.responsible}
+                  onChange={onChange("responsible")}
                 />
               </label>
             </div>
           </div>
 
-          {/* Kunde / kontrakt / prosjektleder */}
           <div className="calendar-section">
             <h3>Kunde og kontrakt</h3>
             <div className="calendar-form-grid">
               <label>
                 Kunde
                 <input
-                  type="text"
+                  disabled={disable}
                   value={info.customer}
-                  onChange={handleChange("customer")}
-                  placeholder="F.eks. BKK Produksjon AS"
+                  onChange={onChange("customer")}
                 />
               </label>
+
               <label>
                 Kontraktsverdi
                 <input
-                  type="text"
+                  disabled={disable}
                   value={info.contractValue}
-                  onChange={handleChange("contractValue")}
-                  placeholder="F.eks. 3 250 000 NOK"
+                  onChange={onChange("contractValue")}
                 />
               </label>
+
               <label>
                 Prosjektleder
                 <input
-                  type="text"
+                  disabled={disable}
                   value={info.projectManager}
-                  onChange={handleChange("projectManager")}
-                  placeholder="Navn på prosjektleder"
+                  onChange={onChange("projectManager")}
                 />
               </label>
             </div>
           </div>
 
-          {/* Helg-konfig */}
           <div className="calendar-section">
             <h3>Arbeidsdager i helg</h3>
-            <p style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>
-              Disse valgene brukes senere til å bestemme om lørdag/søndag
-              regnes som arbeidsdager i fremdriftsplanen.
-            </p>
-            <div className="calendar-section">
-              <label className="calendar-checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={info.workSaturday}
-                  onChange={handleChange("workSaturday")}
-                />
-                <span>Arbeid på lørdag i dette prosjektet</span>
-              </label>
-              <label className="calendar-checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={info.workSunday}
-                  onChange={handleChange("workSunday")}
-                />
-                <span>Arbeid på søndag i dette prosjektet</span>
-              </label>
-            </div>
+            <label className="calendar-checkbox-row">
+              <input
+                type="checkbox"
+                disabled={disable}
+                checked={info.workSaturday}
+                onChange={onChange("workSaturday")}
+              />
+              Lørdag er arbeidsdag
+            </label>
+
+            <label className="calendar-checkbox-row">
+              <input
+                type="checkbox"
+                disabled={disable}
+                checked={info.workSunday}
+                onChange={onChange("workSunday")}
+              />
+              Søndag er arbeidsdag
+            </label>
           </div>
 
-          {/* Notater */}
           <div className="calendar-section">
             <h3>Notater</h3>
             <textarea
-              value={info.notes}
-              onChange={handleChange("notes")}
-              placeholder="Evt. andre nøkkelopplysninger, milepæler, referanser m.m."
+              disabled={disable}
               rows={4}
+              value={info.notes}
+              onChange={onChange("notes")}
             />
           </div>
         </div>
 
         <div className="mcl-modal-footer">
-          <button type="button" onClick={handleSave}>
-            Lagre
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            onClick={onClose}
-            style={{ marginLeft: "0.5rem" }}
-          >
-            Avbryt
+          {isEditing ? (
+            <button onClick={handleSave}>Lagre prosjektinfo</button>
+          ) : (
+            <button onClick={() => setIsEditing(true)}>
+              Rediger prosjektinfo
+            </button>
+          )}
+
+          <button className="secondary" onClick={onClose}>
+            Lukk
           </button>
         </div>
       </div>
     </div>
   );
-};
-
-export default ProjectInfoModal;
+}
