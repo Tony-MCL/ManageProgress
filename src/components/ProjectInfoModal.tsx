@@ -10,6 +10,10 @@ type ProjectInfo = {
   responsible: string;
   workSaturday: boolean;
   workSunday: boolean;
+  customer: string;
+  contractValue: string;
+  projectManager: string;
+  notes: string;
 };
 
 type ProjectInfoModalProps = {
@@ -23,6 +27,10 @@ const defaultInfo: ProjectInfo = {
   responsible: "",
   workSaturday: false,
   workSunday: false,
+  customer: "",
+  contractValue: "",
+  projectManager: "",
+  notes: "",
 };
 
 function loadFromStorage(): ProjectInfo {
@@ -37,6 +45,10 @@ function loadFromStorage(): ProjectInfo {
       responsible: parsed.responsible ?? "",
       workSaturday: !!parsed.workSaturday,
       workSunday: !!parsed.workSunday,
+      customer: parsed.customer ?? "",
+      contractValue: parsed.contractValue ?? "",
+      projectManager: parsed.projectManager ?? "",
+      notes: parsed.notes ?? "",
     };
   } catch {
     return defaultInfo;
@@ -55,8 +67,9 @@ function saveToStorage(info: ProjectInfo) {
 /**
  * Prosjektinfo-modal
  * - Grunnleggende prosjektdata (nr/navn/ansvarlige)
+ * - Kunde / kontraktsverdi / prosjektleder
  * - Valg for arbeid på lørdag/søndag
- * - Lagrer til localStorage slik at vi kan hente det opp i andre deler av appen senere
+ * - Frie notater
  */
 const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({ open, onClose }) => {
   const [info, setInfo] = useState<ProjectInfo>(defaultInfo);
@@ -103,6 +116,10 @@ const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({ open, onClose }) =>
       responsible: info.responsible.trim(),
       workSaturday: info.workSaturday,
       workSunday: info.workSunday,
+      customer: info.customer.trim(),
+      contractValue: info.contractValue.trim(),
+      projectManager: info.projectManager.trim(),
+      notes: info.notes.trim(),
     };
     saveToStorage(trimmed);
     onClose();
@@ -140,7 +157,7 @@ const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({ open, onClose }) =>
         </div>
 
         <div className="mcl-modal-body">
-          {/* Vi gjenbruker layout-klasser fra CalendarModal for å slippe ny CSS */}
+          {/* Grunnleggende info */}
           <div className="calendar-section">
             <h3>Grunnleggende informasjon</h3>
             <div className="calendar-form-grid">
@@ -174,6 +191,41 @@ const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({ open, onClose }) =>
             </div>
           </div>
 
+          {/* Kunde / kontrakt / prosjektleder */}
+          <div className="calendar-section">
+            <h3>Kunde og kontrakt</h3>
+            <div className="calendar-form-grid">
+              <label>
+                Kunde
+                <input
+                  type="text"
+                  value={info.customer}
+                  onChange={handleChange("customer")}
+                  placeholder="F.eks. BKK Produksjon AS"
+                />
+              </label>
+              <label>
+                Kontraktsverdi
+                <input
+                  type="text"
+                  value={info.contractValue}
+                  onChange={handleChange("contractValue")}
+                  placeholder="F.eks. 3 250 000 NOK"
+                />
+              </label>
+              <label>
+                Prosjektleder
+                <input
+                  type="text"
+                  value={info.projectManager}
+                  onChange={handleChange("projectManager")}
+                  placeholder="Navn på prosjektleder"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Helg-konfig */}
           <div className="calendar-section">
             <h3>Arbeidsdager i helg</h3>
             <p style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>
@@ -198,6 +250,17 @@ const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({ open, onClose }) =>
                 <span>Arbeid på søndag i dette prosjektet</span>
               </label>
             </div>
+          </div>
+
+          {/* Notater */}
+          <div className="calendar-section">
+            <h3>Notater</h3>
+            <textarea
+              value={info.notes}
+              onChange={handleChange("notes")}
+              placeholder="Evt. andre nøkkelopplysninger, milepæler, referanser m.m."
+              rows={4}
+            />
           </div>
         </div>
 
