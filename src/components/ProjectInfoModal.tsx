@@ -59,7 +59,7 @@ function saveToStorage(info: ProjectInfo) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
   } catch {
-    // Ignorer lagringsfeil – best effort
+    // best effort
   }
 }
 
@@ -72,7 +72,7 @@ export default function ProjectInfoModal({
   const [isEditing, setIsEditing] = useState(true);
   const [savedToast, setSavedToast] = useState(false);
 
-  // Last data når modalen åpnes
+  // Last data når modalen åpnes første gang
   useEffect(() => {
     if (!open) return;
 
@@ -95,7 +95,7 @@ export default function ProjectInfoModal({
     }
   }, [open, hasLoaded]);
 
-  // Toast-timer (4 sekunder)
+  // Toast-timer (2 sekunder nå)
   useEffect(() => {
     if (!savedToast) return;
     const id = window.setTimeout(() => setSavedToast(false), 2000);
@@ -133,6 +133,20 @@ export default function ProjectInfoModal({
     saveToStorage(trimmed);
     setInfo(trimmed);
 
+    // 🔔 NYTT: si fra til resten av appen at prosjektinfo er oppdatert
+    try {
+      window.dispatchEvent(
+        new CustomEvent("mcl-project-info-changed", {
+          detail: {
+            projectNumber: trimmed.projectNumber,
+            projectName: trimmed.projectName,
+          },
+        })
+      );
+    } catch {
+      // ignorer om noe skulle feile
+    }
+
     // Lås felter
     setIsEditing(false);
     // Vis toast
@@ -140,7 +154,6 @@ export default function ProjectInfoModal({
   };
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // bare lukk hvis vi klikker direkte på bakteppet, ikke inne i modalen
     if (e.target === e.currentTarget) {
       onClose();
     }
