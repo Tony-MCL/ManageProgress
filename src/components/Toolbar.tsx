@@ -1,6 +1,7 @@
 // src/components/Toolbar.tsx
 import React, { useState, useRef, useEffect } from "react";
 import "../styles/toolbar.css";
+import ProjectInfoModal from "./ProjectInfoModal";
 
 type FileAction = "new" | "open" | "save" | "print" | "export";
 type TableAction = "addColumn";
@@ -65,6 +66,9 @@ export default function Toolbar({
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
 
   const [activeMenu, setActiveMenu] = useState<MenuId>(null);
+
+  // Prosjektinfo-modal
+  const [projectInfoOpen, setProjectInfoOpen] = useState(false);
 
   const refs = useRef<Refs>({
     fileBtn: null,
@@ -179,250 +183,267 @@ export default function Toolbar({
   };
 
   return (
-    <nav className="mcl-toolbar">
-      <div className="mcl-toolbar-inner">
-        {/* ================================================================================= */}
-        {/*  FIL-MENY  */}
-        {/* ================================================================================= */}
-        <div className="toolbar-item">
-          <button
-            ref={setRef("fileBtn")}
-            className={
-              current === "file"
-                ? "mcl-toolbar-btn mcl-toolbar-btn--active"
-                : "mcl-toolbar-btn"
-            }
-            onClick={() => {
-              onSelect("file");
-              toggle("file");
-            }}
-          >
-            Fil
-          </button>
+    <>
+      <nav className="mcl-toolbar">
+        <div className="mcl-toolbar-inner">
+          {/* ================================================================================= */}
+          {/*  FIL-MENY  */}
+          {/* ================================================================================= */}
+          <div className="toolbar-item">
+            <button
+              ref={setRef("fileBtn")}
+              className={
+                current === "file"
+                  ? "mcl-toolbar-btn mcl-toolbar-btn--active"
+                  : "mcl-toolbar-btn"
+              }
+              onClick={() => {
+                onSelect("file");
+                toggle("file");
+              }}
+            >
+              Fil
+            </button>
 
-          {fileMenuOpen && (
-            <div className="file-menu" ref={setRef("fileMenu")}>
-              <div
-                className="file-menu-item"
-                onClick={() => onFileAction && onFileAction("new")}
-              >
-                Ny plan
+            {fileMenuOpen && (
+              <div className="file-menu" ref={setRef("fileMenu")}>
+                <div
+                  className="file-menu-item"
+                  onClick={() => onFileAction && onFileAction("new")}
+                >
+                  Ny plan
+                </div>
+                <div
+                  className="file-menu-item"
+                  onClick={() => onFileAction && onFileAction("open")}
+                >
+                  Åpne plan…
+                </div>
+                <div
+                  className="file-menu-item"
+                  onClick={() => onFileAction && onFileAction("save")}
+                >
+                  Lagre plan
+                </div>
+                <div
+                  className="file-menu-item"
+                  onClick={() => onFileAction && onFileAction("print")}
+                >
+                  Skriv ut…
+                </div>
+                <div
+                  className="file-menu-item"
+                  onClick={() => onFileAction && onFileAction("export")}
+                >
+                  Eksporter til JSON…
+                </div>
               </div>
-              <div
-                className="file-menu-item"
-                onClick={() => onFileAction && onFileAction("open")}
-              >
-                Åpne plan…
-              </div>
-              <div
-                className="file-menu-item"
-                onClick={() => onFileAction && onFileAction("save")}
-              >
-                Lagre plan
-              </div>
-              <div
-                className="file-menu-item"
-                onClick={() => onFileAction && onFileAction("print")}
-              >
-                Skriv ut…
-              </div>
-              <div
-                className="file-menu-item"
-                onClick={() => onFileAction && onFileAction("export")}
-              >
-                Eksporter til JSON…
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* ================================================================================= */}
-        {/*  TABELL-MENY  */}
-        {/* ================================================================================= */}
-        <div className="toolbar-item">
-          <button
-            ref={setRef("tableBtn")}
-            className={
-              current === "table"
-                ? "mcl-toolbar-btn mcl-toolbar-btn--active"
-                : "mcl-toolbar-btn"
-            }
-            onClick={() => {
-              onSelect("table");
-              toggle("table");
-            }}
-          >
-            Tabell
-          </button>
+          {/* ================================================================================= */}
+          {/*  TABELL-MENY  */}
+          {/* ================================================================================= */}
+          <div className="toolbar-item">
+            <button
+              ref={setRef("tableBtn")}
+              className={
+                current === "table"
+                  ? "mcl-toolbar-btn mcl-toolbar-btn--active"
+                  : "mcl-toolbar-btn"
+              }
+              onClick={() => {
+                onSelect("table");
+                toggle("table");
+              }}
+            >
+              Tabell
+            </button>
 
-          {tableMenuOpen && (
-            <div className="file-menu" ref={setRef("tableMenu")}>
-              <div className="file-menu-header">Kolonner</div>
+            {tableMenuOpen && (
+              <div className="file-menu" ref={setRef("tableMenu")}>
+                <div className="file-menu-header">Kolonner</div>
 
-              {tableColumns.map((col) => {
-                const checked = isVisible(col.key);
-                const editing = renamingKey === col.key;
+                {tableColumns.map((col) => {
+                  const checked = isVisible(col.key);
+                  const editing = renamingKey === col.key;
 
-                if (editing) {
+                  if (editing) {
+                    return (
+                      <div
+                        key={col.key}
+                        className="file-menu-item file-menu-item--rename"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="text"
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              commitRename();
+                            }
+                            if (e.key === "Escape") {
+                              e.preventDefault();
+                              cancelRename();
+                            }
+                          }}
+                          autoFocus
+                        />
+                      </div>
+                    );
+                  }
+
                   return (
                     <div
                       key={col.key}
-                      className="file-menu-item file-menu-item--rename"
-                      onClick={(e) => e.stopPropagation()}
+                      className="file-menu-item"
+                      onClick={() => onToggleColumn(col.key)}
                     >
-                      <input
-                        type="text"
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            commitRename();
-                          }
-                          if (e.key === "Escape") {
-                            e.preventDefault();
-                            cancelRename();
-                          }
-                        }}
-                        autoFocus
-                      />
+                      <span className="file-menu-check">
+                        {checked ? "✓" : " "}
+                      </span>
+                      <span className="file-menu-label">{col.title}</span>
+                      {col.isCustom && (
+                        <button
+                          className="file-menu-rename"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startRename(col);
+                          }}
+                        >
+                          Endre navn
+                        </button>
+                      )}
                     </div>
                   );
-                }
+                })}
 
-                return (
-                  <div
-                    key={col.key}
-                    className="file-menu-item"
-                    onClick={() => onToggleColumn(col.key)}
-                  >
-                    <span className="file-menu-check">
-                      {checked ? "✓" : " "}
-                    </span>
-                    <span className="file-menu-label">{col.title}</span>
-                    {col.isCustom && (
-                      <button
-                        className="file-menu-rename"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startRename(col);
-                        }}
-                      >
-                        Endre navn
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+                <div className="file-menu-divider" />
 
-              <div className="file-menu-divider" />
-
-              <div
-                className="file-menu-item"
-                onClick={() => onTableAction && onTableAction("addColumn")}
-              >
-                + Legg til ny kolonne
+                <div
+                  className="file-menu-item"
+                  onClick={() => onTableAction && onTableAction("addColumn")}
+                >
+                  + Legg til ny kolonne
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* ================================================================================= */}
-        {/*  GANTT-MENY  */}
-        {/* ================================================================================= */}
-        <div className="toolbar-item">
-          <button
-            ref={setRef("ganttBtn")}
-            className={
-              current === "gantt"
-                ? "mcl-toolbar-btn mcl-toolbar-btn--active"
-                : "mcl-toolbar-btn"
-            }
-            onClick={() => {
-              onSelect("gantt");
-              toggle("gantt");
-            }}
-          >
-            Gantt
-          </button>
+          {/* ================================================================================= */}
+          {/*  GANTT-MENY  */}
+          {/* ================================================================================= */}
+          <div className="toolbar-item">
+            <button
+              ref={setRef("ganttBtn")}
+              className={
+                current === "gantt"
+                  ? "mcl-toolbar-btn mcl-toolbar-btn--active"
+                  : "mcl-toolbar-btn"
+              }
+              onClick={() => {
+                onSelect("gantt");
+                toggle("gantt");
+              }}
+            >
+              Gantt
+            </button>
 
-          {ganttMenuOpen && (
-            <div className="file-menu" ref={setRef("ganttMenu")}>
-              <div className="file-menu-item">Visningsvalg (kommer)</div>
-            </div>
-          )}
-        </div>
-
-        {/* ================================================================================= */}
-        {/*  KALENDER-MENY  */}
-        {/* ================================================================================= */}
-        <div className="toolbar-item">
-          <button
-            ref={setRef("calendarBtn")}
-            className={
-              current === "calendar"
-                ? "mcl-toolbar-btn mcl-toolbar-btn--active"
-                : "mcl-toolbar-btn"
-            }
-            onClick={() => {
-              onSelect("calendar");
-              toggle("calendar");
-            }}
-          >
-            Kalender
-          </button>
-
-          {calendarMenuOpen && (
-            <div className="file-menu" ref={setRef("calendarMenu")}>
-              <div
-                className="file-menu-item"
-                onClick={() => {
-                  onOpenCalendar?.();
-                  closeAll();
-                }}
-              >
-                Legg til fridager og ferier…
+            {ganttMenuOpen && (
+              <div className="file-menu" ref={setRef("ganttMenu")}>
+                <div className="file-menu-item">Visningsvalg (kommer)</div>
               </div>
-              <div
-                className="file-menu-item"
-                onClick={() => {
-                  onToggleWeekends?.();
-                }}
-              >
-                {showWeekends ? "✓ Marker helgedager" : "Marker helgedager"}
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* ================================================================================= */}
-        {/*  PROSJEKT-MENY  */}
-        {/* ================================================================================= */}
-        <div className="toolbar-item">
-          <button
-            ref={setRef("projectBtn")}
-            className={
-              current === "project"
-                ? "mcl-toolbar-btn mcl-toolbar-btn--active"
-                : "mcl-toolbar-btn"
-            }
-            onClick={() => {
-              onSelect("project");
-              toggle("project");
-            }}
-          >
-            Prosjekt
-          </button>
+          {/* ================================================================================= */}
+          {/*  KALENDER-MENY  */}
+          {/* ================================================================================= */}
+          <div className="toolbar-item">
+            <button
+              ref={setRef("calendarBtn")}
+              className={
+                current === "calendar"
+                  ? "mcl-toolbar-btn mcl-toolbar-btn--active"
+                  : "mcl-toolbar-btn"
+              }
+              onClick={() => {
+                onSelect("calendar");
+                toggle("calendar");
+              }}
+            >
+              Kalender
+            </button>
 
-          {projectMenuOpen && (
-            <div className="file-menu" ref={setRef("projectMenu")}>
-              <div className="file-menu-item">
-                Prosjektinnstillinger (kommer senere)
+            {calendarMenuOpen && (
+              <div className="file-menu" ref={setRef("calendarMenu")}>
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    onOpenCalendar?.();
+                    closeAll();
+                  }}
+                >
+                  Legg til fridager og ferier…
+                </div>
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    onToggleWeekends?.();
+                  }}
+                >
+                  {showWeekends ? "✓ Marker helgedager" : "Marker helgedager"}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* ================================================================================= */}
+          {/*  PROSJEKT-MENY  */}
+          {/* ================================================================================= */}
+          <div className="toolbar-item">
+            <button
+              ref={setRef("projectBtn")}
+              className={
+                current === "project"
+                  ? "mcl-toolbar-btn mcl-toolbar-btn--active"
+                  : "mcl-toolbar-btn"
+              }
+              onClick={() => {
+                onSelect("project");
+                toggle("project");
+              }}
+            >
+              Prosjekt
+            </button>
+
+            {projectMenuOpen && (
+              <div className="file-menu" ref={setRef("projectMenu")}>
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    setProjectInfoOpen(true);
+                    closeAll();
+                  }}
+                >
+                  Prosjektinfo…
+                </div>
+                <div className="file-menu-item">
+                  Avansert (kommer senere)
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Prosjektinfo-modal (helt lokal til Toolbar i denne fasen) */}
+      <ProjectInfoModal
+        open={projectInfoOpen}
+        onClose={() => setProjectInfoOpen(false)}
+      />
+    </>
   );
 }
