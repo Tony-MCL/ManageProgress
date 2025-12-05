@@ -1,0 +1,187 @@
+/* src/styles/gantt.css
+   Gantt-layout for Manage Progress
+   - Matcher TableCore i høyde og farger
+   - Marker helgedager (lør/søn) i header og bakgrunn
+*/
+
+/* ==== Basis ============================================================= */
+
+.gantt-root {
+  border: 1px solid var(--mcl-outline);
+  border-radius: 0;
+  background: var(--mcl-table-bg);
+  color: var(--mcl-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+    Helvetica, Arial;
+  display: flex;
+  flex-direction: column;
+
+  /* Radhøyde matcher TableCore (celle + padding) hvis satt */
+  --gantt-row-h: calc(var(--tc-row-h, 28px) + 12px);
+
+  min-width: 100%;
+  width: max-content;
+}
+
+/* ==== Header / tidslinje =============================================== */
+
+.gantt-header {
+  border-bottom: 1px solid var(--mcl-outline);
+  background: var(--mcl-table-header);
+}
+
+.gantt-header-track {
+  position: relative;
+  display: flex;
+  min-width: 100%;
+  width: max-content;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  /* Match tabell-headeren: rad-høyde * 1.5 + litt padding */
+  min-height: calc(var(--tc-row-h, 28px) * 1.5 + 12px);
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px
+  );
+  background-size: 32px 100%;
+}
+
+.gantt-header-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  width: 32px;
+  height: 24px;
+}
+
+.gantt-header-day {
+  opacity: 0.9;
+}
+
+/* Helgedager i header */
+
+.gantt-header-cell--weekend {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* ==== Sammendragsrad ==================================================== */
+
+.gantt-summary-row {
+  background: var(--mcl-table-summary);
+  border-bottom: 1px solid var(--mcl-outline);
+}
+
+.gantt-summary-track {
+  position: relative;
+  height: var(--gantt-row-h);
+  min-width: 100%;
+
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px
+  );
+  background-size: 32px 100%;
+}
+
+.gantt-summary-bar {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 999px;
+  background: var(--mcl-accent);
+  opacity: 0.35;
+}
+
+/* ==== Rader / bars ====================================================== */
+
+.gantt-body {
+  flex: 1;
+  overflow: visible;
+  background: var(--mcl-table-bg);
+}
+
+.gantt-rows {
+  position: relative;
+  min-width: 100%;
+  width: max-content;
+
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px
+  );
+  background-size: 32px 100%;
+}
+
+.gantt-row {
+  height: var(--gantt-row-h);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.gantt-row:last-child {
+  border-bottom: none;
+}
+
+.gantt-row-track {
+  position: relative;
+  height: 100%;
+}
+
+.gantt-bar {
+  position: absolute;
+  top: 5px;
+  height: calc(var(--gantt-row-h) - 10px);
+  border-radius: 999px;
+  background: var(--mcl-accent);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* ==== I dag-linje ======================================================= */
+
+.gantt-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--mcl-accent);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* ==== Helgedags-striper i body ========================================= */
+
+.gantt-weekend-stripes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gantt-weekend-stripe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* ==== Dark mode-justeringer ============================================ */
+
+html[data-theme="dark"] .gantt-header-cell--weekend {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme="dark"] .gantt-weekend-stripe {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="dark"] .gantt-header-track {
+  border-color: var(--mcl-outline);
+}
+
+html[data-theme="dark"] .gantt-bar {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}

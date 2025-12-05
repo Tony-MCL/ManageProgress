@@ -1,0 +1,280 @@
+/* ===== App-shell layout ===== */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--mcl-bg);
+  color: var(--mcl-text);
+}
+
+/* Hovedområde mellom header og footer */
+.app-main {
+  flex: 1;
+  width: 100%;
+  padding: 16px 32px 32px; /* litt mer luft på sidene */
+  box-sizing: border-box;
+  padding: 16px 16px 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Kortet som inneholder tittel + delt visning (tabell + gantt) */
+.app-section {
+  flex: 1;
+  background: var(--mcl-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--elev-1);
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Delt visning (Tabell + Gantt + splitter) ===== */
+
+.app-split {
+  flex: 1;
+  display: flex;
+  min-height: 320px;
+  /* deler deler av kortet under tittelen */
+}
+
+/* Panelene arver høyde av .app-section (via flex) */
+.app-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* viktig for korrekt flex-shrink */
+}
+
+/* Innholdet i hvert panel – horisontal scroll, men felles vertikal */
+.app-panel-inner {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 4px 4px 4px 0;
+}
+
+/* Litt ekstra luft mot høyre kant for Gantt slik at det matcher */
+.app-panel-inner--gantt {
+  padding-left: 4px;
+}
+
+/* Vertikal splitter mellom tabell og gantt */
+.app-splitter {
+  flex: 0 0 12px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  cursor: col-resize;
+  padding: 0 4px;
+}
+
+/* Selve linjen som skiller Tabell og Gantt */
+.app-splitter-grip {
+  width: 2px;
+  border-radius: 999px;
+  background: var(--mcl-outline);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7);
+  opacity: 0.9;
+  transition:
+    background 0.15s ease,
+    width 0.15s ease,
+    opacity 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Hover-effekt på splitteren – subtil, men merkbar */
+.app-splitter:hover .app-splitter-grip {
+  width: 3px;
+  background: var(--mcl-accent);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+  opacity: 1;
+}
+
+
+/* ===== Footer – fast blokklinje nederst ===== */
+
+.app-footer {
+  border-top: 1px solid var(--mcl-outline);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+html[data-theme="dark"] .app-footer {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.app-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  color: var(--mcl-muted);
+}
+
+/* =========================================================
+   MCL Standard Header v1.0 – variant C
+   - Mellomting mellom nettside-header og “ren app-header”
+   - Støtter både lys og mørk modus
+   ========================================================= */
+
+.mcl-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+
+  backdrop-filter: blur(16px);
+  box-shadow: var(--elev-1);
+
+  /* Lys modus: cappuccino med litt transparens */
+  background: linear-gradient(
+    to bottom,
+    rgba(215, 194, 168, 0.96),
+    rgba(215, 194, 168, 0.84),
+    rgba(215, 194, 168, 0.0)
+  );
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Mørk modus: inspirert av nettside-headeren */
+html[data-theme="dark"] .mcl-header {
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 11, 9, 0.88),
+    rgba(15, 11, 9, 0.72),
+    transparent
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Indre container – styrer høyde / luft */
+.mcl-header-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.1rem 1.5rem; /* gir ca. 84px total høyde */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ===== Venstre side: logo + appnavn ===== */
+
+.mcl-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mcl-logo-wrap {
+  height: 68px; /* variant C: mellom 64 og 72 */
+  width: auto;
+  display: flex;
+  align-items: center;
+}
+
+.mcl-logo {
+  height: 100%;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* Mindre logo på smale skjermer */
+@media (max-width: 720px) {
+  .mcl-logo-wrap {
+    height: 52px;
+  }
+}
+
+.mcl-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.mcl-header-appname {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.mcl-header-tagline {
+  font-size: 0.8rem;
+  color: var(--mcl-muted);
+}
+
+/* ===== Høyre side: språk + tema + hjelp ===== */
+
+.mcl-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Icon-knapper (help, theme) */
+.mcl-header-icon-button {
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s ease, opacity 0.1s ease;
+}
+
+/* Hover – lys modus */
+.mcl-header-icon-button:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Hover – mørk modus */
+html[data-theme="dark"] .mcl-header-icon-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mcl-header-icon-button:active {
+  opacity: 0.7;
+}
+
+.mcl-header-icon-label {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .mcl-header-icon-label {
+    display: inline;
+  }
+}
+
+/* ===== Språk-toggle (NO / EN) ===== */
+
+.mcl-lang-toggle {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Mørk: gjør “pill” mørkere */
+html[data-theme="dark"] .mcl-lang-toggle {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.mcl-lang-button {
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mcl-lang-button--active {
+  background: var(--mcl-surface);
+  color: var(--mcl-brand);
+}
+
+/* Tema-ikon */
+.mcl-theme-icon {
+  font-size: 1.1rem;
+}

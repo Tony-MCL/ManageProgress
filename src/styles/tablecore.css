@@ -1,0 +1,272 @@
+/* ==== [BLOCK: TableCore CSS] BEGIN ==== */
+
+/* Knytter tabellfarger til MCL-paletten (lys/mørk styres av html[data-theme]) */
+:root {
+  --tc-bg:         var(--mcl-table-bg, #ffffff);
+  --tc-fg:         var(--mcl-text, #151515);
+  --tc-grid:       var(--mcl-outline, #e8dfd5);
+  --tc-accent:     var(--mcl-accent, #b08968);
+  --tc-sel:        var(--mcl-table-select, #f2e6dc);
+  --tc-sel-border: var(--mcl-table-select-border, var(--mcl-accent, #b08968));
+  --tc-edit-bg:    #fffdf7;
+}
+
+/* Basis-layout */
+.tc-root {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  color: var(--tc-fg);
+}
+/* ==== [BLOCK: Wrapper rundt hele tabellen] ============================= */
+/* Denne skal ha bredde bestemt av innholdet (kolonnene), ikke av panelet.
+   Når panelet blir smalere enn tabellen, kommer horisontal scroll
+   i .app-panel-inner i stedet for at kolonnene klemmes. */
+.tc-wrap {
+  border: 1px solid var(--tc-grid);
+  border-radius: 0;
+  overflow: hidden;
+  background: var(--tc-bg);
+
+  /* Viktig del:
+     - min-width: 100% => tabellen fyller panelet når den er smalere
+     - width: max-content => tabellen slutter å “flyte med” panelet når den er bredere
+  */
+  width: max-content;
+}
+
+.tc-header {
+  display: grid;
+  border-bottom: 1px solid var(--tc-grid);
+  user-select: none;
+  background: var(--mcl-table-header, #d7c2a8);
+}
+.tc-row {
+  display: grid;
+  border-bottom: 1px solid var(--tc-grid);
+  background: var(--tc-bg);
+}
+.tc-cell {
+  padding: 6px 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+.tc-idx {
+  color: #7a7a85;
+  text-align: right;
+  padding-right: 6px;
+}
+.tc-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tc-indent {
+  display: inline-block;
+  width: calc(var(--lvl) * 14px);
+}
+.tc-summary {
+  font-weight: 600;
+  border-bottom: 1px solid var(--tc-grid);
+}
+
+/* Celle i redigering: samme utseende som visning, kun svart kant */
+.tc-cell.editing {
+  background: transparent !important;
+  outline: 1px solid #000;
+  outline-offset: 0;
+  z-index: 2;
+}
+.tc-cell.editing.sel {
+  background: transparent !important;
+}
+
+/* Inputs arver stil fra cella */
+.tc-cell input,
+.tc-cell textarea {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  text-transform: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Lås textarea */
+.tc-cell textarea {
+  resize: none !important;
+  height: 22px;
+  max-height: 22px;
+  overflow: hidden;
+}
+
+/* Markering */
+.tc-cell.sel {
+  background: var(--tc-sel);
+}
+.tc-cell.sel-edge {
+  outline: 2px solid var(--tc-sel-border);
+  outline-offset: -2px;
+}
+
+/* Slå av text selection i hele root KUN når vi drar mellom celler */
+.tc-root.tc-noselect,
+.tc-root.tc-noselect * {
+  user-select: none !important;
+}
+
+/* ==== [BLOCK: Parent/Child Typography] BEGIN ==== */
+/* Parent-rader: fet + uppercase */
+
+.tc-row.tc-parent .tc-cell {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Barn (indent > 0): kursiv + egen (ofte lik child-bakgrunn) */
+.tc-row.tc-child {
+  background: var(--mcl-table-child, var(--tc-bg));
+}
+.tc-row.tc-child .tc-cell {
+  font-style: italic;
+}
+/* ==== [BLOCK: Parent/Child Typography + bakgrunn] END ==== */
+
+/* ==== [BLOCK: Hover] BEGIN ==== */
+/* Hover på rader – DEAKTIVERT:
+   Vi ønsker ingen visuell hover før bruker faktisk klikker i cellen. */
+.tc-row:not(.tc-summary):hover .tc-cell:not(.sel) {
+  background: transparent !important;
+}
+/* ==== [BLOCK: Hover] END ==== */
+
+/* ==== [BLOCK: Disclosure Button] BEGIN ==== */
+.tc-disc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  color: inherit;
+}
+.tc-disc:focus {
+  outline: 1px dashed #bbb;
+  outline-offset: 2px;
+}
+/* ==== [BLOCK: Disclosure Button] END ==== */
+
+/* ==== [BLOCK: DnD styling] BEGIN ==== */
+.tc-header-cell {
+  cursor: grab;
+}
+.tc-header-cell:active {
+  cursor: grabbing;
+}
+.tc-row-handle {
+  cursor: grab;
+}
+.tc-row-handle:active {
+  cursor: grabbing;
+}
+/* ==== [BLOCK: DnD styling] END ==== */
+
+/* ==== [BLOCK: Row drop hint] BEGIN ==== */
+.tc-row {
+  position: relative;
+  overflow: visible;
+}
+
+.tc-row.tc-drop-before::before,
+.tc-row.tc-drop-after::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  height: 3px;
+  background: #1e66ff;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.95;
+}
+
+.tc-row.tc-drop-before::before {
+  top: -2px;
+}
+.tc-row.tc-drop-after::after {
+  bottom: -2px;
+}
+/* ==== [BLOCK: Row drop hint] END ==== */
+
+/* ==== [BLOCK: Vertical grid lines] BEGIN ==== */
+.tc-header > .tc-cell + .tc-cell,
+.tc-row > .tc-cell + .tc-cell,
+.tc-summary > .tc-cell + .tc-cell {
+  border-left: 1px solid var(--tc-grid);
+}
+
+/* Sørg for at seleksjon tegnes over vertikale linjer */
+.tc-cell.sel {
+  position: relative;
+  z-index: 1;
+}
+/* ==== [BLOCK: Vertical grid lines] END ==== */
+
+/* ==== [BLOCK: UI sizing from app] BEGIN ==== */
+.tc-root {
+  --tc-font-size: 14px;
+  --tc-row-h: 28px;
+}
+.tc-cell {
+  font-size: var(--tc-font-size);
+  min-height: var(--tc-row-h);
+}
+/* Header-raden (tittelrad) skal være 1.5x høyere enn vanlige rader */
+.tc-header .tc-cell {
+  min-height: calc(var(--tc-row-h) * 1.5);
+}
+/* ==== [BLOCK: UI sizing from app] END ==== */
+
+/* ==== [BLOCK: Column resize handle] BEGIN ==== */
+.tc-header-cell {
+  position: relative;
+}
+.tc-header-label {
+  pointer-events: none;
+}
+
+.tc-col-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+}
+.tc-col-resizer:hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 1px;
+  background: var(--tc-grid);
+}
+/* ==== [BLOCK: Column resize handle] END ==== */
+
+/* ==== [BLOCK: TableCore CSS] END ==== */

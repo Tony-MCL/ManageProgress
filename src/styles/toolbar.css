@@ -1,0 +1,181 @@
+/* src/styles/toolbar.css */
+
+/* Sticky linje under header, men nesten usynlig */
+.mcl-toolbar {
+  position: sticky;
+  top: 84px; /* rett under headeren (ca. 84px høy) */
+  z-index: 30;
+
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+
+  /* tynn stripe der header og toolbar møtes */
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+/* mørk modus: juster stripene */
+html[data-theme="dark"] .mcl-toolbar {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+/* Innholdet – bare en enkel rad med tekst-knapper */
+.mcl-toolbar-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 4px 12px;
+
+  display: flex;
+  gap: 8px;
+}
+
+/* "Knapper" – helt flate, kun tekst */
+.mcl-toolbar-btn {
+  background: transparent;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 0;
+
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--mcl-text);
+
+  /* ingen synlig knappekasse */
+  transition: color 0.15s ease, border-color 0.15s ease;
+  border-bottom: 2px solid transparent;
+}
+
+/* Hover: kun tekstfarge + subtil underline */
+.mcl-toolbar-btn:hover {
+  color: var(--mcl-accent);
+  border-bottom-color: rgba(196, 154, 108, 0.5);
+}
+
+/* Aktiv: skal se ut som vanlig tekst, uten underline */
+.mcl-toolbar-btn--active {
+  color: var(--mcl-text);
+  font-weight: normal;
+  border-bottom-color: transparent;
+}
+/* ==== [BLOCK: FIL-meny dropdown] BEGIN ==== */
+
+.toolbar-item {
+  position: relative;
+  display: inline-block;
+}
+
+.file-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--mcl-surface, #fff);
+  border: 1px solid var(--mcl-outline, rgba(0, 0, 0, 0.08));
+  box-shadow: var(--elev-2, 0 4px 12px rgba(0, 0, 0, 0.12));
+  border-radius: 6px;
+  padding: 4px 0;
+  min-width: 180px;
+  z-index: 1000;
+}
+
+.file-menu-item {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.file-menu-item:hover {
+  background: var(--mcl-accent-soft, rgba(176, 137, 104, 0.12));
+}
+
+/* Dark mode justeringer (bruker eksisterende MCL-variabler hvis satt) */
+html[data-theme="dark"] .file-menu {
+  background: var(--mcl-surface-dark, #181310);
+  border-color: var(--mcl-outline-dark, rgba(255, 255, 255, 0.08));
+}
+
+html[data-theme="dark"] .file-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ==== [BLOCK: FIL-meny dropdown] END ==== */
+
+/* ==== [BLOCK: Kolonnemeny – checkbox + rename] BEGIN ==== */
+
+.file-menu-header {
+  padding: 4px 12px 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.file-menu-divider {
+  margin: 4px 0;
+  border-top: 1px solid var(--mcl-outline, rgba(0, 0, 0, 0.08));
+}
+
+.file-menu-item--checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.file-menu-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-menu-checkbox input[type="checkbox"] {
+  margin: 0;
+}
+
+.file-menu-rename-btn {
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+/* Rename-rad med input + knapper */
+.file-menu-item--rename {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-menu-item--rename input[type="text"] {
+  flex: 1;
+  font-size: 0.8rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--mcl-outline, rgba(0, 0, 0, 0.16));
+}
+
+.file-menu-item--rename button {
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.file-menu-item--rename button:first-of-type {
+  background: var(--mcl-accent, #b08968);
+  color: #fff;
+}
+
+.file-menu-item--rename button:last-of-type {
+  background: transparent;
+}
+
+/* ==== [BLOCK: Kolonnemeny – checkbox + rename] END ==== */
