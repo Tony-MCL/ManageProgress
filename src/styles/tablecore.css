@@ -268,5 +268,29 @@
   background: var(--tc-grid);
 }
 /* ==== [BLOCK: Column resize handle] END ==== */
+/* === Sammendragsrad – visuelt løft === */
 
+.tc-row.tc-summary {
+  background: var(--tc-sel, #f2e6dc);
+  border-top: 2px solid var(--tc-grid, #e0e0e0);
+  border-bottom: 2px solid var(--tc-grid, #e0e0e0);
+}
+
+.tc-row.tc-summary .tc-summary-cell {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Tittelcellen i sammendraget – ekstra tydelig */
+.tc-row.tc-summary .tc-summary-title-cell {
+  font-size: 1rem;
+}
+
+/* Litt mer luft i sammendragsraden */
+.tc-row.tc-summary .tc-summary-cell {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
 /* ==== [BLOCK: TableCore CSS] END ==== */
