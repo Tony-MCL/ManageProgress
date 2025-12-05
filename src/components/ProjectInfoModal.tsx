@@ -98,7 +98,7 @@ export default function ProjectInfoModal({
   // Toast-timer (4 sekunder)
   useEffect(() => {
     if (!savedToast) return;
-    const id = window.setTimeout(() => setSavedToast(false), 4000);
+    const id = window.setTimeout(() => setSavedToast(false), 2000);
     return () => window.clearTimeout(id);
   }, [savedToast]);
 
