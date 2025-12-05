@@ -774,8 +774,14 @@ export default function TableCore(props:ExtendedTableCoreProps){
             <div className="tc-row tc-summary" style={{ gridTemplateColumns: gridCols }}>
               <div className="tc-cell tc-idx"></div>
               {cols.map((col) => (
-                <div key={col.key} className="tc-cell">
-                  {String(base[col.key] ?? '')}
+                <div
+                  key={col.key}
+                  className={
+                    "tc-cell tc-summary-cell" +
+                    (col.isTitle ? " tc-summary-title-cell" : "")
+                  }
+                >
+                  {String(base[col.key] ?? "")}
                 </div>
               ))}
             </div>
@@ -821,8 +827,14 @@ export default function TableCore(props:ExtendedTableCoreProps){
           <div className="tc-row tc-summary" style={{ gridTemplateColumns: gridCols }}>
             <div className="tc-cell tc-idx"></div>
             {cols.map((col) => (
-              <div key={col.key} className="tc-cell">
-                {String(s[col.key] ?? '')}
+              <div
+                key={col.key}
+                className={
+                  "tc-cell tc-summary-cell" +
+                  (col.isTitle ? " tc-summary-title-cell" : "")
+                }
+              >
+                {String(s[col.key] ?? "")}
               </div>
             ))}
           </div>
