@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import TableCore from "./core/TableCore";
 import type { RowData, ColumnDef } from "./core/TableTypes";
 import Header from "./components/Header";
@@ -165,6 +165,28 @@ const initialRows: RowData[] = [
 ];
 
 const STORAGE_KEY = "mcl-progress-plan-v3";
+const PROJECT_INFO_STORAGE_KEY = "mcl-progress-project-info";
+
+function loadProjectSummaryTitle(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = window.localStorage.getItem(PROJECT_INFO_STORAGE_KEY);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as {
+      projectNumber?: string;
+      projectName?: string;
+    };
+
+    const number = (parsed.projectNumber || "").trim();
+    const name = (parsed.projectName || "").trim();
+
+    if (!number && !name) return undefined;
+    if (number && name) return `${number} – ${name}`;
+    return number || name || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /* ==== [BLOCK: Hjelpere – kalender -> dato-liste] ======================= */
 
@@ -201,7 +223,10 @@ function expandHolidayDates(periods: HolidayPeriod[]): string[] {
 
 export default function App() {
   const [rows, setRows] = useState<RowData[]>(initialRows);
-
+const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
+    () => loadProjectSummaryTitle()
+  );
+  
   // Egendefinerte kolonner utover baseColumns (for "Legg til ny kolonne")
   const [extraColumns, setExtraColumns] = useState<ColumnDef[]>([]);
 
@@ -229,9 +254,22 @@ export default function App() {
 
   const [showWeekends, setShowWeekends] = useState<boolean>(true);
 
-  const { t } = useI18n();
+    const { t } = useI18n();
+
+  // Lytt på oppdateringer fra ProjectInfoModal (prosjektinfo)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handler = () => {
+      setSummaryTitle(loadProjectSummaryTitle());
+    };
+
+    window.addEventListener("mcl-project-info-changed", handler);
+    return () => window.removeEventListener("mcl-project-info-changed", handler);
+  }, []);
 
   const handleSplitterMouseDown = (e: React.MouseEvent) => {
+
     e.preventDefault();
     const container = splitRef.current;
     if (!container) return;
@@ -445,9 +483,11 @@ export default function App() {
                   rows={rows}
                   onChange={setRows}
                   showSummary
+                  summaryTitle={summaryTitle}
                   // Ny: fridager/ferier som skal trekkes fra varighet
                   nonWorkingDates={nonWorkingDates}
                 />
+
               </div>
             </div>
 
