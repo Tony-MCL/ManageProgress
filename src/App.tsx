@@ -218,6 +218,49 @@ function expandHolidayDates(periods: HolidayPeriod[]): string[] {
   // stabil sortering – fint for debugging om vi logger
   return out.sort();
 }
+// ==== Sammendragsberegning (start/slutt/varighet) ====
+
+function extractDates(rows: RowData[]) {
+  const starts: Date[] = [];
+  const ends: Date[] = [];
+
+  for (const r of rows) {
+    const s = r.cells.fra;
+    const e = r.cells.til;
+    if (s) {
+      const d = new Date(s + "T00:00:00");
+      if (!isNaN(+d)) starts.push(d);
+    }
+    if (e) {
+      const d = new Date(e + "T00:00:00");
+      if (!isNaN(+d)) ends.push(d);
+    }
+  }
+
+  if (!starts.length || !ends.length) {
+    return {
+      start: undefined,
+      end: undefined,
+      duration: undefined,
+    };
+  }
+
+  const start = new Date(Math.min(...starts.map((d) => d.getTime())));
+  const end = new Date(Math.max(...ends.map((d) => d.getTime())));
+
+  const duration =
+    Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  return { start, end, duration };
+}
+
+function formatDate(d?: Date): string | undefined {
+  if (!d) return undefined;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 /* ==== [BLOCK: App-komponent] ============================================ */
 
@@ -226,7 +269,10 @@ export default function App() {
 const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
     () => loadProjectSummaryTitle()
   );
-  
+    const [summaryStart, setSummaryStart] = useState<string | undefined>(undefined);
+  const [summaryEnd, setSummaryEnd] = useState<string | undefined>(undefined);
+  const [summaryDuration, setSummaryDuration] = useState<number | undefined>(undefined);
+
   // Egendefinerte kolonner utover baseColumns (for "Legg til ny kolonne")
   const [extraColumns, setExtraColumns] = useState<ColumnDef[]>([]);
 
@@ -267,6 +313,14 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
     window.addEventListener("mcl-project-info-changed", handler);
     return () => window.removeEventListener("mcl-project-info-changed", handler);
   }, []);
+  // Oppdater start/slutt/varighet når radene endrer seg
+  useEffect(() => {
+    const { start, end, duration } = extractDates(rows);
+
+    setSummaryStart(formatDate(start));
+    setSummaryEnd(formatDate(end));
+    setSummaryDuration(duration);
+  }, [rows]);
 
   const handleSplitterMouseDown = (e: React.MouseEvent) => {
 
@@ -484,10 +538,11 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
                   onChange={setRows}
                   showSummary
                   summaryTitle={summaryTitle}
-                  // Ny: fridager/ferier som skal trekkes fra varighet
+                  summaryStart={summaryStart}
+                  summaryEnd={summaryEnd}
+                  summaryDuration={summaryDuration}
                   nonWorkingDates={nonWorkingDates}
                 />
-
               </div>
             </div>
 
