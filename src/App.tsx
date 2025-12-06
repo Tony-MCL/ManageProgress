@@ -4,7 +4,7 @@ import TableCore from "./core/TableCore";
 import type { RowData, ColumnDef } from "./core/TableTypes";
 import Header from "./components/Header";
 import HelpPanel from "./components/HelpPanel";
-import Toolbar, { ToolbarColumn } from "./components/Toolbar";
+import Toolbar, { ToolbarColumn, ZoomMode } from "./components/Toolbar";
 import CalendarModal, { HolidayPeriod } from "./components/CalendarModal";
 import { useI18n } from "./i18n";
 import GanttPanel from "./components/GanttPanel";
@@ -315,9 +315,12 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
   const [splitRatio, setSplitRatio] = useState<number>(0.55);
   const splitRef = useRef<HTMLDivElement | null>(null);
 
-  const [showWeekends, setShowWeekends] = useState<boolean>(true);
+    const [showWeekends, setShowWeekends] = useState<boolean>(true);
 
-  // Zoom-nivå for Gantt (styrer dagbredde)
+  // Zoom-modus for Gantt (tidsoppløsning: dag/uke/måned)
+  const [zoomMode, setZoomMode] = useState<ZoomMode>("day");
+
+  // Zoom-nivå for Gantt (styrer dagbredde i piksel innen valgt zoom-modus)
   const [ganttZoom, setGanttZoom] = useState<"small" | "medium" | "large">(
     "medium"
   );
@@ -537,7 +540,7 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
       <Header onToggleHelp={() => setHelpOpen(true)} />
 
       {/* Sticky toolbar rett under header */}
-      <Toolbar
+            <Toolbar
         current={activeView}
         onSelect={setActiveView}
         onFileAction={handleFileAction}
@@ -549,6 +552,8 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
         onOpenCalendar={() => setCalendarOpen(true)}
         showWeekends={showWeekends}
         onToggleWeekends={() => setShowWeekends((prev) => !prev)}
+        zoomMode={zoomMode}
+        onChangeZoomMode={setZoomMode}
         ganttZoom={ganttZoom}
         onChangeGanttZoom={setGanttZoom}
       />
