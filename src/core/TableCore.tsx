@@ -307,7 +307,30 @@ export default function TableCore(props:ExtendedTableCoreProps){
   } = props
 
   const [cols, setCols] = useState<ColumnDef[]>(columns)
-  useEffect(()=>setCols(columns),[columns])
+    useEffect(() => {
+    // Sync props-kolonner inn i lokal state,
+    // men behold bredder (width) som brukeren har justert.
+    setCols((prev) => {
+      const next: ColumnDef[] = [];
+
+      for (const incoming of columns) {
+        const existing = prev.find((p) => p.key === incoming.key);
+
+        if (existing) {
+          // Behold brukerens width, men oppdater øvrige felt fra props
+          next.push({
+            ...incoming,
+            width: existing.width,
+          });
+        } else {
+          // Ny kolonne → ta alt fra incoming
+          next.push({ ...incoming });
+        }
+      }
+
+      return next;
+    });
+  }, [columns]);
 
   const [data,setData]=useState<RowData[]>(rows)
   useEffect(()=>setData(rows),[rows])
