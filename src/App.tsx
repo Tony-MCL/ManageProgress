@@ -604,6 +604,7 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
                   showWeekends={showWeekends}
                   dayWidth={ganttDayWidth}
                   zoomMode={zoomMode}
+                  onZoomModeChange={setZoomMode}
                 />
               </div>
             </div>
