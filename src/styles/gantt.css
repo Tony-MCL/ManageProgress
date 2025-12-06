@@ -112,6 +112,13 @@
 }
 /* ===== Grid-linjer per nivå i header =================================== */
 
+/* Sørg for at border-right ikke "legger på" bredde i headerceller */
+.gantt-header-cell,
+.gantt-header-week-cell,
+.gantt-header-month-cell {
+  box-sizing: border-box;
+}
+
 /* Øverste tredel: månedsgrenser */
 .gantt-header-month-row .gantt-header-month-cell {
   border-right: 1px solid rgba(0, 0, 0, 0.16);
