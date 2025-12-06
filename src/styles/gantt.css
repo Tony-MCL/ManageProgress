@@ -47,7 +47,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.7rem;
-  width: 32px;
+  width: var(--gantt-day-w, 32px);
   height: 100%;
 }
 
@@ -158,7 +158,7 @@
     rgba(0, 0, 0, 0.08) 1px,
     transparent 1px
   );
-  background-size: 32px 100%;
+    background-size: var(--gantt-day-w, 32px) 100%;
 }
 
 .gantt-summary-bar {
@@ -190,7 +190,7 @@
     rgba(0, 0, 0, 0.08) 1px,
     transparent 1px
   );
-  background-size: 32px 100%;
+    background-size: var(--gantt-day-w, 32px) 100%;
 }
 
 .gantt-row {
