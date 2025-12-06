@@ -33,11 +33,12 @@
 .gantt-header-track {
   position: relative;
   display: flex;
+  flex-direction: column; /* månedslinje over, daglinje under */
   min-width: 100%;
   width: max-content;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  /* Match tabell-headeren: rad-høyde * 1.5 + litt padding */
-  min-height: calc(var(--tc-row-h, 28px) * 1.5 + 12px);
+  /* Match tabell-headeren: litt høyere nå som det er to rader */
+  min-height: calc(var(--tc-row-h, 28px) * 2 + 12px);
   background-image: linear-gradient(
     to right,
     rgba(0, 0, 0, 0.08) 1px,
@@ -63,6 +64,27 @@
 
 .gantt-header-cell--weekend {
   background-color: rgba(0, 0, 0, 0.03);
+}
+/* Øverste rad: månedsnavn */
+
+.gantt-header-month-row {
+  display: flex;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.gantt-header-month-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 0;
+}
+
+/* Nederste rad: dager (som før, men samlet i en egen rad) */
+
+.gantt-header-day-row {
+  display: flex;
 }
 
 /* ==== Sammendragsrad ==================================================== */
