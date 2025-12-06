@@ -20,8 +20,9 @@ type GanttPanelProps = {
   startKey: string;
   endKey: string;
   showWeekends?: boolean;
-  dayWidth?: number; // ← zoom-kontroll
-  zoomMode?: "day" | "week" | "month"; // ← tids-oppløsning (dag/uke/måned)
+  dayWidth?: number; // ← piksel-zoom
+  zoomMode?: ZoomMode; // ← dag/uke/måned
+  onZoomModeChange?: (mode: ZoomMode) => void; // ← for scroll-basert zoom
 };
 
 type DayCell = {
@@ -135,9 +136,32 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
   showWeekends = true,
   dayWidth,
   zoomMode = "day",
+  onZoomModeChange,
 }) => {
-  // Grunnbredde per dag fra appen (styrt av "Kompakt / Normal / Luftig")
   const baseDayWidth = dayWidth ?? DAY_WIDTH_DEFAULT;
+
+  // Scroll-basert zoom mellom Dag → Uke → Måned
+  const handleHeaderWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (!onZoomModeChange) return;
+
+    // Kun zoom når bruker holder Ctrl (eller Cmd på Mac),
+    // ellers skal scroll oppføre seg som vanlig.
+    if (!event.ctrlKey && !event.metaKey) return;
+
+    event.preventDefault();
+
+    const modes: ZoomMode[] = ["day", "week", "month"];
+    const currentIndex = modes.indexOf(zoomMode);
+    if (currentIndex === -1) return;
+
+    if (event.deltaY < 0 && currentIndex > 0) {
+      // Scroll opp = zoom inn (mot "day")
+      onZoomModeChange(modes[currentIndex - 1]);
+    } else if (event.deltaY > 0 && currentIndex < modes.length - 1) {
+      // Scroll ned = zoom ut (mot "month")
+      onZoomModeChange(modes[currentIndex + 1]);
+    }
+  };
 
   // Tids-basert zoom:
   //  - "day"   = detaljvisning (1:1)
@@ -362,7 +386,7 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
       }
     >
             {/* HEADER */}
-      <div className="gantt-header">
+      <div className="gantt-header" onWheel={handleHeaderWheel}>
         <div
           className="gantt-header-track"
           style={{ width: timelineWidth || "100%" }}
