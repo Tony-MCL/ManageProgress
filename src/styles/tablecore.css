@@ -293,4 +293,13 @@
   padding-top: 4px;
   padding-bottom: 4px;
 }
+/* ===== Header: tillat tekstbrytning i kolonne-titler ===== */
+
+.tc-header-cell .tc-header-label {
+  display: inline-block;
+  white-space: normal;      /* bryt linje ved behov */
+  word-break: break-word;   /* bryt lange ord hvis nødvendig */
+  line-height: 1.2;
+}
+
 /* ==== [BLOCK: TableCore CSS] END ==== */
