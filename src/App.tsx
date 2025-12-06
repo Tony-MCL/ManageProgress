@@ -317,7 +317,13 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
 
   const [showWeekends, setShowWeekends] = useState<boolean>(true);
 
-    const { t } = useI18n();
+  // Zoom-nivå for Gantt (styrer dagbredde)
+  const [ganttZoom, setGanttZoom] = useState<"small" | "medium" | "large">(
+    "medium"
+  );
+
+  const { t } = useI18n();
+
 
   // Lytt på oppdateringer fra ProjectInfoModal (prosjektinfo)
   useEffect(() => {
@@ -369,6 +375,11 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
 
   const tableWidthPct = Math.round(splitRatio * 100);
   const ganttWidthPct = 100 - tableWidthPct;
+
+  // Dagbredde i Gantt basert på zoom
+  const ganttDayWidth =
+    ganttZoom === "small" ? 24 : ganttZoom === "large" ? 48 : 32;
+
 
   // ==== FIL-meny handling ====
   const handleFileAction = (
@@ -538,6 +549,8 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
         onOpenCalendar={() => setCalendarOpen(true)}
         showWeekends={showWeekends}
         onToggleWeekends={() => setShowWeekends((prev) => !prev)}
+        ganttZoom={ganttZoom}
+        onChangeGanttZoom={setGanttZoom}
       />
 
       <main className="app-main">
@@ -579,12 +592,13 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
             >
               <div className="app-panel-inner app-panel-inner--gantt">
                 <GanttPanel
-                  rows={rows}
-                  columns={visibleColumns}
-                  startKey="fra"
-                  endKey="til"
-                  showWeekends={showWeekends}
-                />
+                rows={rows}
+                columns={visibleColumns}
+                startKey="fra"
+                endKey="til"
+                showWeekends={showWeekends}
+                dayWidth={ganttDayWidth}
+              />
               </div>
             </div>
           </div>
