@@ -217,13 +217,13 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
       const projectStart = startOfDay(minDate as Date);
       const projectEnd = startOfDay(maxDate as Date);
 
-      // 2) Ta hensyn til "i dag" (gjeldende dato)
-      const today = startOfDay(new Date());
+            // 2) Ta hensyn til "i dag" (gjeldende dato)
+      const todayRef = startOfDay(new Date());
       let rangeStart = projectStart;
       let rangeEnd = projectEnd;
 
-      if (today < rangeStart) rangeStart = today;
-      if (today > rangeEnd) rangeEnd = today;
+      if (todayRef < rangeStart) rangeStart = todayRef;
+      if (todayRef > rangeEnd) rangeEnd = todayRef;
 
       // 3) Rund ned til første dag i måneden for start
       const startMonth = new Date(
