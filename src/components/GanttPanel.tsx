@@ -102,6 +102,13 @@ function addDays(d: Date, days: number): Date {
   return copy;
 }
 
+// Legg til/trekk fra måneder, men behold datoen som "hele dager"
+function addMonths(d: Date, months: number): Date {
+  const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  copy.setMonth(copy.getMonth() + months);
+  return copy;
+}
+
 function formatMonthLabel(year: number, monthIndex: number): string {
   const name =
     MONTH_NAMES_NO[monthIndex] ?? String(monthIndex + 1).padStart(2, "0");
@@ -195,7 +202,7 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
           return { rowId: row.id, start: null, end: null };
         });
 
-      if (!minDate || !maxDate) {
+            if (!minDate || !maxDate) {
         return {
           days: [],
           bars: [],
@@ -205,17 +212,46 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
         };
       }
 
-      // Litt padding på hver side (1 dag)
-      minDate = addDays(minDate, -1);
-      maxDate = addDays(maxDate, 1);
+      // === UTVID TIDSLINJEN ===
+      // 1) Prosjektintervall (start/slutt på hele dager)
+      const projectStart = startOfDay(minDate as Date);
+      const projectEnd = startOfDay(maxDate as Date);
 
+      // 2) Ta hensyn til "i dag" (gjeldende dato)
+      const today = startOfDay(new Date());
+      let rangeStart = projectStart;
+      let rangeEnd = projectEnd;
+
+      if (today < rangeStart) rangeStart = today;
+      if (today > rangeEnd) rangeEnd = today;
+
+      // 3) Rund ned til første dag i måneden for start
+      const startMonth = new Date(
+        rangeStart.getFullYear(),
+        rangeStart.getMonth(),
+        1
+      );
+
+      // 4) Rund opp til siste dag i måneden for slutt
+      const endMonth = new Date(
+        rangeEnd.getFullYear(),
+        rangeEnd.getMonth() + 1,
+        0
+      );
+
+      // 5) Legg på margin: -3 måneder før, +3 år etter
+      const minDay = addMonths(startMonth, -3);   // 3 måneder før
+      const maxDay = addMonths(endMonth, 36);     // 36 måneder = 3 år etter
+
+      // 6) Bygg dag-lista
       const days: DayCell[] = [];
-      for (let d = minDate; d <= maxDate; d = addDays(d, 1)) {
+      for (let d = minDay; d <= maxDay; d = addDays(d, 1)) {
         days.push({
           date: d,
           label: String(d.getDate()).padStart(2, "0"),
         });
       }
+
 
       // Måned-segmenter
       const monthSegments: MonthSegment[] = [];
