@@ -12,6 +12,8 @@ import type { ColumnDef, RowData } from "../core/TableTypes";
  * Dagbredden kan justeres via prop dayWidth (brukes til zoom).
  */
 
+export type ZoomMode = "day" | "week" | "month";
+
 type GanttPanelProps = {
   rows: RowData[];
   columns: ColumnDef[];
@@ -19,6 +21,7 @@ type GanttPanelProps = {
   endKey: string;
   showWeekends?: boolean;
   dayWidth?: number; // ← zoom-kontroll
+  zoomMode?: ZoomMode; // ← tids-oppløsning (dag/uke/måned)
 };
 
 type DayCell = {
@@ -124,8 +127,12 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
   endKey,
   showWeekends = true,
   dayWidth,
+  zoomMode = "day",
 }) => {
   const effectiveDayWidth = dayWidth ?? DAY_WIDTH_DEFAULT;
+
+  // Steg 2: zoomMode er tilgjengelig, men vi bruker fortsatt dagbasert skala.
+  // I Steg 3 vil vi bruke zoomMode til å bytte mellom dag/uke/måned-logikk.
 
   const startCol = columns.find((c) => c.key === startKey);
   const endCol = columns.find((c) => c.key === endKey);
