@@ -3,13 +3,12 @@ import React, { useMemo } from "react";
 import type { ColumnDef, RowData } from "../core/TableTypes";
 
 /**
- * Enkel Gantt-visning:
- * - Leser start-/sluttdato fra angitte kolonnenøkler
- * - Lager en dag-linje fra tidligste til seneste dato
- * - Tegner én bar per rad
- * - Marker helgedager (lør/søn) i header + bakgrunn (styrt av showWeekends)
- * - Viser en vertikal linje for "i dag" hvis den ligger i intervallet
- * - Viser i tillegg en månedslinje over dagene (jan, feb, mar ...)
+ * Gantt-visning med 3 nivåer i header:
+ * - Øverst: måneder (mar 2025, apr 2025, ...)
+ * - Midten: uker (Uke 09, Uke 10, ...)
+ * - Nederst: dager (01–31) med helgedagsmarkering
+ *
+ * I dag-linje og helgestriper fungerer som før.
  */
 
 type GanttPanelProps = {
@@ -22,7 +21,7 @@ type GanttPanelProps = {
 
 type DayCell = {
   date: Date;
-  label: string; // dag i måneden (01–31)
+  label: string; // "01", "02", ...
 };
 
 type Bar = {
@@ -38,15 +37,24 @@ type MonthSegment = {
   span: number;
 };
 
+type WeekSegment = {
+  key: string;
+  label: string;
+  startIndex: number;
+  span: number;
+};
+
 type GanttCalc = {
   days: DayCell[];
   bars: Bar[];
   todayIndex: number | null;
   monthSegments: MonthSegment[];
+  weekSegments: WeekSegment[];
 };
 
 const DAY_WIDTH = 32;
 
+// Norsk månedsnavn i liten, kompakt form
 const MONTH_NAMES_NO = [
   "jan",
   "feb",
@@ -94,6 +102,16 @@ function formatMonthLabel(year: number, monthIndex: number): string {
   return `${name} ${year}`;
 }
 
+// ISO-uke (brukes til "Uke 09", "Uke 10" osv.)
+function getIsoWeek(date: Date): { year: number; week: number } {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7; // 1–7 (man–søn)
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum); // til torsdag i samme uke
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((+d - +yearStart) / 86400000 + 1) / 7);
+  return { year: d.getUTCFullYear(), week };
+}
+
 const GanttPanel: React.FC<GanttPanelProps> = ({
   rows,
   columns,
@@ -104,115 +122,161 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
   const startCol = columns.find((c) => c.key === startKey);
   const endCol = columns.find((c) => c.key === endKey);
 
-  const { days, bars, todayIndex, monthSegments } = useMemo<GanttCalc>(() => {
-    if (!startCol || !endCol) {
-      return { days: [], bars: [], todayIndex: null, monthSegments: [] };
-    }
-
-    let minDate: Date | null = null;
-    let maxDate: Date | null = null;
-
-    const rowDates: { rowId: string; start: Date | null; end: Date | null }[] =
-      rows.map((row) => {
-        const s = parseDate(row.cells[startCol.key]);
-        const e = parseDate(row.cells[endCol.key]);
-        let start = s;
-        let end = e;
-
-        if (start && !end) end = start;
-        if (end && !start) start = end;
-
-        if (start && end) {
-          const sDay = startOfDay(start);
-          const eDay = startOfDay(end);
-          if (!minDate || sDay < minDate) minDate = sDay;
-          if (!maxDate || eDay > maxDate) maxDate = eDay;
-          return { rowId: row.id, start: sDay, end: eDay };
-        }
-
-        return { rowId: row.id, start: null, end: null };
-      });
-
-    if (!minDate || !maxDate) {
-      return { days: [], bars: [], todayIndex: null, monthSegments: [] };
-    }
-
-    const minDay: Date = minDate as Date;
-    const maxDay: Date = maxDate as Date;
-
-    const days: DayCell[] = [];
-    for (let cur: Date = minDay; cur <= maxDay; cur = addDays(cur, 1)) {
-      const day = cur.getDate().toString().padStart(2, "0");
-      days.push({
-        date: new Date(cur.getTime()),
-        label: day,
-      });
-    }
-
-    // Bygg månedsegmenter (brukes til øverste linje i headeren)
-    const monthSegments: MonthSegment[] = [];
-    if (days.length > 0) {
-      let currentMonth = days[0].date.getMonth();
-      let currentYear = days[0].date.getFullYear();
-      let startIndex = 0;
-
-      for (let i = 0; i < days.length; i++) {
-        const d = days[i].date;
-        const m = d.getMonth();
-        const y = d.getFullYear();
-
-        if (m !== currentMonth || y !== currentYear) {
-          const span = i - startIndex;
-          monthSegments.push({
-            key: `${currentYear}-${currentMonth}`,
-            label: formatMonthLabel(currentYear, currentMonth),
-            startIndex,
-            span,
-          });
-          currentMonth = m;
-          currentYear = y;
-          startIndex = i;
-        }
-      }
-
-      // Siste segment
-      const span = days.length - startIndex;
-      monthSegments.push({
-        key: `${currentYear}-${currentMonth}`,
-        label: formatMonthLabel(currentYear, currentMonth),
-        startIndex,
-        span,
-      });
-    }
-
-    const bars: Bar[] = rowDates
-      .map((rd) => {
-        if (!rd.start || !rd.end) return null;
-        const startIndex = days.findIndex(
-          (d) => startOfDay(d.date).getTime() === rd.start!.getTime()
-        );
-        const endIndex = days.findIndex(
-          (d) => startOfDay(d.date).getTime() === rd.end!.getTime()
-        );
-        if (startIndex === -1 || endIndex === -1) return null;
+  const { days, bars, todayIndex, monthSegments, weekSegments } =
+    useMemo<GanttCalc>(() => {
+      if (!startCol || !endCol) {
         return {
-          id: rd.rowId,
-          startIndex: Math.min(startIndex, endIndex),
-          endIndex: Math.max(startIndex, endIndex),
+          days: [],
+          bars: [],
+          todayIndex: null,
+          monthSegments: [],
+          weekSegments: [],
         };
-      })
-      .filter((b): b is Bar => !!b);
-
-    const today = startOfDay(new Date());
-    let todayIndex: number | null = null;
-    days.forEach((d, idx) => {
-      if (startOfDay(d.date).getTime() === today.getTime()) {
-        todayIndex = idx;
       }
-    });
 
-    return { days, bars, todayIndex, monthSegments };
-  }, [rows, columns, startKey, endKey, startCol, endCol]);
+      let minDate: Date | null = null;
+      let maxDate: Date | null = null;
+
+      const rowDates: { rowId: string; start: Date | null; end: Date | null }[] =
+        rows.map((row) => {
+          const s = parseDate(row.cells[startCol.key]);
+          const e = parseDate(row.cells[endCol.key]);
+          let start = s;
+          let end = e;
+
+          if (start && !end) end = start;
+          if (end && !start) start = end;
+
+          if (start && end) {
+            const sDay = startOfDay(start);
+            const eDay = startOfDay(end);
+            if (!minDate || sDay < minDate) minDate = sDay;
+            if (!maxDate || eDay > maxDate) maxDate = eDay;
+            return { rowId: row.id, start: sDay, end: eDay };
+          }
+
+          return { rowId: row.id, start: null, end: null };
+        });
+
+      if (!minDate || !maxDate) {
+        return {
+          days: [],
+          bars: [],
+          todayIndex: null,
+          monthSegments: [],
+          weekSegments: [],
+        };
+      }
+
+      const minDay: Date = minDate as Date;
+      const maxDay: Date = maxDate as Date;
+
+      const days: DayCell[] = [];
+      for (let cur: Date = minDay; cur <= maxDay; cur = addDays(cur, 1)) {
+        const day = cur.getDate().toString().padStart(2, "0");
+        days.push({
+          date: new Date(cur.getTime()),
+          label: day,
+        });
+      }
+
+      // Bygg måned-segmenter
+      const monthSegments: MonthSegment[] = [];
+      if (days.length > 0) {
+        let currentMonth = days[0].date.getMonth();
+        let currentYear = days[0].date.getFullYear();
+        let startIndex = 0;
+
+        for (let i = 0; i < days.length; i++) {
+          const d = days[i].date;
+          const m = d.getMonth();
+          const y = d.getFullYear();
+
+          if (m !== currentMonth || y !== currentYear) {
+            const span = i - startIndex;
+            monthSegments.push({
+              key: `${currentYear}-${currentMonth}`,
+              label: formatMonthLabel(currentYear, currentMonth),
+              startIndex,
+              span,
+            });
+            currentMonth = m;
+            currentYear = y;
+            startIndex = i;
+          }
+        }
+
+        // siste segment
+        const span = days.length - startIndex;
+        monthSegments.push({
+          key: `${currentYear}-${currentMonth}`,
+          label: formatMonthLabel(currentYear, currentMonth),
+          startIndex,
+          span,
+        });
+      }
+
+      // Bygg uke-segmenter (ISO-uke)
+      const weekSegments: WeekSegment[] = [];
+      if (days.length > 0) {
+        let { year: curYear, week: curWeek } = getIsoWeek(days[0].date);
+        let startIndex = 0;
+
+        for (let i = 0; i < days.length; i++) {
+          const { year, week } = getIsoWeek(days[i].date);
+          if (year !== curYear || week !== curWeek) {
+            const span = i - startIndex;
+            weekSegments.push({
+              key: `${curYear}-W${curWeek}`,
+              label: `Uke ${String(curWeek).padStart(2, "0")}`,
+              startIndex,
+              span,
+            });
+            curYear = year;
+            curWeek = week;
+            startIndex = i;
+          }
+        }
+
+        // siste uke
+        const span = days.length - startIndex;
+        weekSegments.push({
+          key: `${curYear}-W${curWeek}`,
+          label: `Uke ${String(curWeek).padStart(2, "0")}`,
+          startIndex,
+          span,
+        });
+      }
+
+      // Bars
+      const bars: Bar[] = rowDates
+        .map((rd) => {
+          if (!rd.start || !rd.end) return null;
+          const startIndex = days.findIndex(
+            (d) => startOfDay(d.date).getTime() === rd.start!.getTime()
+          );
+          const endIndex = days.findIndex(
+            (d) => startOfDay(d.date).getTime() === rd.end!.getTime()
+          );
+          if (startIndex === -1 || endIndex === -1) return null;
+          return {
+            id: rd.rowId,
+            startIndex: Math.min(startIndex, endIndex),
+            endIndex: Math.max(startIndex, endIndex),
+          };
+        })
+        .filter((b): b is Bar => !!b);
+
+      const today = startOfDay(new Date());
+      let todayIndex: number | null = null;
+      days.forEach((d, idx) => {
+        if (startOfDay(d.date).getTime() === today.getTime()) {
+          todayIndex = idx;
+        }
+      });
+
+      return { days, bars, todayIndex, monthSegments, weekSegments };
+    }, [rows, columns, startKey, endKey, startCol, endCol]);
 
   const timelineWidth = days.length * DAY_WIDTH;
   const todayLeft =
@@ -226,7 +290,7 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
           className="gantt-header-track"
           style={{ width: timelineWidth || "100%" }}
         >
-          {/* Øverste linje: måneder */}
+          {/* Rad 1: måneder */}
           <div className="gantt-header-month-row">
             {monthSegments.map((seg) => (
               <div
@@ -239,7 +303,20 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
             ))}
           </div>
 
-          {/* Nederste linje: dager */}
+          {/* Rad 2: uker */}
+          <div className="gantt-header-week-row">
+            {weekSegments.map((seg) => (
+              <div
+                key={seg.key}
+                className="gantt-header-week-cell"
+                style={{ width: seg.span * DAY_WIDTH }}
+              >
+                {seg.label}
+              </div>
+            ))}
+          </div>
+
+          {/* Rad 3: dager */}
           <div className="gantt-header-day-row">
             {days.map((d) => {
               const dow = d.date.getDay(); // 0 = søndag, 6 = lørdag
