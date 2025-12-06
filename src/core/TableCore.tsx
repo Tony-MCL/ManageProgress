@@ -332,9 +332,25 @@ export default function TableCore(props:ExtendedTableCoreProps){
     });
   }, [columns]);
 
-  const [data,setData]=useState<RowData[]>(rows)
-  useEffect(()=>setData(rows),[rows])
-  const setAndPropagate=useCallback((next:RowData[])=>{setData(next);onChange(next)},[onChange])
+    const [data, setData] = useState<RowData[]>(rows)
+  useEffect(() => setData(rows), [rows])
+
+  // Kan ta enten et ferdig array, eller en funksjon som får forrige state
+  const setAndPropagate = useCallback(
+    (next: RowData[] | ((prev: RowData[]) => RowData[])) => {
+      if (typeof next === "function") {
+        setData(prev => {
+          const resolved = (next as (p: RowData[]) => RowData[])(prev)
+          onChange(resolved)
+          return resolved
+        })
+      } else {
+        setData(next)
+        onChange(next)
+      }
+    },
+    [onChange]
+  )
 
   const nonWorkingSet: NonWorkingSet = useMemo(() => {
     if (!props.nonWorkingDates || props.nonWorkingDates.length === 0) {
@@ -374,34 +390,62 @@ export default function TableCore(props:ExtendedTableCoreProps){
     ...(ui?.colors?.editBg   ? {'--tc-edit-bg': ui.colors.editBg} : {}),
   }) as React.CSSProperties,[ui])
 
-  const commitEdit = (r:number, c:number, val:string) => {
+    const commitEdit = (
+    r: number,
+    c: number,
+    val: string,
+    extraTransform?: (rows: RowData[]) => RowData[]
+  ) => {
     const col = colsRef.current[c]
-    const parsed: CellValue = isNumericColumn(col) ? (val === '' ? '' : Number(val)) : val
+    const parsed: CellValue = isNumericColumn(col) ? (val === "" ? "" : Number(val)) : val
 
-    let next = dataRef.current.map((row,i)=>
-      i === r ? { ...row, cells: { ...row.cells, [col.key]: parsed } } : row
-    )
+    setAndPropagate(prev => {
+      // 1) Oppdater selve cellen
+      let next = prev.map((row, i) =>
+        i === r ? { ...row, cells: { ...row.cells, [col.key]: parsed } } : row
+      )
 
-    const durationConfigs = getDurationConfigs(colsRef.current)
-    if (durationConfigs.length) {
-      const isDurationCol = durationConfigs.some(cfg => cfg.durationKey === col.key)
-      const isDCol = isDateColumn(col)
+      // 2) Varighetslogikk (start/slutt/varighet)
+      const durationConfigs = getDurationConfigs(colsRef.current)
+      if (durationConfigs.length) {
+        const isDurationCol = durationConfigs.some(cfg => cfg.durationKey === col.key)
+        const isDCol = isDateColumn(col)
 
-      if (isDurationCol) {
-        const updated = adjustDatesFromDuration(next[r], colsRef.current, col.key, nonWorkingSet)
-        const recalced = recomputeDurationsForRow(updated, colsRef.current, nonWorkingSet)
-        if (recalced !== next[r]) {
-          next = next.map((row,i)=> i===r ? recalced : row)
-        }
-      } else if (isDCol) {
-        const updated = recomputeDurationsForRow(next[r], colsRef.current, nonWorkingSet)
-        if (updated !== next[r]) {
-          next = next.map((row,i)=> i===r ? updated : row)
+        if (isDurationCol) {
+          const updated = adjustDatesFromDuration(
+            next[r],
+            colsRef.current,
+            col.key,
+            nonWorkingSet
+          )
+          const recalced = recomputeDurationsForRow(
+            updated,
+            colsRef.current,
+            nonWorkingSet
+          )
+          if (recalced !== next[r]) {
+            next = next.map((row, i) => (i === r ? recalced : row))
+          }
+        } else if (isDCol) {
+          const updated = recomputeDurationsForRow(
+            next[r],
+            colsRef.current,
+            nonWorkingSet
+          )
+          if (updated !== next[r]) {
+            next = next.map((row, i) => (i === r ? updated : row))
+          }
         }
       }
-    }
 
-    setAndPropagate(next)
+      // 3) Ekstra transformasjon (f.eks. legg til ny rad)
+      if (extraTransform) {
+        next = extraTransform(next)
+      }
+
+      return next
+    })
+
     setEditing(null)
   }
 
@@ -935,7 +979,7 @@ export default function TableCore(props:ExtendedTableCoreProps){
 
             if(editingHere){
               classes.push('editing')
-              const handleCommitMove = (
+             const handleCommitMove = (
                 value: string,
                 key: string,
                 _isTextarea: boolean,
@@ -946,49 +990,69 @@ export default function TableCore(props:ExtendedTableCoreProps){
                     ? (e.shiftKey ? "up" : "down")
                     : key === "Tab"
                     ? (e.shiftKey ? "left" : "right")
-                    : null;
-                if (!dir) return;
+                    : null
+                if (!dir) return
               
-                e.preventDefault();
-                skipBlurCommit.current = true;
+                e.preventDefault()
+                skipBlurCommit.current = true
               
-                // Lagre verdien i cellen
-                commitEdit(rVisibleIdx, cIdx, value);
-              
-                let target = { r: rVisibleIdx, c: cIdx };
-              
+                // Spesialtilfelle: Enter (ned) på siste synlige rad → lag ny rad under
                 if (dir === "down") {
-                  const visible = visibleRowIndices;
-                  const lastVisible = visible[visible.length - 1];
+                  const visible = visibleRowIndices
+                  const lastVisible = visible[visible.length - 1]
               
                   if (rVisibleIdx === lastVisible) {
-                    // Siste synlige rad + Enter = opprett ny rad under
-                    const arr = dataRef.current.slice();
-                    const baseIndent = arr[lastVisible]?.indent ?? 0;
+                    const insertAt = lastVisible + 1
               
-                    const newRow: RowData = {
-                      id: `row-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                      indent: baseIndent,
-                      cells: {}, // tom rad, brukeren fyller ut
-                    };
+                    // Lagre verdien i cellen + legg til ny rad i samme operasjon
+                    commitEdit(rVisibleIdx, cIdx, value, (rowsAfterEdit) => {
+                      const baseIndent = rowsAfterEdit[lastVisible]?.indent ?? 0
               
-                    const insertAt = lastVisible + 1;
-                    arr.splice(insertAt, 0, newRow);
-                    setAndPropagate(arr);
+                      const newRow: RowData = {
+                        id: `row-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                        indent: baseIndent,
+                        cells: {},
+                      }
               
-                    // Flytt markør til samme kolonne på den nye raden
-                    target = { r: insertAt, c: cIdx };
-                  } else {
-                    // Vanlig "nedover"-navigasjon
-                    target = nextPosAfter(rVisibleIdx, cIdx, "down");
+                      const arr = rowsAfterEdit.slice()
+                      arr.splice(insertAt, 0, newRow)
+                      return arr
+                    })
+              
+                    // Flytt fokus til samme kolonne i den nye raden
+                    setSel({
+                      r1: insertAt,
+                      r2: insertAt,
+                      c1: cIdx,
+                      c2: cIdx,
+                    })
+                    return
                   }
-                } else {
-                  // Tab / Shift+Tab / Enter+Shift → som før
-                  target = nextPosAfter(rVisibleIdx, cIdx, dir);
                 }
               
-                setSel({ r1: target.r, r2: target.r, c1: target.c, c2: target.c });
-              };
+                // Standardtilfelle: bare lagre og flytt fokus som før
+                commitEdit(rVisibleIdx, cIdx, value)
+              
+                const nextPos = nextPosAfter(
+                  rVisibleIdx,
+                  cIdx,
+                  dir === "down"
+                    ? "down"
+                    : dir === "up"
+                    ? "up"
+                    : dir === "left"
+                    ? "left"
+                    : "right"
+                )
+              
+                setSel({
+                  r1: nextPos.r,
+                  r2: nextPos.r,
+                  c1: nextPos.c,
+                  c2: nextPos.c,
+                })
+              }
+
               if(isNumericColumn(col)){
                 const seed = editing!.seed && /[0-9\-\.,]/.test(editing!.seed) ? editing!.seed : ''
                 const def = editing!.mode==='replace' ? seed : String(storedVal)
