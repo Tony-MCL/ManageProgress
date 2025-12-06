@@ -9,6 +9,7 @@ import type { ColumnDef, RowData } from "../core/TableTypes";
  * - Tegner én bar per rad
  * - Marker helgedager (lør/søn) i header + bakgrunn (styrt av showWeekends)
  * - Viser en vertikal linje for "i dag" hvis den ligger i intervallet
+ * - Viser i tillegg en månedslinje over dagene (jan, feb, mar ...)
  */
 
 type GanttPanelProps = {
@@ -21,7 +22,7 @@ type GanttPanelProps = {
 
 type DayCell = {
   date: Date;
-  label: string;
+  label: string; // dag i måneden (01–31)
 };
 
 type Bar = {
@@ -30,11 +31,36 @@ type Bar = {
   endIndex: number;
 };
 
+type MonthSegment = {
+  key: string;
+  label: string;
+  startIndex: number;
+  span: number;
+};
+
 type GanttCalc = {
   days: DayCell[];
   bars: Bar[];
   todayIndex: number | null;
+  monthSegments: MonthSegment[];
 };
+
+const DAY_WIDTH = 32;
+
+const MONTH_NAMES_NO = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "mai",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "okt",
+  "nov",
+  "des",
+];
 
 function parseDate(value: unknown): Date | null {
   if (!value) return null;
@@ -63,7 +89,10 @@ function addDays(d: Date, days: number): Date {
   return copy;
 }
 
-const DAY_WIDTH = 32;
+function formatMonthLabel(year: number, monthIndex: number): string {
+  const name = MONTH_NAMES_NO[monthIndex] ?? String(monthIndex + 1).padStart(2, "0");
+  return `${name} ${year}`;
+}
 
 const GanttPanel: React.FC<GanttPanelProps> = ({
   rows,
@@ -75,9 +104,9 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
   const startCol = columns.find((c) => c.key === startKey);
   const endCol = columns.find((c) => c.key === endKey);
 
-  const { days, bars, todayIndex } = useMemo<GanttCalc>(() => {
+  const { days, bars, todayIndex, monthSegments } = useMemo<GanttCalc>(() => {
     if (!startCol || !endCol) {
-      return { days: [], bars: [], todayIndex: null };
+      return { days: [], bars: [], todayIndex: null, monthSegments: [] };
     }
 
     let minDate: Date | null = null;
@@ -105,7 +134,7 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
       });
 
     if (!minDate || !maxDate) {
-      return { days: [], bars: [], todayIndex: null };
+      return { days: [], bars: [], todayIndex: null, monthSegments: [] };
     }
 
     const minDay: Date = minDate as Date;
@@ -117,6 +146,42 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
       days.push({
         date: new Date(cur.getTime()),
         label: day,
+      });
+    }
+
+    // Bygg månedsegmenter (brukes til øverste linje i headeren)
+    const monthSegments: MonthSegment[] = [];
+    if (days.length > 0) {
+      let currentMonth = days[0].date.getMonth();
+      let currentYear = days[0].date.getFullYear();
+      let startIndex = 0;
+
+      for (let i = 0; i < days.length; i++) {
+        const d = days[i].date;
+        const m = d.getMonth();
+        const y = d.getFullYear();
+
+        if (m !== currentMonth || y !== currentYear) {
+          const span = i - startIndex;
+          monthSegments.push({
+            key: `${currentYear}-${currentMonth}`,
+            label: formatMonthLabel(currentYear, currentMonth),
+            startIndex,
+            span,
+          });
+          currentMonth = m;
+          currentYear = y;
+          startIndex = i;
+        }
+      }
+
+      // Siste segment
+      const span = days.length - startIndex;
+      monthSegments.push({
+        key: `${currentYear}-${currentMonth}`,
+        label: formatMonthLabel(currentYear, currentMonth),
+        startIndex,
+        span,
       });
     }
 
@@ -146,7 +211,7 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
       }
     });
 
-    return { days, bars, todayIndex };
+    return { days, bars, todayIndex, monthSegments };
   }, [rows, columns, startKey, endKey, startCol, endCol]);
 
   const timelineWidth = days.length * DAY_WIDTH;
@@ -161,22 +226,40 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
           className="gantt-header-track"
           style={{ width: timelineWidth || "100%" }}
         >
-          {days.map((d) => {
-            const dow = d.date.getDay(); // 0 = søndag, 6 = lørdag
-            const isWeekend = dow === 0 || dow === 6;
-
-            return (
+          {/* Øverste linje: måneder */}
+          <div className="gantt-header-month-row">
+            {monthSegments.map((seg) => (
               <div
-                key={d.date.toISOString()}
-                className={
-                  "gantt-header-cell" +
-                  (showWeekends && isWeekend ? " gantt-header-cell--weekend" : "")
-                }
+                key={seg.key}
+                className="gantt-header-month-cell"
+                style={{ width: seg.span * DAY_WIDTH }}
               >
-                <span className="gantt-header-day">{d.label}</span>
+                {seg.label}
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Nederste linje: dager */}
+          <div className="gantt-header-day-row">
+            {days.map((d) => {
+              const dow = d.date.getDay(); // 0 = søndag, 6 = lørdag
+              const isWeekend = dow === 0 || dow === 6;
+
+              return (
+                <div
+                  key={d.date.toISOString()}
+                  className={
+                    "gantt-header-cell" +
+                    (showWeekends && isWeekend
+                      ? " gantt-header-cell--weekend"
+                      : "")
+                  }
+                >
+                  <span className="gantt-header-day">{d.label}</span>
+                </div>
+              );
+            })}
+          </div>
 
           {todayLeft != null && (
             <div className="gantt-today-line" style={{ left: todayLeft }} />
