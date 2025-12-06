@@ -9,6 +9,7 @@ import type { ColumnDef, RowData } from "../core/TableTypes";
  * - Nederst: dager (01–31) med helgedagsmarkering
  *
  * I dag-linje og helgestriper fungerer som før.
+ * Dagbredden kan justeres via prop dayWidth (brukes til zoom).
  */
 
 type GanttPanelProps = {
@@ -17,6 +18,7 @@ type GanttPanelProps = {
   startKey: string;
   endKey: string;
   showWeekends?: boolean;
+  dayWidth?: number; // ← zoom-kontroll
 };
 
 type DayCell = {
@@ -52,7 +54,7 @@ type GanttCalc = {
   weekSegments: WeekSegment[];
 };
 
-const DAY_WIDTH = 32;
+const DAY_WIDTH_DEFAULT = 32;
 
 // Norsk månedsnavn i liten, kompakt form
 const MONTH_NAMES_NO = [
@@ -98,13 +100,16 @@ function addDays(d: Date, days: number): Date {
 }
 
 function formatMonthLabel(year: number, monthIndex: number): string {
-  const name = MONTH_NAMES_NO[monthIndex] ?? String(monthIndex + 1).padStart(2, "0");
+  const name =
+    MONTH_NAMES_NO[monthIndex] ?? String(monthIndex + 1).padStart(2, "0");
   return `${name} ${year}`;
 }
 
 // ISO-uke (brukes til "Uke 09", "Uke 10" osv.)
 function getIsoWeek(date: Date): { year: number; week: number } {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
   const dayNum = d.getUTCDay() || 7; // 1–7 (man–søn)
   d.setUTCDate(d.getUTCDate() + 4 - dayNum); // til torsdag i samme uke
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -118,7 +123,10 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
   startKey,
   endKey,
   showWeekends = true,
+  dayWidth,
 }) => {
+  const effectiveDayWidth = dayWidth ?? DAY_WIDTH_DEFAULT;
+
   const startCol = columns.find((c) => c.key === startKey);
   const endCol = columns.find((c) => c.key === endKey);
 
@@ -168,55 +176,53 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
         };
       }
 
-      const minDay: Date = minDate as Date;
-      const maxDay: Date = maxDate as Date;
+      // Litt padding på hver side (1 dag)
+      minDate = addDays(minDate, -1);
+      maxDate = addDays(maxDate, 1);
 
       const days: DayCell[] = [];
-      for (let cur: Date = minDay; cur <= maxDay; cur = addDays(cur, 1)) {
-        const day = cur.getDate().toString().padStart(2, "0");
+      for (let d = minDate; d <= maxDate; d = addDays(d, 1)) {
         days.push({
-          date: new Date(cur.getTime()),
-          label: day,
+          date: d,
+          label: String(d.getDate()).padStart(2, "0"),
         });
       }
 
-      // Bygg måned-segmenter
+      // Måned-segmenter
       const monthSegments: MonthSegment[] = [];
       if (days.length > 0) {
-        let currentMonth = days[0].date.getMonth();
-        let currentYear = days[0].date.getFullYear();
+        let curYear = days[0].date.getFullYear();
+        let curMonth = days[0].date.getMonth();
         let startIndex = 0;
 
         for (let i = 0; i < days.length; i++) {
           const d = days[i].date;
-          const m = d.getMonth();
           const y = d.getFullYear();
-
-          if (m !== currentMonth || y !== currentYear) {
+          const m = d.getMonth();
+          if (y !== curYear || m !== curMonth) {
             const span = i - startIndex;
             monthSegments.push({
-              key: `${currentYear}-${currentMonth}`,
-              label: formatMonthLabel(currentYear, currentMonth),
+              key: `${curYear}-${curMonth}`,
+              label: formatMonthLabel(curYear, curMonth),
               startIndex,
               span,
             });
-            currentMonth = m;
-            currentYear = y;
+            curYear = y;
+            curMonth = m;
             startIndex = i;
           }
         }
 
-        // siste segment
-        const span = days.length - startIndex;
+        const lastSpan = days.length - startIndex;
         monthSegments.push({
-          key: `${currentYear}-${currentMonth}`,
-          label: formatMonthLabel(currentYear, currentMonth),
+          key: `${curYear}-${curMonth}`,
+          label: formatMonthLabel(curYear, curMonth),
           startIndex,
-          span,
+          span: lastSpan,
         });
       }
 
-      // Bygg uke-segmenter (ISO-uke)
+      // Uke-segmenter
       const weekSegments: WeekSegment[] = [];
       if (days.length > 0) {
         let { year: curYear, week: curWeek } = getIsoWeek(days[0].date);
@@ -238,7 +244,6 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
           }
         }
 
-        // siste uke
         const span = days.length - startIndex;
         weekSegments.push({
           key: `${curYear}-W${curWeek}`,
@@ -278,12 +283,19 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
       return { days, bars, todayIndex, monthSegments, weekSegments };
     }, [rows, columns, startKey, endKey, startCol, endCol]);
 
-  const timelineWidth = days.length * DAY_WIDTH;
+  const timelineWidth = days.length * effectiveDayWidth;
   const todayLeft =
-    todayIndex != null ? todayIndex * DAY_WIDTH + DAY_WIDTH / 2 : null;
+    todayIndex != null
+      ? todayIndex * effectiveDayWidth + effectiveDayWidth / 2
+      : null;
 
   return (
-    <div className="gantt-root">
+    <div
+      className="gantt-root"
+      style={
+        { "--gantt-day-w": `${effectiveDayWidth}px` } as React.CSSProperties
+      }
+    >
       {/* HEADER */}
       <div className="gantt-header">
         <div
@@ -296,7 +308,7 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
               <div
                 key={seg.key}
                 className="gantt-header-month-cell"
-                style={{ width: seg.span * DAY_WIDTH }}
+                style={{ width: seg.span * effectiveDayWidth }}
               >
                 {seg.label}
               </div>
@@ -309,7 +321,7 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
               <div
                 key={seg.key}
                 className="gantt-header-week-cell"
-                style={{ width: seg.span * DAY_WIDTH }}
+                style={{ width: seg.span * effectiveDayWidth }}
               >
                 {seg.label}
               </div>
@@ -366,12 +378,12 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
               {days.map((d, idx) => {
                 const dow = d.date.getDay();
                 if (dow !== 0 && dow !== 6) return null;
-                const left = idx * DAY_WIDTH;
+                const left = idx * effectiveDayWidth;
                 return (
                   <div
                     key={d.date.toISOString()}
                     className="gantt-weekend-stripe"
-                    style={{ left, width: DAY_WIDTH }}
+                    style={{ left, width: effectiveDayWidth }}
                   />
                 );
               })}
@@ -386,8 +398,10 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
           {rows.map((row) => {
             const bar = bars.find((b) => b.id === row.id);
             const hasBar = !!bar;
-            const left = hasBar ? bar!.startIndex * DAY_WIDTH : 0;
-            const right = hasBar ? (bar!.endIndex + 1) * DAY_WIDTH : 0;
+            const left = hasBar ? bar!.startIndex * effectiveDayWidth : 0;
+            const right = hasBar
+              ? (bar!.endIndex + 1) * effectiveDayWidth
+              : 0;
             const width = hasBar ? right - left : 0;
 
             return (
