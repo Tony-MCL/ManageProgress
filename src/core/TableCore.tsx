@@ -935,13 +935,60 @@ export default function TableCore(props:ExtendedTableCoreProps){
 
             if(editingHere){
               classes.push('editing')
-              const handleCommitMove = (value:string, key:string, _isTextarea:boolean, e:React.KeyboardEvent)=>{
-                const dir = key==='Enter' ? (e.shiftKey ? 'up' : 'down') : key==='Tab' ? (e.shiftKey ? 'left' : 'right') : null
-                if(!dir) return
-                e.preventDefault(); skipBlurCommit.current = true
-                commitEdit(rVisibleIdx,cIdx,value)
-                const next = nextPosAfter(rVisibleIdx,cIdx,dir); setSel({r1:next.r,r2:next.r,c1:next.c,c2:next.c})
-              }
+              const handleCommitMove = (
+                value: string,
+                key: string,
+                _isTextarea: boolean,
+                e: React.KeyboardEvent
+              ) => {
+                const dir =
+                  key === "Enter"
+                    ? (e.shiftKey ? "up" : "down")
+                    : key === "Tab"
+                    ? (e.shiftKey ? "left" : "right")
+                    : null;
+                if (!dir) return;
+              
+                e.preventDefault();
+                skipBlurCommit.current = true;
+              
+                // Lagre verdien i cellen
+                commitEdit(rVisibleIdx, cIdx, value);
+              
+                let target = { r: rVisibleIdx, c: cIdx };
+              
+                if (dir === "down") {
+                  const visible = visibleRowIndices;
+                  const lastVisible = visible[visible.length - 1];
+              
+                  if (rVisibleIdx === lastVisible) {
+                    // Siste synlige rad + Enter = opprett ny rad under
+                    const arr = dataRef.current.slice();
+                    const baseIndent = arr[lastVisible]?.indent ?? 0;
+              
+                    const newRow: RowData = {
+                      id: `row-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                      indent: baseIndent,
+                      cells: {}, // tom rad, brukeren fyller ut
+                    };
+              
+                    const insertAt = lastVisible + 1;
+                    arr.splice(insertAt, 0, newRow);
+                    setAndPropagate(arr);
+              
+                    // Flytt markør til samme kolonne på den nye raden
+                    target = { r: insertAt, c: cIdx };
+                  } else {
+                    // Vanlig "nedover"-navigasjon
+                    target = nextPosAfter(rVisibleIdx, cIdx, "down");
+                  }
+                } else {
+                  // Tab / Shift+Tab / Enter+Shift → som før
+                  target = nextPosAfter(rVisibleIdx, cIdx, dir);
+                }
+              
+                setSel({ r1: target.r, r2: target.r, c1: target.c, c2: target.c });
+              };
               if(isNumericColumn(col)){
                 const seed = editing!.seed && /[0-9\-\.,]/.test(editing!.seed) ? editing!.seed : ''
                 const def = editing!.mode==='replace' ? seed : String(storedVal)
