@@ -597,13 +597,14 @@ const [summaryTitle, setSummaryTitle] = useState<string | undefined>(
             >
               <div className="app-panel-inner app-panel-inner--gantt">
                 <GanttPanel
-                rows={rows}
-                columns={visibleColumns}
-                startKey="fra"
-                endKey="til"
-                showWeekends={showWeekends}
-                dayWidth={ganttDayWidth}
-              />
+                  rows={rows}
+                  columns={visibleColumns}
+                  startKey="fra"
+                  endKey="til"
+                  showWeekends={showWeekends}
+                  dayWidth={ganttDayWidth}
+                  zoomMode={zoomMode}
+                />
               </div>
             </div>
           </div>
