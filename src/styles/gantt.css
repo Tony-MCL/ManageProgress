@@ -40,13 +40,6 @@
 
   /* Samme totale høyde som tabell-headeren (1,5x rad + litt padding) */
   min-height: calc(var(--tc-row-h, 28px) * 1.5 + 12px);
-
-  background-image: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.08) 1px,
-    transparent 1px
-  );
-  background-size: 32px 100%;
 }
 
 .gantt-header-cell {
@@ -116,6 +109,29 @@
   justify-content: center;
   font-size: 0.6rem;
   opacity: 0.85;
+}
+/* ===== Grid-linjer per nivå i header =================================== */
+
+/* Øverste tredel: månedsgrenser */
+.gantt-header-month-row .gantt-header-month-cell {
+  border-right: 1px solid rgba(0, 0, 0, 0.16);
+}
+
+/* Midterste tredel: ukesgrenser */
+.gantt-header-week-row .gantt-header-week-cell {
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* Nederste tredel: dag-linjer */
+.gantt-header-day-row .gantt-header-cell {
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Valgfritt: ikke tegn linje helt til høyre (litt renere) */
+.gantt-header-month-row .gantt-header-month-cell:last-child,
+.gantt-header-week-row .gantt-header-week-cell:last-child,
+.gantt-header-day-row .gantt-header-cell:last-child {
+  border-right: none;
 }
 
 /* ==== Sammendragsrad ==================================================== */
