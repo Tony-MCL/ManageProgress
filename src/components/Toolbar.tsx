@@ -24,10 +24,14 @@ type ToolbarProps = {
   onTableAction?: (action: TableAction) => void;
   onRenameColumn?: (key: string, newTitle: string) => void;
 
-  // Kalender
+    // Kalender
   onOpenCalendar?: () => void;
   showWeekends?: boolean;
   onToggleWeekends?: () => void;
+
+  // Gantt-zoom
+  ganttZoom: "small" | "medium" | "large";
+  onChangeGanttZoom?: (zoom: "small" | "medium" | "large") => void;
 };
 
 type MenuId = "file" | "table" | "gantt" | "calendar" | "project" | null;
@@ -57,6 +61,8 @@ export default function Toolbar({
   onOpenCalendar,
   showWeekends = true,
   onToggleWeekends,
+  ganttZoom,
+  onChangeGanttZoom,
 }: ToolbarProps) {
   // === Meny-states ===
   const [fileMenuOpen, setFileMenuOpen] = useState(false);
@@ -338,10 +344,9 @@ export default function Toolbar({
           <div className="toolbar-item">
             <button
               ref={setRef("ganttBtn")}
+              type="button"
               className={
-                current === "gantt"
-                  ? "mcl-toolbar-btn mcl-toolbar-btn--active"
-                  : "mcl-toolbar-btn"
+                "mcl-toolbar-btn" + (current === "gantt" ? " mcl-toolbar-btn--active" : "")
               }
               onClick={() => {
                 onSelect("gantt");
@@ -353,7 +358,40 @@ export default function Toolbar({
 
             {ganttMenuOpen && (
               <div className="file-menu" ref={setRef("ganttMenu")}>
-                <div className="file-menu-item">Visningsvalg (kommer)</div>
+                <div className="file-menu-header">Zoom</div>
+
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    onChangeGanttZoom && onChangeGanttZoom("small");
+                    closeAll();
+                  }}
+                >
+                  {ganttZoom === "small" ? "✓ " : ""}
+                  Kompakt (flere uker)
+                </div>
+
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    onChangeGanttZoom && onChangeGanttZoom("medium");
+                    closeAll();
+                  }}
+                >
+                  {ganttZoom === "medium" ? "✓ " : ""}
+                  Normal
+                </div>
+
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    onChangeGanttZoom && onChangeGanttZoom("large");
+                    closeAll();
+                  }}
+                >
+                  {ganttZoom === "large" ? "✓ " : ""}
+                  Luftig (kortere periode)
+                </div>
               </div>
             )}
           </div>
