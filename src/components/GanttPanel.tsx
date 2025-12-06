@@ -325,13 +325,13 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
         { "--gantt-day-w": `${effectiveDayWidth}px` } as React.CSSProperties
       }
     >
-      {/* HEADER */}
+            {/* HEADER */}
       <div className="gantt-header">
         <div
           className="gantt-header-track"
           style={{ width: timelineWidth || "100%" }}
         >
-          {/* Rad 1: måneder */}
+          {/* Øverste rad: måneder (alltid) */}
           <div className="gantt-header-month-row">
             {monthSegments.map((seg) => (
               <div
@@ -344,47 +344,50 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
             ))}
           </div>
 
-          {/* Rad 2: uker */}
-          <div className="gantt-header-week-row">
-            {weekSegments.map((seg) => (
-              <div
-                key={seg.key}
-                className="gantt-header-week-cell"
-                style={{ width: seg.span * effectiveDayWidth }}
-              >
-                {seg.label}
-              </div>
-            ))}
-          </div>
-
-          {/* Rad 3: dager */}
-          <div className="gantt-header-day-row">
-            {days.map((d) => {
-              const dow = d.date.getDay(); // 0 = søndag, 6 = lørdag
-              const isWeekend = dow === 0 || dow === 6;
-
-              return (
+          {/* Midterste rad: uker (kun i dag/uke-zoom) */}
+          {(zoomMode === "day" || zoomMode === "week") && (
+            <div className="gantt-header-week-row">
+              {weekSegments.map((seg) => (
                 <div
-                  key={d.date.toISOString()}
-                  className={
-                    "gantt-header-cell" +
-                    (showWeekends && isWeekend
-                      ? " gantt-header-cell--weekend"
-                      : "")
-                  }
+                  key={seg.key}
+                  className="gantt-header-week-cell"
+                  style={{ width: seg.span * effectiveDayWidth }}
                 >
-                  <span className="gantt-header-day">{d.label}</span>
+                  {seg.label}
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {/* Nederste rad: dager (kun i dag-zoom) */}
+          {zoomMode === "day" && (
+            <div className="gantt-header-day-row">
+              {days.map((d) => {
+                const dow = d.date.getDay(); // 0 = søndag, 6 = lørdag
+                const isWeekend = dow === 0 || dow === 6;
+
+                return (
+                  <div
+                    key={d.date.toISOString()}
+                    className={
+                      "gantt-header-cell" +
+                      (showWeekends && isWeekend
+                        ? " gantt-header-cell--weekend"
+                        : "")
+                    }
+                  >
+                    <span className="gantt-header-day">{d.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {todayLeft != null && (
             <div className="gantt-today-line" style={{ left: todayLeft }} />
           )}
         </div>
       </div>
-
       {/* SAMMENDRAGSRAD */}
       <div className="gantt-summary-row">
         <div
@@ -402,7 +405,7 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
       <div className="gantt-body">
         <div className="gantt-rows" style={{ width: timelineWidth || "100%" }}>
           {/* Helgestriper i bakgrunnen */}
-          {showWeekends && (
+          {showWeekends && zoomMode === "day" && (
             <div className="gantt-weekend-stripes">
               {days.map((d, idx) => {
                 const dow = d.date.getDay();
