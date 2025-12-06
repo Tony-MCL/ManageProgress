@@ -18,25 +18,42 @@ import "./styles/gantt.css";
 /* ==== [BLOCK: Kolonnedefinisjon – standard] =========================== */
 
 const baseColumns: ColumnDef[] = [
-  { key: "kode", title: "Kode" },
-  { key: "tittel", title: "Aktivitet", isTitle: true },
-  { key: "fra", title: "Start", type: "date", dateRole: "start" },
-  { key: "til", title: "Slutt", type: "date", dateRole: "end" },
+  // Litt smal, bare tall → WBS
+  { key: "kode", title: "Kode (WBS)", width: 70 },
+
+  // Hovedkolonne, god plass til tekst
+  { key: "tittel", title: "Aktivitet", isTitle: true, width: 260 },
+
+  // Dato-kolonner – smale, men lesbare
+  { key: "fra", title: "Start", type: "date", dateRole: "start", width: 110 },
+  { key: "til", title: "Slutt", type: "date", dateRole: "end", width: 110 },
+
+  // Varighet – ca lik bredde som dato
   {
     key: "varighet",
     title: "Varighet (dager)",
     type: "number",
     summarizable: true,
+    width: 110,
     durationOf: {
       startKey: "fra",
       endKey: "til",
     },
   },
-  { key: "ansvarlig", title: "Ansvarlig" },
-  { key: "avhengigheter", title: "Avhengighet" },
-  { key: "farge", title: "Farge" },
-  { key: "merknad", title: "Merknad" },
+
+  // Ansvarlig trenger litt mer plass (navn/tittel)
+  { key: "ansvarlig", title: "Ansvarlig", width: 160 },
+
+  // Avhengighet – typisk korte koder, middels bredde
+  { key: "avhengigheter", title: "Avhengighet", width: 120 },
+
+  // Farge – hex-kode eller kort tekst
+  { key: "farge", title: "Farge", width: 90 },
+
+  // Merknad – tekstkolonne, men ikke like bred som Aktivitet
+  { key: "merknad", title: "Merknad", width: 220 },
 ];
+
 
 /* ==== [BLOCK: Dummy-data – Progress LITE] ============================== */
 
