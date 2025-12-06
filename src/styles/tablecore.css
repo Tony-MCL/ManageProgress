@@ -301,5 +301,9 @@
   word-break: break-word;   /* bryt lange ord hvis nødvendig */
   line-height: 1.2;
 }
+/* ===== Header: fet skrift i kolonne-titler ===== */
 
+.tc-header-cell .tc-header-label {
+  font-weight: 600;   /* tydelig, men ikke for tung */
+}
 /* ==== [BLOCK: TableCore CSS] END ==== */
