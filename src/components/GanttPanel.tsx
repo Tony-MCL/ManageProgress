@@ -21,7 +21,7 @@ type GanttPanelProps = {
   endKey: string;
   showWeekends?: boolean;
   dayWidth?: number; // ← zoom-kontroll
-  zoomMode?: ZoomMode; // ← tids-oppløsning (dag/uke/måned)
+  zoomMode?: "day" | "week" | "month"; // ← tids-oppløsning (dag/uke/måned)
 };
 
 type DayCell = {
@@ -129,7 +129,29 @@ const GanttPanel: React.FC<GanttPanelProps> = ({
   dayWidth,
   zoomMode = "day",
 }) => {
-  const effectiveDayWidth = dayWidth ?? DAY_WIDTH_DEFAULT;
+  // Grunnbredde per dag fra appen (styrt av "Kompakt / Normal / Luftig")
+  const baseDayWidth = dayWidth ?? DAY_WIDTH_DEFAULT;
+
+  // Tids-basert zoom:
+  //  - "day"   = detaljvisning (1:1)
+  //  - "week"  = ca 7 ganger mer komprimert
+  //  - "month" = ca 30 ganger mer komprimert
+  let factor = 1;
+
+  switch (zoomMode) {
+    case "week":
+      factor = 1 / 7;
+      break;
+    case "month":
+      factor = 1 / 30;
+      break;
+    case "day":
+    default:
+      factor = 1;
+      break;
+  }
+
+  const effectiveDayWidth = Math.max(2, baseDayWidth * factor);
 
   // Steg 2: zoomMode er tilgjengelig, men vi bruker fortsatt dagbasert skala.
   // I Steg 3 vil vi bruke zoomMode til å bytte mellom dag/uke/måned-logikk.
