@@ -12,24 +12,30 @@ export type ToolbarColumn = {
   isCustom?: boolean; // true for nye/egendefinerte kolonner
 };
 
+export type ZoomMode = "day" | "week" | "month";
+
 type ToolbarProps = {
   current: string;
   onSelect: (id: string) => void;
   onFileAction?: (action: FileAction) => void;
 
   // Tabell-kolonner (for menyen)
-  tableColumns: ToolbarColumn[];
+   tableColumns: ToolbarColumn[];
   visibleColumnKeys: string[];
   onToggleColumn: (key: string) => void;
   onTableAction?: (action: TableAction) => void;
   onRenameColumn?: (key: string, newTitle: string) => void;
 
-    // Kalender
+  // Kalender
   onOpenCalendar?: () => void;
   showWeekends?: boolean;
   onToggleWeekends?: () => void;
 
-  // Gantt-zoom
+  // Gantt tids-zoom (dag/uke/måned)
+  zoomMode: ZoomMode;
+  onChangeZoomMode?: (mode: ZoomMode) => void;
+
+  // Gantt-zoom (piksel-tetthet)
   ganttZoom: "small" | "medium" | "large";
   onChangeGanttZoom?: (zoom: "small" | "medium" | "large") => void;
 };
@@ -61,6 +67,8 @@ export default function Toolbar({
   onOpenCalendar,
   showWeekends = true,
   onToggleWeekends,
+  zoomMode,
+  onChangeZoomMode,
   ganttZoom,
   onChangeGanttZoom,
 }: ToolbarProps) {
@@ -356,9 +364,46 @@ export default function Toolbar({
               Gantt
             </button>
 
-            {ganttMenuOpen && (
+                        {ganttMenuOpen && (
               <div className="file-menu" ref={setRef("ganttMenu")}>
-                <div className="file-menu-header">Zoom</div>
+                <div className="file-menu-header">Tidsoppløsning</div>
+
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    onChangeZoomMode && onChangeZoomMode("day");
+                    closeAll();
+                  }}
+                >
+                  {zoomMode === "day" ? "✓ " : ""}
+                  Dag (detalj)
+                </div>
+
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    onChangeZoomMode && onChangeZoomMode("week");
+                    closeAll();
+                  }}
+                >
+                  {zoomMode === "week" ? "✓ " : ""}
+                  Uke (planlegging)
+                </div>
+
+                <div
+                  className="file-menu-item"
+                  onClick={() => {
+                    onChangeZoomMode && onChangeZoomMode("month");
+                    closeAll();
+                  }}
+                >
+                  {zoomMode === "month" ? "✓ " : ""}
+                  Måned (oversikt)
+                </div>
+
+                <div className="file-menu-divider" />
+
+                <div className="file-menu-header">Visuell zoom</div>
 
                 <div
                   className="file-menu-item"
